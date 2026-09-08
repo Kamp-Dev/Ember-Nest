@@ -273,11 +273,11 @@ function openFogFree(n) {
 }
 
 function oneSprite(level, hi, lo) {
-  if (level === 0) {
-    // Ceramic Lotus Egg using an SVG group to prevent nested SVG conflicts
+ if (level === 0) {
+    // Ceramic Lotus Egg image with native drag disabled and centered coordinates
     return `
-      <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 20px;">
-        <image href="egg-art.png" x="-2" y="-2" width="36" height="36" preserveAspectRatio="xMidYMid meet" />
+      <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="egg-art.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
       </g>
     `;
   }
