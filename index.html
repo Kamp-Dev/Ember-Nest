@@ -245,6 +245,11 @@
     #buyEgg { background: #3a2a20; color: var(--gold); border: 1px solid #e8c37a44; }
     #gather:disabled { opacity: .45; cursor: not-allowed; }
     #hint { background: #3a2a20; color: var(--gold); border: 1px solid #e8c37a44; }
+    #guideBtn {
+      flex: 0 0 42px;
+      background: #3a2a20; color: var(--gold);
+      border: 1px solid #e8c37a44;
+    }
     .toast {
       position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%);
       background: #2a1c14ee; border: 1px solid var(--gold);
@@ -263,7 +268,22 @@
       align-items: center; justify-content: center;
       padding: 16px;
     }
-    #book.open, #trailFail.open, #trailWin.open, #chest.open { display: flex; }
+    #book.open, #trailFail.open, #trailWin.open, #chest.open, #guide.open, #wipe.open { display: flex; }
+    #guide, #wipe {
+      display: none; position: fixed; inset: 0;
+      background: #140e0ccc; z-index: 44;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    #guide .panel, #wipe .panel {
+      width: min(420px, 100%); background: #2a1c16;
+      border: 1px solid #e8c37a55; border-radius: 16px; padding: 16px;
+    }
+    #guide h2, #wipe h2 { margin: 0 0 8px; color: var(--gold); }
+    #guide p, #wipe p { margin: 0 0 8px; color: #c9a36a; font-size: .82rem; line-height: 1.35; }
+    #wipeInput {
+      width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #e8c37a55;
+      background: #1c1410; color: var(--cream); font-size: 1rem;
+    }
     #chest {
       display: none; position: fixed; inset: 0;
       background: #140e0ccc; z-index: 43;
@@ -378,7 +398,7 @@
       <p class="nest-title" style="margin-top:7px">The Mountain · <span id="roomCount">1</span>/5</p>
       <div class="mountain" id="mountain"></div>
       <p class="nest-title" id="hearthGoal" style="margin-top:7px">Goal · Hatch a Hearth</p>
-      <p class="nest-title" style="margin-top:7px">Perch · park a dragon to rest</p>
+      <p class="nest-title" id="perchLabel" style="margin-top:7px">Perch · park a dragon to rest</p>
       <div class="perch-row" id="perchRow"></div>
     </div>
 
@@ -388,9 +408,31 @@
       <button id="gather">Gather egg · 1✦</button>
       <button id="buyEgg">Buy egg</button>
       <button id="hint">Ash Trail</button>
+      <button id="guideBtn" type="button">?</button>
     </footer>
   </div>
   <div class="toast" id="toast"></div>
+  <div id="guide">
+    <div class="panel">
+      <h2>Ash Trail</h2>
+      <p>Burn <b>6 ash</b> to clear the path. Live ash at <b>12</b> closes it.</p>
+      <p>Only a <b>5-merge</b> burns ash. Hatchling 1 side, Wyrmling 2 sides, Young a whole row.</p>
+      <p>Merge <b>next to the cracks</b>. The pouch is spare eggs, not the puzzle.</p>
+      <p>Win beats “no moves” if both happen on the same merge.</p>
+      <button class="close" id="guideClose">Got it</button>
+    </div>
+  </div>
+  <div id="wipe">
+    <div class="panel">
+      <h2>Reset all progress</h2>
+      <p>Type <b>Delete</b> to confirm. The nest will start over.</p>
+      <input id="wipeInput" type="text" autocomplete="off" placeholder="Delete" />
+      <div class="row" style="display:flex;gap:8px;margin-top:10px">
+        <button id="wipeGo" style="flex:1;background:linear-gradient(#e37a3a,#b84a1c);color:#fff" disabled>Confirm</button>
+        <button id="wipeNo" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Cancel</button>
+      </div>
+    </div>
+  </div>
   <div id="chest">
     <div class="panel">
       <h2 id="chestTitle">Level up</h2>
@@ -606,6 +648,12 @@
       if (app) app.setAttribute("data-theme", state.theme === "hatchery" ? "" : state.theme);
     }
     let perchArmed = -1;
+    function perchIncome() {
+      return (state.perch || []).reduce((s, p) => s + (p ? 8 + p.level * 12 : 0), 0);
+    }
+    function showGuide() {
+      document.getElementById("guide").classList.add("open");
+    }
     function perchPay() {
       let coins = 0;
       (state.perch || []).forEach(p => {
@@ -727,6 +775,7 @@
       perch: [null, null, null],
       theme: "hatchery",
       perchAt: 0,
+      seenGuide: false,
     });
 
     let state = defaultState();
@@ -1118,6 +1167,7 @@
       generateTrail();
       toast("Ash Trail · burn " + ASH_GOAL + " ash to finish");
       save(); render();
+      if (!state.seenGuide) showGuide();
     }
 
     function highestOwned() {
@@ -1317,6 +1367,12 @@
         return;
       }
       if (regenEl) regenEl.textContent = "· " + Math.ceil(left / 1000) + "s";
+      const pl = document.getElementById("perchLabel");
+      const inc = perchIncome();
+      if (pl && inc) {
+        const wait = Math.max(0, (state.perchAt || Date.now()) - Date.now());
+        pl.textContent = "Perch · " + Math.ceil(wait / 1000) + "s · +" + inc + "●";
+      }
       if (state.mode === "home" && (state.perch || []).some(Boolean)) {
         if (!state.perchAt) state.perchAt = Date.now() + PERCH_MS;
         if (Date.now() >= state.perchAt) {
@@ -1353,11 +1409,19 @@
       const have = findLevel(q.want) >= 0;
       document.getElementById("questBox").innerHTML = `
         <div class="art">${dragonSvg(q.want, 30)}</div>
-        <p>${state.questDone ? "The nest settles. A new wish is forming…" : q.text} · gifts ${(state.gives || 0) % 5}/5</p>
+        <p id="wishText">${state.questDone ? "The nest settles. A new wish is forming…" : q.text} · gifts ${(state.gives || 0) % 5}/5</p>
         <button id="giveBtn" ${have && !state.questDone ? "" : "disabled"}>${state.questDone ? "…" : "Give"}</button>
       `;
       const btn = document.getElementById("giveBtn");
       if (btn) btn.onclick = fulfillQuest;
+      const wish = document.getElementById("wishText");
+      if (wish && !state.questDone) {
+        wish.style.cursor = "pointer";
+        wish.onclick = () => {
+          const pay = q.reward * bonus();
+          toast(CHAIN[q.want].name + " · " + q.reward + "● ×" + bonus() + " = " + pay + "●");
+        };
+      }
     }
 
     function render() {
@@ -1414,6 +1478,17 @@
           return `<div class="room ${open ? "open" : ""} ${now ? "now" : ""} ${state.theme === r.id ? "now" : ""}" data-room="${r.id}">${r.art}<br>${open ? r.name : "—"}</div>`;
         }).join("");
       }
+      const pl = document.getElementById("perchLabel");
+      if (pl) {
+        const inc = perchIncome();
+        if (!inc) pl.textContent = "Perch · park a dragon to rest";
+        else {
+          const left = Math.max(0, (state.perchAt || Date.now()) - Date.now());
+          pl.textContent = "Perch · " + Math.ceil(left / 1000) + "s · +" + inc + "●";
+        }
+      }
+      const gb = document.getElementById("guideBtn");
+      if (gb) gb.style.display = state.mode === "stage" ? "" : "none";
       applyTheme(state.theme || "hatchery");
       const pr = document.getElementById("perchRow");
       if (pr) {
@@ -1566,9 +1641,29 @@
       document.getElementById("book").classList.remove("open");
     });
     document.getElementById("resetAll").addEventListener("click", () => {
+      document.getElementById("wipe").classList.add("open");
+      const inp = document.getElementById("wipeInput");
+      inp.value = "";
+      document.getElementById("wipeGo").disabled = true;
+      inp.focus();
+    });
+    document.getElementById("wipeInput").addEventListener("input", (e) => {
+      document.getElementById("wipeGo").disabled = e.target.value.trim() !== "Delete";
+    });
+    document.getElementById("wipeGo").addEventListener("click", () => {
+      if (document.getElementById("wipeInput").value.trim() !== "Delete") return;
       localStorage.removeItem(SAVE);
       localStorage.removeItem("ember-nest-v2");
       location.reload();
+    });
+    document.getElementById("wipeNo").addEventListener("click", () => {
+      document.getElementById("wipe").classList.remove("open");
+    });
+    document.getElementById("guideBtn").addEventListener("click", showGuide);
+    document.getElementById("guideClose").addEventListener("click", () => {
+      state.seenGuide = true;
+      document.getElementById("guide").classList.remove("open");
+      save();
     });
     document.getElementById("book").addEventListener("click", (e) => {
       if (e.target.id === "book") document.getElementById("book").classList.remove("open");
