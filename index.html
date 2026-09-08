@@ -42,6 +42,36 @@
     #app[data-theme="vault"] { --ember:#e64a3a; --gold:#ffb088; --tile:#2c1b18; --tile-top:#422722; --tile-edge:#693a32; --cave:#0f0605; }
     body.themed { background: radial-gradient(ellipse at 50% 0%, #2a2018 0%, var(--cave) 55%); }
 
+    /* Spine-Rigged Animations */
+    @keyframes breathe {
+      0%, 100% { transform: scaleY(1) translateY(0); }
+      50% { transform: scaleY(1.03) translateY(-0.5px); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2.5px); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.15); opacity: 0.8; }
+    }
+    @keyframes flap-l {
+      0%, 100% { transform: rotate(5deg); }
+      50% { transform: rotate(-25deg); }
+    }
+    @keyframes flap-r {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(25deg); }
+    }
+    @keyframes flap-l-slow {
+      0%, 100% { transform: rotate(8deg); }
+      50% { transform: rotate(-15deg); }
+    }
+    @keyframes flap-r-slow {
+      0%, 100% { transform: rotate(-8deg); }
+      50% { transform: rotate(15deg); }
+    }
+
     /* Header & Stat Badges */
     header { display: flex; align-items: flex-start; justify-content: space-between; padding: 2px 2px 8px; }
     .title-container { display: flex; flex-direction: column; }
@@ -194,7 +224,7 @@
       transform: scale(1.05);
     }
 
-    /* 2.5D Cel-Shaded Grid Board (Enlarged) */
+    /* 2.5D Cel-Shaded Grid Board */
     #board {
       flex: 1;
       display: grid;
@@ -270,7 +300,7 @@
       70% { transform: translateY(-8px) scale(1.08); }
       100% { transform: translateY(-5px) scale(1); }
     }
-    .item svg { width: 44px; height: 44px; display: block; }
+    .item svg { width: 44px; height: 44px; display: block; overflow: visible; }
     .item .lvl {
       font-size: .56rem; font-weight: 900; color: #fff;
       margin-top: 1px; text-shadow: 0 2px 2px #000, 0 0 4px #000;
@@ -294,7 +324,7 @@
       transform: translate(-50%, -60%) rotateX(12deg) scale(1.15);
       filter: drop-shadow(0 12px 18px #000a);
     }
-    .ghost svg { width: 48px; height: 48px; }
+    .ghost svg { width: 48px; height: 48px; overflow: visible; }
 
     /* Controls */
     footer { display: flex; gap: 8px; margin-top: 7px; }
@@ -394,7 +424,6 @@
       <div class="mountain" id="mountain"></div>
       <button id="tributeBtn" class="tribute-btn">Mountain Tribute: 25k 🪙 (+1 Bonus)</button>
       
-      <!-- Perch Dragon Bank UI -->
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:7px;">
         <p class="nest-title" id="perchLabel" style="margin:0; flex:1;">Perch: park a dragon</p>
         <button id="collectPerchBtn" style="display:none; padding:4px 12px; background:linear-gradient(180deg, #ffcf40, #ffaa00); color:#1a100c; border:2px solid #fff; border-radius:12px; font-weight:900; font-size:0.75rem; box-shadow:0 3px 0 #996600, 0 4px 6px #0006; cursor:pointer;">
@@ -416,7 +445,6 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- Sleepy Dragon Clarity Modal -->
   <div id="sleepyGuide">
     <div class="panel">
       <h2>The Sleepy Dragon</h2>
@@ -517,7 +545,7 @@
   </div>
 
   <script>
-    const COLS = 6, ROWS = 6, MAX_ENERGY = 5, SAVE = "ember-nest-v8";
+    const COLS = 6, ROWS = 6, MAX_ENERGY = 5, SAVE = "ember-nest-v9";
     const REGEN_MS = 8000;
     const PERCH_MS = 20000;
     const OPEN_START = COLS * 5;
@@ -760,112 +788,151 @@
       }
     }
 
+    // NEW: Spine-Rigged SVG Generation
     function oneSprite(level, hi, lo) {
       if (level === 0) {
         return `
-          <ellipse cx="16" cy="18" rx="10" ry="13" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
-          <ellipse cx="16" cy="19" rx="8" ry="10" fill="${lo}" opacity="0.4"/>
-          <path d="M14 11 L17 15 L15 19 L19 23" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
-          <ellipse cx="12" cy="13" rx="2.5" ry="4" fill="#ffffff77" transform="rotate(-18 12 13)"/>
-          <circle cx="20" cy="22" r="1" fill="#ffe08a"/>
+          <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 24px;">
+            <ellipse cx="16" cy="18" rx="10" ry="13" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+            <ellipse cx="16" cy="19" rx="8" ry="10" fill="${lo}" opacity="0.4"/>
+            <path d="M14 11 L17 15 L15 19 L19 23" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+            <ellipse cx="12" cy="13" rx="2.5" ry="4" fill="#ffffff77" transform="rotate(-18 12 13)"/>
+            <circle cx="20" cy="22" r="1" fill="#ffe08a"/>
+          </g>
         `;
       }
       if (level === 1) {
         return `
-          <path d="M7 16 C3 11 8 8 12 13 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
-          <path d="M25 16 C29 11 24 8 20 13 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
-          <path d="M16 23 C22 28 20 30 16 30 C12 30 10 28 16 23" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
-          <ellipse cx="16" cy="22" rx="7" ry="6" fill="${hi}" stroke="#1a0f08" stroke-width="1.4"/>
-          <ellipse cx="16" cy="23" rx="4" ry="3.5" fill="#fce4a6"/>
-          <circle cx="16" cy="13" r="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
-          <path d="M11 7 L8 2 L13 5 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-          <path d="M21 7 L24 2 L19 5 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-          <ellipse cx="12.5" cy="13" rx="2.2" ry="2.8" fill="#1a0f08"/>
-          <ellipse cx="19.5" cy="13" rx="2.2" ry="2.8" fill="#1a0f08"/>
-          <circle cx="13.2" cy="12.2" r="0.9" fill="#fff"/>
-          <circle cx="20.2" cy="12.2" r="0.9" fill="#fff"/>
-          <ellipse cx="16" cy="16" rx="2.5" ry="1.4" fill="#fce4a6"/>
-          <circle cx="9.5" cy="15.5" r="1.1" fill="#ff704088"/>
-          <circle cx="22.5" cy="15.5" r="1.1" fill="#ff704088"/>
+          <g style="animation: flap-l 0.2s infinite alternate ease-in-out; transform-origin: 12px 13px;">
+            <path d="M7 16 C3 11 8 8 12 13 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+          </g>
+          <g style="animation: flap-r 0.2s infinite alternate ease-in-out; transform-origin: 20px 13px;">
+            <path d="M25 16 C29 11 24 8 20 13 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+          </g>
+          <g style="animation: breathe 1.2s infinite ease-in-out; transform-origin: 16px 24px;">
+            <path d="M16 23 C22 28 20 30 16 30 C12 30 10 28 16 23" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+            <ellipse cx="16" cy="22" rx="7" ry="6" fill="${hi}" stroke="#1a0f08" stroke-width="1.4"/>
+            <ellipse cx="16" cy="23" rx="4" ry="3.5" fill="#fce4a6"/>
+            <circle cx="16" cy="13" r="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
+            <path d="M11 7 L8 2 L13 5 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+            <path d="M21 7 L24 2 L19 5 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+            <ellipse cx="12.5" cy="13" rx="2.2" ry="2.8" fill="#1a0f08"/>
+            <ellipse cx="19.5" cy="13" rx="2.2" ry="2.8" fill="#1a0f08"/>
+            <circle cx="13.2" cy="12.2" r="0.9" fill="#fff"/>
+            <circle cx="20.2" cy="12.2" r="0.9" fill="#fff"/>
+            <ellipse cx="16" cy="16" rx="2.5" ry="1.4" fill="#fce4a6"/>
+            <circle cx="9.5" cy="15.5" r="1.1" fill="#ff704088"/>
+            <circle cx="22.5" cy="15.5" r="1.1" fill="#ff704088"/>
+          </g>
         `;
       }
       if (level === 2) {
         return `
-          <path d="M5 19 C1 9 10 8 13 15 L8 21 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
-          <path d="M27 19 C31 9 22 8 19 15 L24 21 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
-          <path d="M16 23 Q25 28 26 23 Q22 21 16 22" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
-          <path d="M26 23 L29 20 L27 25 Z" fill="#ffcc33"/>
-          <ellipse cx="16" cy="21" rx="6.5" ry="6.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.5"/>
-          <path d="M13 20 Q16 24 19 20 Q16 27 13 20" fill="#fce4a6"/>
-          <circle cx="16" cy="12" r="7.2" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
-          <path d="M10 7 L7 1 L13 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-          <path d="M22 7 L25 1 L19 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-          <path d="M16 5 L16 1 L17 5 Z" fill="#ffb033" stroke="#1a0f08" stroke-width="1"/>
-          <ellipse cx="13" cy="12" rx="2" ry="2.6" fill="#1a0f08"/>
-          <ellipse cx="19" cy="12" rx="2" ry="2.6" fill="#1a0f08"/>
-          <circle cx="13.7" cy="11.2" r="0.8" fill="#fff"/>
-          <circle cx="19.7" cy="11.2" r="0.8" fill="#fff"/>
-          <circle cx="12.5" cy="13.2" r="0.5" fill="#ffaa00"/>
-          <circle cx="18.5" cy="13.2" r="0.5" fill="#ffaa00"/>
+          <g style="animation: flap-l 0.3s infinite alternate ease-in-out; transform-origin: 13px 15px;">
+            <path d="M5 19 C1 9 10 8 13 15 L8 21 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+          </g>
+          <g style="animation: flap-r 0.3s infinite alternate ease-in-out; transform-origin: 19px 15px;">
+            <path d="M27 19 C31 9 22 8 19 15 L24 21 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+          </g>
+          <g style="animation: breathe 1.5s infinite ease-in-out; transform-origin: 16px 23px;">
+            <path d="M16 23 Q25 28 26 23 Q22 21 16 22" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+            <path d="M26 23 L29 20 L27 25 Z" fill="#ffcc33"/>
+            <ellipse cx="16" cy="21" rx="6.5" ry="6.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.5"/>
+            <path d="M13 20 Q16 24 19 20 Q16 27 13 20" fill="#fce4a6"/>
+            <circle cx="16" cy="12" r="7.2" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
+            <path d="M10 7 L7 1 L13 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+            <path d="M22 7 L25 1 L19 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+            <path d="M16 5 L16 1 L17 5 Z" fill="#ffb033" stroke="#1a0f08" stroke-width="1"/>
+            <ellipse cx="13" cy="12" rx="2" ry="2.6" fill="#1a0f08"/>
+            <ellipse cx="19" cy="12" rx="2" ry="2.6" fill="#1a0f08"/>
+            <circle cx="13.7" cy="11.2" r="0.8" fill="#fff"/>
+            <circle cx="19.7" cy="11.2" r="0.8" fill="#fff"/>
+            <circle cx="12.5" cy="13.2" r="0.5" fill="#ffaa00"/>
+            <circle cx="18.5" cy="13.2" r="0.5" fill="#ffaa00"/>
+          </g>
         `;
       }
       if (level === 3) {
         return `
-          <path d="M3 21 C-2 8 11 7 14 16 L8 23 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.5"/>
-          <path d="M29 21 C34 8 21 7 18 16 L24 23 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.5"/>
-          <ellipse cx="16" cy="21" rx="7.5" ry="7" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
-          <path d="M13 18 L19 18 L18 21 L14 21 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="0.8"/>
-          <path d="M14 22 L18 22 L17 25 L15 25 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="0.8"/>
-          <circle cx="16" cy="11" r="7.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.7"/>
-          <path d="M9 7 C6 2 4 1 2 3 C5 6 9 7 9 7" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-          <path d="M23 7 C26 2 28 1 30 3 C27 6 23 7 23 7" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-          <path d="M11 9 L15 11 L11 14 Z" fill="#1a0f08"/>
-          <path d="M21 9 L17 11 L21 14 Z" fill="#1a0f08"/>
-          <circle cx="13.5" cy="11.2" r="0.9" fill="#ffdd44"/>
-          <circle cx="18.5" cy="11.2" r="0.9" fill="#ffdd44"/>
-          <circle cx="13.7" cy="10.8" r="0.4" fill="#fff"/>
-          <circle cx="18.7" cy="10.8" r="0.4" fill="#fff"/>
+          <g style="animation: flap-l 0.35s infinite alternate ease-in-out; transform-origin: 14px 16px;">
+            <path d="M3 21 C-2 8 11 7 14 16 L8 23 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.5"/>
+          </g>
+          <g style="animation: flap-r 0.35s infinite alternate ease-in-out; transform-origin: 18px 16px;">
+            <path d="M29 21 C34 8 21 7 18 16 L24 23 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.5"/>
+          </g>
+          <g style="animation: breathe 1.6s infinite ease-in-out; transform-origin: 16px 22px;">
+            <ellipse cx="16" cy="21" rx="7.5" ry="7" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
+            <path d="M13 18 L19 18 L18 21 L14 21 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="0.8"/>
+            <path d="M14 22 L18 22 L17 25 L15 25 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="0.8"/>
+            <circle cx="16" cy="11" r="7.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.7"/>
+            <path d="M9 7 C6 2 4 1 2 3 C5 6 9 7 9 7" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+            <path d="M23 7 C26 2 28 1 30 3 C27 6 23 7 23 7" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+            <path d="M11 9 L15 11 L11 14 Z" fill="#1a0f08"/>
+            <path d="M21 9 L17 11 L21 14 Z" fill="#1a0f08"/>
+            <circle cx="13.5" cy="11.2" r="0.9" fill="#ffdd44"/>
+            <circle cx="18.5" cy="11.2" r="0.9" fill="#ffdd44"/>
+            <circle cx="13.7" cy="10.8" r="0.4" fill="#fff"/>
+            <circle cx="18.7" cy="10.8" r="0.4" fill="#fff"/>
+          </g>
         `;
       }
       if (level === 4) {
         return `
-          <path d="M2 22 C-3 6 12 4 14 15 L7 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
-          <path d="M30 22 C35 6 20 4 18 15 L25 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
-          <circle cx="1" cy="6" r="1.5" fill="#ffe08a"/>
-          <circle cx="31" cy="6" r="1.5" fill="#ffe08a"/>
-          <ellipse cx="16" cy="21" rx="8" ry="7.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
-          <polygon points="16,17 19,21 16,25 13,21" fill="#fff" stroke="#d93d04" stroke-width="1.2"/>
-          <path d="M8 7 L3 0 L10 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
-          <path d="M24 7 L29 0 L22 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
-          <path d="M14 4 L16 -1 L18 4 Z" fill="#ff9900" stroke="#1a0f08" stroke-width="1.3"/>
-          <circle cx="16" cy="11" r="7.8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
-          <ellipse cx="12.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
-          <ellipse cx="19.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
-          <circle cx="12.5" cy="11" r="1.2" fill="#00ffe1"/>
-          <circle cx="19.5" cy="11" r="1.2" fill="#00ffe1"/>
-          <circle cx="13" cy="10.4" r="0.5" fill="#fff"/>
-          <circle cx="20" cy="10.4" r="0.5" fill="#fff"/>
+          <g style="animation: flap-l-slow 1.2s infinite alternate ease-in-out; transform-origin: 14px 15px;">
+            <path d="M2 22 C-3 6 12 4 14 15 L7 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
+            <circle cx="1" cy="6" r="1.5" fill="#ffe08a"/>
+          </g>
+          <g style="animation: flap-r-slow 1.2s infinite alternate ease-in-out; transform-origin: 18px 15px;">
+            <path d="M30 22 C35 6 20 4 18 15 L25 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
+            <circle cx="31" cy="6" r="1.5" fill="#ffe08a"/>
+          </g>
+          <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 21px;">
+            <ellipse cx="16" cy="21" rx="8" ry="7.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+            <g style="animation: pulse 1.5s infinite alternate ease-in-out; transform-origin: 16px 21px;">
+              <polygon points="16,17 19,21 16,25 13,21" fill="#fff" stroke="#d93d04" stroke-width="1.2"/>
+            </g>
+            <path d="M8 7 L3 0 L10 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
+            <path d="M24 7 L29 0 L22 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
+            <path d="M14 4 L16 -1 L18 4 Z" fill="#ff9900" stroke="#1a0f08" stroke-width="1.3"/>
+            <circle cx="16" cy="11" r="7.8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+            <ellipse cx="12.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
+            <ellipse cx="19.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
+            <circle cx="12.5" cy="11" r="1.2" fill="#00ffe1"/>
+            <circle cx="19.5" cy="11" r="1.2" fill="#00ffe1"/>
+            <circle cx="13" cy="10.4" r="0.5" fill="#fff"/>
+            <circle cx="20" cy="10.4" r="0.5" fill="#fff"/>
+          </g>
         `;
       }
       return `
-        <circle cx="16" cy="16" r="15" fill="none" stroke="#ffe08a44" stroke-width="2" stroke-dasharray="3 3"/>
-        <path d="M1 23 C-5 4 13 2 15 15 L6 25 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.7"/>
-        <path d="M31 23 C37 4 19 2 17 15 L26 25 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.7"/>
-        <ellipse cx="16" cy="21" rx="8.5" ry="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
-        <path d="M12 17 Q16 21 20 17 Q16 28 12 17" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-        <path d="M6 8 L0 -1 L9 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.4"/>
-        <path d="M26 8 L32 -1 L23 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.4"/>
-        <path d="M12 4 L11 -3 L15 2 Z" fill="#ffb033" stroke="#1a0f08" stroke-width="1.2"/>
-        <path d="M20 4 L21 -3 L17 2 Z" fill="#ffb033" stroke="#1a0f08" stroke-width="1.2"/>
-        <circle cx="16" cy="11" r="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
-        <ellipse cx="12.2" cy="11" rx="2.5" ry="2.7" fill="#1a0f08"/>
-        <ellipse cx="19.8" cy="11" rx="2.5" ry="2.7" fill="#1a0f08"/>
-        <circle cx="12.2" cy="11" r="1.4" fill="#ff4d00"/>
-        <circle cx="19.8" cy="11" r="1.4" fill="#ff4d00"/>
-        <circle cx="12.2" cy="11" r="0.7" fill="#ffea00"/>
-        <circle cx="19.8" cy="11" r="0.7" fill="#ffea00"/>
-        <circle cx="12.8" cy="10.2" r="0.5" fill="#fff"/>
-        <circle cx="20.4" cy="10.2" r="0.5" fill="#fff"/>
+        <g style="animation: float 4s infinite ease-in-out; transform-origin: 16px 16px;">
+          <g style="animation: pulse 3s infinite ease-in-out; transform-origin: 16px 16px;">
+            <circle cx="16" cy="16" r="15" fill="none" stroke="#ffe08a44" stroke-width="2" stroke-dasharray="3 3"/>
+          </g>
+          <g style="animation: flap-l-slow 2s infinite alternate ease-in-out; transform-origin: 15px 15px;">
+            <path d="M1 23 C-5 4 13 2 15 15 L6 25 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.7"/>
+          </g>
+          <g style="animation: flap-r-slow 2s infinite alternate ease-in-out; transform-origin: 17px 15px;">
+            <path d="M31 23 C37 4 19 2 17 15 L26 25 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.7"/>
+          </g>
+          <g style="animation: breathe 2.5s infinite ease-in-out; transform-origin: 16px 21px;">
+            <ellipse cx="16" cy="21" rx="8.5" ry="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+            <path d="M12 17 Q16 21 20 17 Q16 28 12 17" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+            <path d="M6 8 L0 -1 L9 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.4"/>
+            <path d="M26 8 L32 -1 L23 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.4"/>
+            <path d="M12 4 L11 -3 L15 2 Z" fill="#ffb033" stroke="#1a0f08" stroke-width="1.2"/>
+            <path d="M20 4 L21 -3 L17 2 Z" fill="#ffb033" stroke="#1a0f08" stroke-width="1.2"/>
+            <circle cx="16" cy="11" r="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+            <ellipse cx="12.2" cy="11" rx="2.5" ry="2.7" fill="#1a0f08"/>
+            <ellipse cx="19.8" cy="11" rx="2.5" ry="2.7" fill="#1a0f08"/>
+            <circle cx="12.2" cy="11" r="1.4" fill="#ff4d00"/>
+            <circle cx="19.8" cy="11" r="1.4" fill="#ff4d00"/>
+            <circle cx="12.2" cy="11" r="0.7" fill="#ffea00"/>
+            <circle cx="19.8" cy="11" r="0.7" fill="#ffea00"/>
+            <circle cx="12.8" cy="10.2" r="0.5" fill="#fff"/>
+            <circle cx="20.4" cy="10.2" r="0.5" fill="#fff"/>
+          </g>
+        </g>
       `;
     }
 
