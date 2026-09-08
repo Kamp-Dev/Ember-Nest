@@ -274,15 +274,11 @@ function openFogFree(n) {
 
 function oneSprite(level, hi, lo) {
   if (level === 0) {
-    // Chibi Egg: rounder shell, pulsing core glow, soft highlight
+    // Ceramic Lotus Egg using custom image asset
     return `
-      <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 20px;">
-        <ellipse cx="16" cy="18" rx="11" ry="14" fill="${hi}" stroke="#1a0f08" stroke-width="2"/>
-        <ellipse cx="16" cy="19" rx="8" ry="11" fill="${lo}" opacity="0.5"/>
-        <path d="M13 10 C15 13 14 16 18 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-        <ellipse cx="11" cy="12" rx="3" ry="5" fill="#ffffff88" transform="rotate(-20 11 12)"/>
-        <circle cx="21" cy="23" r="1.2" fill="#ffe08a" style="animation: pulse 1s infinite alternate;"/>
-      </g>
+      <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: breathe 2s infinite ease-in-out;">
+        <img src="egg-art.jpg" alt="Egg" style="width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
+      </div>
     `;
   }
   if (level === 1) {
