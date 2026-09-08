@@ -43,32 +43,51 @@
     body.themed { background: radial-gradient(ellipse at 50% 0%, #2a2018 0%, var(--cave) 55%); }
 
     /* Header & Stat Badges */
-    header { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 6px; }
-    h1 { margin: 0; font-size: 1.2rem; font-weight: 900; letter-spacing: .05em; color: var(--gold); text-shadow: 0 2px 4px #000a, 0 0 10px #ffaa0044; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; padding: 2px 2px 8px; }
+    .title-container { display: flex; flex-direction: column; }
+    h1 { margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: .05em; color: var(--gold); text-shadow: 0 2px 4px #000a, 0 0 10px #ffaa0044; line-height: 1; }
     h1 span { color: var(--ember); }
-    .stats { display: flex; gap: 6px; font-size: .78rem; font-weight: 800; }
+    #nameLine { font-size: .85rem; font-weight: 800; color: #deb781; margin-top: 4px; text-shadow: 0 1px 2px #000; cursor: pointer; }
+    
+    .stats { display: flex; gap: 6px; font-size: .78rem; font-weight: 800; flex-wrap: wrap; justify-content: flex-end; max-width: 60%; }
     .chip {
       background: linear-gradient(180deg, #2a1c14, #120a07);
       border: 1.5px solid var(--gold);
       border-radius: 12px;
       padding: 4px 9px;
       box-shadow: 0 3px 0 #000, inset 0 1px 0 #ffffff33;
+      white-space: nowrap;
     }
     .chip.btn { cursor: pointer; }
 
-    /* Quest Panel */
+    /* Quest Panel Carousel */
     .quest {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 6px;
       background: linear-gradient(180deg, #382419, #1a100a);
       border: 2px solid #5a3a24;
       border-bottom: 3px solid #140b07;
       border-radius: 16px;
-      padding: 7px 10px;
+      padding: 7px 8px;
       margin-bottom: 7px;
       box-shadow: 0 6px 12px #0008;
+      transition: background .3s, border-color .3s;
+      position: relative;
     }
-    .quest .art { font-size: 1.4rem; width: 38px; text-align: center; }
-    .quest p { margin: 0; font-size: .78rem; font-weight: 600; line-height: 1.25; flex: 1; text-shadow: 0 1px 2px #000; }
+    .quest.sleepy {
+      background: linear-gradient(180deg, #1b263b, #0d1321);
+      border-color: #415a77;
+      box-shadow: 0 6px 15px #415a7766;
+    }
+    .quest-arrow {
+      background: none; border: none; box-shadow: none; color: var(--gold);
+      font-size: 1.4rem; cursor: pointer; padding: 0 4px; opacity: 0.5; font-weight: 900;
+    }
+    .quest-arrow:hover { opacity: 1; }
+    .quest-dots { display: flex; gap: 4px; justify-content: flex-start; margin-top: 6px; }
+    .quest-dots span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #deb78155; }
+    .quest-dots span.active { background: var(--gold); }
+    .quest .art { font-size: 1.4rem; width: 44px; text-align: center; position: relative; }
+    .quest p { margin: 0; font-size: .8rem; font-weight: 600; line-height: 1.25; flex: 1; text-shadow: 0 1px 2px #000; }
     .quest button {
       flex: 0 0 auto; width: auto; padding: 8px 12px;
       background: linear-gradient(180deg, #ff8a3d, #cf4310);
@@ -77,7 +96,24 @@
       box-shadow: 0 4px 0 #732205, 0 4px 8px #0006;
       cursor: pointer;
     }
+    .quest.sleepy button#giveBtn {
+      background: linear-gradient(180deg, #778da9, #415a77);
+      border-color: #e0e1dd;
+      box-shadow: 0 4px 0 #1b263b, 0 4px 8px #0006;
+    }
     .quest button:disabled { opacity: .45; filter: grayscale(0.8); cursor: not-allowed; }
+
+    @keyframes zzz {
+      0% { opacity: 0; transform: translate(0, 0) scale(0.8); }
+      50% { opacity: 1; transform: translate(5px, -8px) scale(1.1); }
+      100% { opacity: 0; transform: translate(10px, -16px) scale(1.3); }
+    }
+    .zzz {
+      animation: zzz 2.5s infinite ease-in-out;
+      font-size: 1.1rem; color: #a9d6e5;
+      position: absolute; top: -14px; right: -8px;
+      font-weight: 900; text-shadow: 0 2px 4px #000;
+    }
 
     .home-only.hidden, .stage-only:not(.show) { display: none !important; }
     #app.stage .home-only { display: none !important; }
@@ -127,33 +163,52 @@
       box-shadow: 0 3px 0 #180d07, 0 0 8px #ffcf4044;
     }
     .decor .ico { font-size: 1.15rem; }
+
+    /* Endless Tribute Button */
+    .tribute-btn {
+      width: 100%; margin-top: 8px; padding: 8px;
+      background: linear-gradient(180deg, #2e1e16, #120b08);
+      color: var(--gold); border: 1.5px dashed #734b22;
+      border-radius: 12px; font-weight: 800; font-size: 0.75rem;
+      cursor: pointer; box-shadow: 0 4px 0 #0a0503;
+      transition: all 0.1s;
+    }
+    .tribute-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0a0503; }
+
     .perch-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
     .perch {
-      min-height: 54px; border-radius: 12px;
+      min-height: 58px; border-radius: 12px;
       border: 1.5px dashed #6b4a32;
       background: linear-gradient(180deg, #241811, #120b08);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       font-size: .62rem; font-weight: 800; color: #deb781; cursor: pointer;
       box-shadow: 0 4px 0 #0a0503;
+      transition: transform .12s, border-color .12s;
     }
     .perch.on { border-style: solid; border-color: var(--gold); box-shadow: 0 4px 0 #0a0503, 0 0 10px #ffcf4033; }
     .perch.armed { outline: 3px solid var(--ember); }
     .perch.lock { opacity: .45; cursor: default; }
+    .perch.valid {
+      border-color: var(--cyan-glow); border-style: solid;
+      box-shadow: 0 4px 0 #082d2c, 0 0 16px var(--cyan-glow);
+      transform: scale(1.05);
+    }
 
-    /* 2.5D Cel-Shaded Grid Board */
+    /* 2.5D Cel-Shaded Grid Board (Enlarged) */
     #board {
       flex: 1;
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      grid-template-rows: repeat(7, 1fr);
-      gap: 6px 5px;
-      min-height: 290px;
-      max-height: 380px;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-rows: repeat(6, minmax(0, 1fr)); 
+      gap: 7px 6px;
+      min-height: 310px;
+      max-height: 440px;
       margin: auto 0;
       padding: 4px 4px 8px;
       perspective: 900px;
     }
     .cell {
+      min-height: 52px;
       background: linear-gradient(180deg, var(--tile-top) 0%, var(--tile) 55%, var(--tile-shadow) 100%);
       border: 2px solid var(--tile-edge);
       border-top-color: color-mix(in srgb, var(--tile-edge) 70%, #fff);
@@ -162,11 +217,12 @@
       position: relative;
       display: flex; align-items: center; justify-content: center;
       box-shadow:
-        0 4px 0 #0f0805,
-        0 8px 12px #0006;
+        0 5px 0 #0f0805,
+        0 8px 14px #0006;
       transform: rotateX(6deg);
       transform-style: preserve-3d;
       transition: transform .12s ease, border-color .12s ease;
+      box-sizing: border-box;
     }
     .cell::before {
       content: ""; position: absolute; inset: 2px;
@@ -204,38 +260,41 @@
       width: 96%; height: 96%;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: grab; position: relative; touch-action: none;
-      transform: translateY(-4px) translateZ(8px);
-      filter: drop-shadow(0 4px 3px #0009);
+      transform: translateY(-5px) translateZ(8px);
+      filter: drop-shadow(0 5px 4px #0009);
+      background: transparent; border: 0;
     }
     .item.pop { animation: pop .22s ease; }
     @keyframes pop {
       0% { transform: translateY(0) scale(.82); }
-      70% { transform: translateY(-6px) scale(1.08); }
-      100% { transform: translateY(-4px) scale(1); }
+      70% { transform: translateY(-8px) scale(1.08); }
+      100% { transform: translateY(-5px) scale(1); }
     }
-    .item svg { width: 34px; height: 34px; display: block; }
+    .item svg { width: 44px; height: 44px; display: block; }
     .item .lvl {
-      font-size: .52rem; font-weight: 800; color: #fff;
+      font-size: .56rem; font-weight: 900; color: #fff;
       margin-top: 1px; text-shadow: 0 2px 2px #000, 0 0 4px #000;
       letter-spacing: .02em;
     }
     .item .qty {
-      position: absolute; top: -3px; right: -3px;
+      position: absolute; top: -5px; right: -5px;
       background: linear-gradient(180deg, #ff8c3b, #d93d04);
       border: 1.5px solid #fff;
-      color: #fff; font-size: .62rem; font-weight: 900;
-      min-width: 17px; height: 17px; border-radius: 6px;
+      color: #fff; font-size: .65rem; font-weight: 900;
+      min-width: 19px; height: 19px; border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 4px #0008;
+      box-shadow: 0 3px 6px #0008;
     }
+    
     .ghost {
       position: fixed; pointer-events: none; z-index: 20;
-      width: 52px; height: 52px; border-radius: 12px;
+      width: 58px; height: 58px;
       display: flex; align-items: center; justify-content: center;
-      background: #3a2818ee; box-shadow: 0 14px 28px #000a;
-      transform: translate(-50%, -60%) rotateX(12deg);
+      background: transparent;
+      transform: translate(-50%, -60%) rotateX(12deg) scale(1.15);
+      filter: drop-shadow(0 12px 18px #000a);
     }
-    .ghost svg { width: 36px; height: 36px; }
+    .ghost svg { width: 48px; height: 48px; }
 
     /* Controls */
     footer { display: flex; gap: 8px; margin-top: 7px; }
@@ -254,7 +313,9 @@
       color: var(--gold); border-color: #63432f;
     }
     #gather:disabled { opacity: .45; cursor: not-allowed; }
-    #guideBtn { flex: 0 0 42px; }
+    
+    #guideBtn { display: none; flex: 0 0 42px; }
+    #app.stage #guideBtn { display: block; }
 
     .toast {
       position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%);
@@ -268,12 +329,12 @@
     .help { font-size: .68rem; color: #c9a36acc; text-align: center; margin: 3px 0 0; }
 
     /* Modals & Dialogs */
-    #book, #trailFail, #trailWin, #chest, #guide, #wipe, #overflow, #nameBox {
+    #book, #trailFail, #trailWin, #chest, #guide, #wipe, #overflow, #nameBox, #sleepyGuide {
       display: none; position: fixed; inset: 0;
       background: #0c0806dd; z-index: 40;
       align-items: center; justify-content: center; padding: 16px;
     }
-    #book.open, #trailFail.open, #trailWin.open, #chest.open, #guide.open, #wipe.open, #overflow.open, #nameBox.open {
+    #book.open, #trailFail.open, #trailWin.open, #chest.open, #guide.open, #wipe.open, #overflow.open, #nameBox.open, #sleepyGuide.open {
       display: flex;
     }
     .panel {
@@ -313,7 +374,10 @@
 <body>
   <div id="app">
     <header>
-      <h1 id="title">Ember <span>Nest</span></h1>
+      <div class="title-container">
+        <h1 id="title">Ember <span>Nest</span></h1>
+        <div id="nameLine">Keeper</div>
+      </div>
       <div class="stats">
         <div class="chip">🪙 <span id="coins">0</span></div>
         <div class="chip">⚡ <span id="energy">5</span>/<span id="energyMax">5</span> <span id="regen" style="opacity:.7"></span></div>
@@ -324,26 +388,44 @@
     </header>
     <div class="quest" id="questBox"></div>
     <div class="nest-wrap home-only">
-      <p class="nest-title btn" id="nameLine" style="cursor:pointer">Keeper • tap to name</p>
       <p class="nest-title">The Nest • bonus x<span id="bonus">1</span></p>
       <div class="nest" id="nest"></div>
       <p class="nest-title" style="margin-top:7px">The Mountain • <span id="roomCount">1</span>/5</p>
       <div class="mountain" id="mountain"></div>
-      <p class="nest-title" id="hearthGoal" style="margin-top:7px">Goal: Hatch a Hearth</p>
-      <p class="nest-title" id="perchLabel" style="margin-top:7px">Perch: park a dragon to rest</p>
+      <button id="tributeBtn" class="tribute-btn">Mountain Tribute: 25k 🪙 (+1 Bonus)</button>
+      
+      <!-- Perch Dragon Bank UI -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:7px;">
+        <p class="nest-title" id="perchLabel" style="margin:0; flex:1;">Perch: park a dragon</p>
+        <button id="collectPerchBtn" style="display:none; padding:4px 12px; background:linear-gradient(180deg, #ffcf40, #ffaa00); color:#1a100c; border:2px solid #fff; border-radius:12px; font-weight:900; font-size:0.75rem; box-shadow:0 3px 0 #996600, 0 4px 6px #0006; cursor:pointer;">
+          🐉 Collect <span id="perchBankAmt">0</span>
+        </button>
+      </div>
+
       <div class="perch-row" id="perchRow"></div>
     </div>
     <div id="board"></div>
     <p id="helpText" class="help"></p>
     <footer>
       <button id="gather">Gather egg 🥚</button>
-      <button id="buyEgg">Buy egg</button>
+      <button id="buyEgg" class="home-only">Buy egg</button>
       <button id="hint">Ash Trail</button>
       <button id="guideBtn" type="button">?</button>
     </footer>
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Sleepy Dragon Clarity Modal -->
+  <div id="sleepyGuide">
+    <div class="panel">
+      <h2>The Sleepy Dragon</h2>
+      <p>Once a day, the ancient Elder awakens and demands an offering.</p>
+      <p>Give it a <b>Young</b> dragon to receive a <b>Dream Hoard</b>: a massive bounty of coins, +10 overheal energy, and 5 Ash Trail gathers.</p>
+      <p>Maintain a <b>7-day streak</b> to permanently increase your Max Energy limit!</p>
+      <button class="close" id="sleepyGuideClose">Got it</button>
+    </div>
+  </div>
 
   <div id="guide">
     <div class="panel">
@@ -435,7 +517,7 @@
   </div>
 
   <script>
-    const COLS = 6, ROWS = 7, MAX_ENERGY = 5, SAVE = "ember-nest-v3";
+    const COLS = 6, ROWS = 6, MAX_ENERGY = 5, SAVE = "ember-nest-v8";
     const REGEN_MS = 8000;
     const PERCH_MS = 20000;
     const OPEN_START = COLS * 5;
@@ -624,35 +706,39 @@
 
     let perchArmed = -1;
     function perchIncome() {
-      return (state.perch || []).reduce((s, p) => s + (p ? 8 + p.level * 12 : 0), 0);
+      const curve = [5, 15, 30, 60, 120, 240];
+      return (state.perch || []).reduce((s, p) => s + (p ? curve[p.level] : 0), 0);
+    }
+
+    function tributeCost() {
+      return 25000 + ((state.tributes || 0) * 25000);
     }
 
     function showGuide() {
       document.getElementById("guide").classList.add("open");
     }
 
-    function perchPay() {
-      let coins = 0;
-      (state.perch || []).forEach(p => {
-        if (p) coins += 8 + p.level * 12;
-      });
-      if (coins) {
-        state.coins += coins;
-        toast("Perch yield: +" + coins + " 🪙");
-      }
-    }
-
     function seatPerch(slot, boardI) {
       if (!perchOpen(slot) || state.mode === "stage") return;
       const cells = board();
-      const it = cells[boardI];
-      if (!it) return;
-      if (state.perch[slot]) {
-        if (!spawn(state.perch[slot].level, state.perch[slot].count)) return;
+      const draggedItem = cells[boardI];
+      if (!draggedItem) return;
+      
+      const existingPerch = state.perch[slot];
+      
+      if (draggedItem.count > 1) {
+        if (existingPerch) {
+          toast("Perch must be empty to split stack.");
+          return;
+        } else {
+          state.perch[slot] = { level: draggedItem.level, count: 1 };
+          draggedItem.count -= 1;
+        }
+      } else {
+        state.perch[slot] = { level: draggedItem.level, count: 1 };
+        cells[boardI] = existingPerch ? { level: existingPerch.level, count: 1 } : null;
       }
-      state.perch[slot] = { level: it.level, count: 1 };
-      if (it.count > 1) it.count -= 1;
-      else cells[boardI] = null;
+
       perchArmed = -1;
       sfx("buy");
       save(); render();
@@ -790,7 +876,7 @@
       return [[10, 10, 0.55], [22, 10, 0.55], [10, 22, 0.55], [22, 22, 0.55]];
     }
 
-    function dragonSvg(level, size = 32, count = 1) {
+    function dragonSvg(level, size = 42, count = 1) {
       const pal = [
         ["#d99b66", "#8a4f28"],
         ["#ffb554", "#d45817"],
@@ -847,12 +933,17 @@
       level: 1,
       pouchBonus: 0,
       perch: [null, null, null],
+      perchBank: 0,
       theme: "hatchery",
       perchAt: 0,
       seenGuide: false,
       muted: false,
       playerName: "Keeper",
       nameChanges: 0,
+      sleepyDone: false,
+      sleepyStreak: 0,
+      questTab: 0,
+      tributes: 0
     });
 
     let state = defaultState();
@@ -863,11 +954,20 @@
         if (!raw) return;
         const s = JSON.parse(raw);
         state = { ...defaultState(), ...s };
-        if (!Array.isArray(state.cells) || state.cells.length !== COLS * ROWS) state.cells = defaultState().cells;
-        if (!Array.isArray(state.locked)) state.locked = defaultState().locked;
-        if (!Array.isArray(state.stageCells) || state.stageCells.length !== COLS * ROWS) {
-          state.stageCells = Array(COLS * ROWS).fill(null);
+        
+        if (Array.isArray(state.cells) && state.cells.length !== COLS * ROWS) {
+          state.cells = state.cells.length > COLS * ROWS ? state.cells.slice(0, COLS * ROWS) : defaultState().cells;
         }
+        if (Array.isArray(state.locked) && state.locked.length !== COLS * ROWS) {
+          state.locked = state.locked.length > COLS * ROWS ? state.locked.slice(0, COLS * ROWS) : defaultState().locked;
+        }
+        if (Array.isArray(state.stageCells) && state.stageCells.length !== COLS * ROWS) {
+          state.stageCells = state.stageCells.length > COLS * ROWS ? state.stageCells.slice(0, COLS * ROWS) : defaultState().stageCells;
+        }
+        if (Array.isArray(state.ash) && state.ash.length !== COLS * ROWS) {
+          state.ash = state.ash.length > COLS * ROWS ? state.ash.slice(0, COLS * ROWS) : defaultState().ash;
+        }
+        
         state.mode = "home";
         state.ash = Array(COLS * ROWS).fill(false);
         state.stageMerges = 0;
@@ -887,11 +987,11 @@
       toastEl.textContent = msg;
       toastEl.classList.add("show");
       clearTimeout(toastEl._t);
-      toastEl._t = setTimeout(() => toastEl.classList.remove("show"), 1700);
+      toastEl._t = setTimeout(() => toastEl.classList.remove("show"), 2500);
     }
 
     function bonus() {
-      return 1 + Object.keys(state.decor).reduce((s, id) => {
+      return 1 + (state.tributes || 0) + Object.keys(state.decor).reduce((s, id) => {
         const d = DECOR.find(x => x.id === id);
         return s + (d ? d.bonus : 0);
       }, 0);
@@ -1251,6 +1351,7 @@
       if (state.ashDayKey !== k) {
         state.ashDayKey = k;
         state.ashDayWins = 0;
+        state.sleepyDone = false;
       }
     }
 
@@ -1448,6 +1549,30 @@
       return list;
     }
 
+    function fulfillSleepy() {
+      if (state.sleepyDone) return;
+      if (!consumeOne(3)) { toast("Need a Young dragon on the board"); return; }
+      
+      state.sleepyDone = true;
+      state.sleepyStreak = (state.sleepyStreak || 0) + 1;
+      state.coins += 3000;
+      state.trailGathers = (state.trailGathers || 0) + 5;
+      const cap = state.maxEnergy || MAX_ENERGY;
+      state.energy += 10; 
+
+      let extra = "Dream Hoard! +3000 🪙 • +10 Energy • +5 Pouch";
+      if (state.sleepyStreak % 7 === 0) {
+        state.maxEnergy = cap + 1;
+        extra += " • Max Energy +1!";
+      }
+
+      sfx("win");
+      toast(extra);
+      
+      state.questTab = 0;
+      save(); render();
+    }
+
     function fulfillQuest() {
       if (state.questDone) return;
       const list = wishList();
@@ -1486,6 +1611,11 @@
       }, 900);
       save(); render();
     }
+    
+    window.toggleQuestTab = () => {
+      state.questTab = state.questTab === 0 ? 1 : 0;
+      render();
+    };
 
     function tickEnergy() {
       const regenEl = document.getElementById("regen");
@@ -1493,73 +1623,164 @@
       if (state.energy >= cap) {
         state.nextEnergyAt = Date.now() + REGEN_MS;
         if (regenEl) regenEl.textContent = "";
-        return;
+      } else {
+        if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
+        const left = state.nextEnergyAt - Date.now();
+        if (left <= 0) {
+          state.energy = Math.min(cap, state.energy + 1);
+          state.nextEnergyAt = Date.now() + REGEN_MS;
+          save();
+          render();
+        } else {
+          if (regenEl) regenEl.textContent = "⏱ " + Math.ceil(left / 1000) + "s";
+        }
       }
-      if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
-      const left = state.nextEnergyAt - Date.now();
-      if (left <= 0) {
-        state.energy = Math.min(cap, state.energy + 1);
-        state.nextEnergyAt = Date.now() + REGEN_MS;
-        save();
-        render();
-        return;
+      
+      // 8h Perch Bank processing
+      if (state.mode === "home" && (state.perch || []).some(Boolean)) {
+        if (!state.perchAt) state.perchAt = Date.now();
+        if (Date.now() >= state.perchAt + PERCH_MS) {
+          const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
+          if (ticks > 0) {
+            const inc = perchIncome() * ticks;
+            const maxBank = perchIncome() * 1440; // 8 hours of 20s ticks
+            state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
+            state.perchAt += ticks * PERCH_MS;
+            save();
+          }
+        }
       }
-      if (regenEl) regenEl.textContent = "⏱ " + Math.ceil(left / 1000) + "s";
+
+      const pAmt = document.getElementById("perchBankAmt");
+      const pBtn = document.getElementById("collectPerchBtn");
+      if (pAmt && pBtn) {
+        if ((state.perchBank || 0) > 0) {
+          pBtn.style.display = "block";
+          pAmt.textContent = state.perchBank;
+        } else {
+          pBtn.style.display = "none";
+        }
+      }
+
       const pl = document.getElementById("perchLabel");
       const inc = perchIncome();
-      if (pl && inc) {
-        const wait = Math.max(0, (state.perchAt || Date.now()) - Date.now());
-        pl.textContent = "Perch: " + Math.ceil(wait / 1000) + "s • +" + inc + " 🪙";
-      }
-      if (state.mode === "home" && (state.perch || []).some(Boolean)) {
-        if (!state.perchAt) state.perchAt = Date.now() + PERCH_MS;
-        if (Date.now() >= state.perchAt) {
-          perchPay();
-          state.perchAt = Date.now() + PERCH_MS;
-          save();
+      if (pl) {
+        if (!inc) {
+          pl.textContent = "Perch: park a dragon";
+        } else {
+          const wait = Math.max(0, state.perchAt + PERCH_MS - Date.now());
+          pl.textContent = "Perch: " + Math.ceil(wait / 1000) + "s • +" + inc;
         }
       }
     }
     setInterval(tickEnergy, 250);
 
+    document.getElementById("collectPerchBtn").addEventListener("click", () => {
+      if ((state.perchBank || 0) > 0) {
+        const amt = state.perchBank;
+        state.coins += amt;
+        state.perchBank = 0;
+        toast(`Collected ${amt} 🪙 from the Perch!`);
+        sfx("win");
+        save(); render();
+      }
+    });
+
+    document.getElementById("tributeBtn").addEventListener("click", () => {
+      const cost = tributeCost();
+      if (state.coins < cost) { toast(`Need ${cost} 🪙 for the Mountain Tribute`); return; }
+      state.coins -= cost;
+      state.tributes = (state.tributes || 0) + 1;
+      sfx("win");
+      toast(`Tribute accepted! Bonus multiplier increased.`);
+      save(); render();
+    });
+
     let drag = null, ghost = null;
 
     function itemHtml(item) {
       const spec = CHAIN[item.level];
-      return `<div class="item pop" style="background:${spec.color}33;border:1.5px solid ${spec.color}99;border-radius:10px;">
-        ${dragonSvg(item.level, 32, item.count)}
-        <div class="lvl">${spec.name}${item.count > 1 ? " • " + item.count : ""}</div>
+      return `<div class="item pop">
+        ${dragonSvg(item.level, 42, item.count)}
+        <div class="lvl" style="color:#fff; text-shadow:0 2px 2px #000, 0 0 4px #000;">${spec.name}${item.count > 1 ? " • " + item.count : ""}</div>
       </div>`;
     }
 
     function renderQuest() {
+      const box = document.getElementById("questBox");
+      
       if (state.mode === "stage") {
         const have = board().some(c => c && c.level >= STAGE_GOAL);
-        document.getElementById("questBox").innerHTML = `
-          <div class="art">${dragonSvg(STAGE_GOAL, 34)}</div>
+        box.className = "quest";
+        box.innerHTML = `
+          <div class="art">${dragonSvg(STAGE_GOAL, 42)}</div>
           <p>Burn <b>${ASH_GOAL} ash</b> • ${state.ashBurned || 0}/${ASH_GOAL} cleared<br>
           <span style="font-size:0.7rem; color:#deb781;">Live ash limits: ${ashCount()}/${ASH_FAIL}</span></p>
           <button id="giveBtn" disabled>${have ? "Done" : "Goal"}</button>
         `;
         return;
       }
-      const list = wishList();
-      const q = list[state.quest % list.length];
-      const have = findLevel(q.want) >= 0;
-      document.getElementById("questBox").innerHTML = `
-        <div class="art">${dragonSvg(q.want, 34)}</div>
-        <p id="wishText">${state.questDone ? "The nest settles. A new wish forms..." : q.text} • gifts ${(state.gives || 0) % 5}/5</p>
-        <button id="giveBtn" ${have && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
-      `;
-      const btn = document.getElementById("giveBtn");
-      if (btn) btn.onclick = fulfillQuest;
-      const wish = document.getElementById("wishText");
-      if (wish && !state.questDone) {
-        wish.style.cursor = "pointer";
-        wish.onclick = () => {
-          const pay = q.reward * bonus();
-          toast(CHAIN[q.want].name + " • " + q.reward + " × " + bonus() + " = " + pay + " 🪙");
-        };
+
+      const hasSleepy = !state.sleepyDone && state.level >= 3;
+      if (!hasSleepy) state.questTab = 0;
+
+      const leftArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❮</button>` : ``;
+      const rightArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❯</button>` : ``;
+      const dots = hasSleepy ? `<div class="quest-dots"><span class="${state.questTab===0?'active':''}"></span><span class="${state.questTab===1?'active':''}"></span></div>` : ``;
+
+      if (hasSleepy && state.questTab === 0) {
+        const haveSleepy = findLevel(3) >= 0; 
+        box.className = "quest sleepy";
+        box.innerHTML = `
+          ${leftArrow}
+          <div style="display:flex; align-items:center; gap:8px; flex:1;">
+            <div class="art">
+              ${dragonSvg(3, 40)}
+              <div class="zzz">Zzz</div>
+            </div>
+            <div style="flex:1;">
+              <p id="wishText" style="color:#a9d6e5;">Sleepy Dragon needs a <b>Young</b> dragon.<br><span style="font-size:0.7rem;">Streak: ${state.sleepyStreak || 0}/7</span></p>
+              ${dots}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <button id="giveBtn" ${haveSleepy ? "" : "disabled"}>Wake</button>
+              <button id="sleepyInfoBtn" style="padding:4px; font-size:0.7rem; background:#415a77; border-color:#e0e1dd; box-shadow:0 2px 0 #1b263b;">Info</button>
+            </div>
+          </div>
+          ${rightArrow}
+        `;
+        const btn = document.getElementById("giveBtn");
+        if (btn) btn.onclick = fulfillSleepy;
+        const sInfo = document.getElementById("sleepyInfoBtn");
+        if (sInfo) sInfo.onclick = () => document.getElementById("sleepyGuide").classList.add("open");
+        
+      } else {
+        box.className = "quest";
+        const list = wishList();
+        const q = list[state.quest % list.length];
+        const have = findLevel(q.want) >= 0;
+        box.innerHTML = `
+          ${leftArrow}
+          <div style="display:flex; align-items:center; gap:8px; flex:1;">
+            <div class="art">${dragonSvg(q.want, 40)}</div>
+            <div style="flex:1;">
+              <p id="wishText">${state.questDone ? "The nest settles..." : q.text}<br><span style="font-size:0.7rem;">Gifts: ${(state.gives || 0) % 5}/5</span></p>
+              ${dots}
+            </div>
+            <button id="giveBtn" ${have && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
+          </div>
+          ${rightArrow}
+        `;
+        const btn = document.getElementById("giveBtn");
+        if (btn) btn.onclick = fulfillQuest;
+        const wish = document.getElementById("wishText");
+        if (wish && !state.questDone) {
+          wish.style.cursor = "pointer";
+          wish.onclick = () => {
+            const pay = q.reward * bonus();
+            toast(CHAIN[q.want].name + " • " + q.reward + " × " + bonus() + " = " + pay + " 🪙");
+          };
+        }
       }
     }
 
@@ -1582,7 +1803,7 @@
       if (hg) hg.textContent = state.hearthDone
         ? "Goal: Hearth hatched • mountain warm"
         : "Goal: Hatch a Hearth";
-      tickEnergy();
+      
       const nl = document.getElementById("nameLine");
       if (nl) {
         const n = state.playerName || "Keeper";
@@ -1613,6 +1834,12 @@
         buy.style.opacity = state.mode === "stage" ? ".45" : "1";
       }
       renderQuest();
+      
+      const tb = document.getElementById("tributeBtn");
+      if (tb) {
+        tb.textContent = `Mountain Tribute: ${tributeCost()} 🪙 (+1 Bonus)`;
+      }
+
       nestEl.innerHTML = DECOR.map(d => {
         const owned = !!state.decor[d.id];
         return `<div class="decor ${owned ? "owned" : ""}" data-decor="${d.id}">
@@ -1632,17 +1859,7 @@
           return `<div class="room ${open ? "open" : ""} ${now ? "now" : ""} ${state.theme === r.id ? "now" : ""}" data-room="${r.id}">${r.art}<br>${open ? r.name : "🔒"}</div>`;
         }).join("");
       }
-      const pl = document.getElementById("perchLabel");
-      if (pl) {
-        const inc = perchIncome();
-        if (!inc) pl.textContent = "Perch: park a dragon to rest";
-        else {
-          const left = Math.max(0, (state.perchAt || Date.now()) - Date.now());
-          pl.textContent = "Perch: " + Math.ceil(left / 1000) + "s • +" + inc + " 🪙";
-        }
-      }
-      const gb = document.getElementById("guideBtn");
-      if (gb) gb.style.display = state.mode === "stage" ? "" : "none";
+      
       applyTheme(state.theme || "hatchery");
       const pr = document.getElementById("perchRow");
       if (pr) {
@@ -1672,6 +1889,8 @@
       if (state._flash && state._flash.length) {
         setTimeout(() => { state._flash = []; }, 280);
       }
+
+      tickEnergy(); // Force one initial UI sync for bank
     }
 
     function cellFromPoint(x, y) {
@@ -1712,7 +1931,7 @@
       drag = { from: i };
       ghost = document.createElement("div");
       ghost.className = "ghost";
-      ghost.innerHTML = dragonSvg(board()[i].level, 34, board()[i].count);
+      ghost.innerHTML = dragonSvg(board()[i].level, 42, board()[i].count);
       document.body.appendChild(ghost);
       ghost.style.left = e.clientX + "px";
       ghost.style.top = e.clientY + "px";
@@ -1723,30 +1942,74 @@
       if (!drag || !ghost) return;
       ghost.style.left = e.clientX + "px";
       ghost.style.top = e.clientY + "px";
+      
       document.querySelectorAll(".cell.valid").forEach(c => c.classList.remove("valid"));
-      const over = cellFromPoint(e.clientX, e.clientY);
-      if (over == null || isLocked(over) || isAsh(over)) return;
-      const a = board()[drag.from];
-      const b = board()[over];
-      if (over !== drag.from && a && ((b && a.level === b.level) || !b)) {
-        boardEl.children[over].classList.add("valid");
+      document.querySelectorAll(".perch.valid").forEach(c => c.classList.remove("valid"));
+      
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = el ? el.closest(".cell") : null;
+      const perch = el ? el.closest("[data-perch]") : null;
+
+      // Highlight drag-and-drop on Perch
+      if (perch && state.mode !== "stage") {
+        if (perchOpen(+perch.dataset.perch)) {
+          perch.classList.add("valid");
+        }
+      } else if (cell) {
+        const over = +cell.dataset.i;
+        if (over == null || isLocked(over) || isAsh(over)) return;
+        const a = board()[drag.from];
+        const b = board()[over];
+        if (over !== drag.from && a && ((b && a.level === b.level) || !b)) {
+          cell.classList.add("valid");
+        }
       }
     });
 
     function endDrag(e) {
       if (!drag) return;
-      const over = cellFromPoint(e.clientX, e.clientY);
       const from = drag.from;
       if (ghost) ghost.remove();
       ghost = null;
       document.querySelectorAll(".cell.valid").forEach(c => c.classList.remove("valid"));
+      document.querySelectorAll(".perch.valid").forEach(c => c.classList.remove("valid"));
+      
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const cellEl = el ? el.closest(".cell") : null;
+      const perchEl = el ? el.closest("[data-perch]") : null;
+
       const cells = board();
-      if (over != null && over !== from && cells[from] && !isLocked(over) && !isAsh(over)) {
-        if (cells[over] && cells[over].level === cells[from].level) {
-          mergeInto(from, over);
-        } else if (!cells[over]) {
-          cells[over] = cells[from];
-          cells[from] = null;
+
+      // Accept Drag and Drop directly onto the Perch
+      if (perchEl && state.mode !== "stage") {
+        const slot = +perchEl.dataset.perch;
+        if (perchOpen(slot) && cells[from]) {
+          const draggedItem = cells[from];
+          const existingPerch = state.perch[slot];
+          
+          if (draggedItem.count > 1) {
+            if (existingPerch) {
+               toast("Perch must be empty to split stack.");
+            } else {
+               state.perch[slot] = { level: draggedItem.level, count: 1 };
+               draggedItem.count -= 1;
+               sfx("buy");
+            }
+          } else {
+            state.perch[slot] = { level: draggedItem.level, count: 1 };
+            cells[from] = existingPerch ? { level: existingPerch.level, count: 1 } : null;
+            sfx("buy");
+          }
+        }
+      } else if (cellEl) {
+        const over = +cellEl.dataset.i;
+        if (over != null && over !== from && cells[from] && !isLocked(over) && !isAsh(over)) {
+          if (cells[over] && cells[over].level === cells[from].level) {
+            mergeInto(from, over);
+          } else if (!cells[over]) {
+            cells[over] = cells[from];
+            cells[from] = null;
+          }
         }
       }
       drag = null;
@@ -1872,7 +2135,7 @@
     document.getElementById("wipeGo").addEventListener("click", () => {
       if (document.getElementById("wipeInput").value.trim() !== "Delete") return;
       localStorage.removeItem(SAVE);
-      localStorage.removeItem("ember-nest-v2");
+      localStorage.removeItem("ember-nest-v8");
       location.reload();
     });
 
@@ -1903,6 +2166,10 @@
       state.seenGuide = true;
       document.getElementById("guide").classList.remove("open");
       save();
+    });
+    
+    document.getElementById("sleepyGuideClose").addEventListener("click", () => {
+      document.getElementById("sleepyGuide").classList.remove("open");
     });
 
     document.getElementById("book").addEventListener("click", (e) => {
