@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Ember Nest — Merge & Decorate</title>
+  <style>
+    :root {
+      --ink: #2a1c14;
+      --ember: #e37a3a;
+      --gold: #e8c37a;
+      --cream: #f4e6c8;
+      --cave: #1a120e;
+      --tile: #3a2a20;
+      --tile-edge: #5a4030;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; height: 100%;
+      background:
+        radial-gradient(ellipse at 50% -10%, #5a3824 0%, transparent 42%),
+        radial-gradient(ellipse at 50% 100%, #0008 0%, transparent 50%),
+        var(--cave);
+      color: var(--cream);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 8px 10px 10px;
+    }
+    #app[data-theme="alcove"] { --ember:#6a9a4a; --gold:#c8e07a; --tile:#2a3a22; --tile-edge:#4a6a38; --cave:#12180e; }
+    #app[data-theme="walk"] { --ember:#e8a030; --gold:#ffe08a; --tile:#4a3010; --tile-edge:#8a5a18; --cave:#1a1208; }
+    #app[data-theme="gallery"] { --ember:#5eb0a8; --gold:#b8e8e0; --tile:#1e3030; --tile-edge:#3a5a58; --cave:#0e1616; }
+    #app[data-theme="vault"] { --ember:#c46a3a; --gold:#e8c090; --tile:#3a2418; --tile-edge:#6a4030; --cave:#140c0a; }
+    body.themed { background: radial-gradient(ellipse at 50% 0%, #2a2018 0%, var(--cave) 55%); }
+    .perch-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+    .perch {
+      min-height: 52px; border-radius: 10px;
+      border: 1px dashed #e8c37a55; background: linear-gradient(180deg, #2a2018, #00000055);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: .58rem; color: #c9a36a; cursor: pointer;
+      box-shadow: 0 4px 0 #100a08;
+    }
+    .perch.on { border-style: solid; border-color: #e8c37aaa; }
+    .perch.armed { outline: 2px solid var(--ember); }
+    .perch.lock { opacity: .4; cursor: default; }
+    .room { cursor: pointer; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 2px 6px;
+    }
+    h1 { margin: 0; font-size: 1.1rem; letter-spacing: .04em; color: var(--gold); }
+    h1 span { color: var(--ember); }
+    .stats { display: flex; gap: 6px; font-size: .78rem; }
+    .chip {
+      background: #00000055;
+      border: 1px solid #e8c37a44;
+      border-radius: 999px;
+      padding: 4px 9px;
+    }
+    .chip.btn { cursor: pointer; }
+    .quest {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(#322218, #211610);
+      border: 1px solid #e8c37a55;
+      border-radius: 14px;
+      padding: 7px 8px;
+      margin-bottom: 7px;
+    }
+    .quest .art { font-size: 1.4rem; width: 36px; text-align: center; }
+    .quest p { margin: 0; font-size: .78rem; line-height: 1.25; flex: 1; }
+    .quest button {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 7px 10px;
+      background: linear-gradient(#e37a3a, #b84a1c);
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: .75rem;
+    }
+    .quest button:disabled { opacity: .4; }
+    .home-only.hidden, .stage-only:not(.show) { display: none !important; }
+    #app.stage .home-only { display: none !important; }
+    #app.stage .stage-only { display: flex !important; }
+    .nest-wrap {
+      background: linear-gradient(180deg, #3a2a20 0%, #1c1410 100%);
+      border: 1px solid #e8c37a33;
+      border-radius: 14px;
+      padding: 7px;
+      margin-bottom: 7px;
+      box-shadow: 0 8px 0 #100a08, 0 12px 16px #0006;
+    }
+    .nest-title {
+      font-size: .65rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #c9a36a;
+      margin: 0 0 5px;
+    }
+    .nest { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .mountain {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .room {
+      border-radius: 8px;
+      border: 1px solid #e8c37a33;
+      background: #1c1410;
+      padding: 4px 2px;
+      font-size: .52rem;
+      text-align: center;
+      color: #8a6a50;
+      line-height: 1.2;
+    }
+    .room.open { border-color: #e8c37a88; color: var(--gold); background: #3a2818; }
+    .room.now { box-shadow: 0 0 0 1px #e37a3a; }
+    .item.pop { animation: pop .22s ease; }
+    @keyframes pop {
+      0% { transform: translateY(0) scale(.82); }
+      70% { transform: translateY(-6px) scale(1.08); }
+      100% { transform: translateY(-3px) scale(1); }
+    }
+    .decor {
+      aspect-ratio: 1.15;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #3a2818, #241810);
+      border: 1px dashed #e8c37a44;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: .6rem;
+      color: #c9a36a;
+      cursor: pointer;
+      text-align: center;
+      padding: 2px;
+      box-shadow: 0 4px 0 #100a08;
+    }
+    .decor.owned { border-style: solid; background: linear-gradient(180deg, #5a3a24, #3a2818); }
+    .decor .ico { font-size: 1.05rem; }
+    #board {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(7, 1fr);
+      gap: 5px 4px;
+      min-height: 0;
+      padding: 2px 2px 6px;
+      perspective: 900px;
+    }
+    .cell {
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--tile) 80%, #fff) 0%, var(--tile) 55%, #1a100c 100%);
+      border: 1px solid var(--tile-edge);
+      border-bottom-color: #100a08;
+      border-radius: 8px 8px 6px 6px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 3px 0 #140c08,
+        0 5px 8px #0004;
+      transform: rotateX(4deg);
+      transform-style: preserve-3d;
+    }
+    .cell::after {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(135deg, #fff3 0 18%, transparent 42%);
+    }
+    .cell.locked {
+      background: repeating-linear-gradient(135deg, #1a120e, #1a120e 6px, #24180f 6px, #24180f 12px);
+      border-color: #3a2a20;
+      color: #c9a36a;
+      font-size: .55rem;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 2px 0 #0a0604;
+      transform: rotateX(4deg) translateY(1px);
+    }
+    .cell.valid { outline: 2px solid #e8c37acc; transform: rotateX(4deg) translateY(-1px); }
+    .cell.ash {
+      background: linear-gradient(180deg, #4a3224 0%, #2a1c14 55%, #120c08 100%);
+      border-color: #4a3020;
+      overflow: hidden;
+    }
+    .cell.ash svg { width: 90%; height: 90%; }
+    .cell.flash {
+      outline: 2px solid #e8c37a;
+      background: linear-gradient(180deg, #8a5a30, #5a3a20);
+    }
+    .item {
+      width: 92%; height: 92%;
+      border-radius: 0;
+      background: transparent !important;
+      border: 0 !important;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: grab;
+      position: relative;
+      touch-action: none;
+      transform: translateY(-3px) translateZ(4px);
+      filter: drop-shadow(0 3px 1px #0006);
+    }
+    .item svg { width: 30px; height: 30px; display: block; }
+    .item .lvl { font-size: .48rem; color: #f4e6c8cc; margin-top: 1px; text-align: center; line-height: 1.1; text-shadow: 0 1px 2px #000a; }
+    .item .qty {
+      position: absolute; top: -3px; right: -3px;
+      background: var(--ember); color: #fff;
+      font-size: .6rem; font-weight: 700;
+      min-width: 15px; height: 15px; border-radius: 99px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px;
+    }
+    .ghost {
+      position: fixed; pointer-events: none; z-index: 20;
+      width: 52px; height: 52px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: #3a2818ee; box-shadow: 0 14px 28px #000a;
+      transform: translate(-50%, -60%) rotateX(12deg);
+    }
+    .ghost svg { width: 32px; height: 32px; }
+    footer { display: flex; gap: 8px; margin-top: 7px; }
+    button {
+      flex: 1; border: 0; border-radius: 12px;
+      padding: 10px 8px; font-weight: 700; font-size: .82rem; cursor: pointer;
+      box-shadow: 0 4px 0 #140c08;
+    }
+    #gather { background: linear-gradient(#e37a3a, #b84a1c); color: #fff; }
+    #buyEgg { background: #3a2a20; color: var(--gold); border: 1px solid #e8c37a44; }
+    #gather:disabled { opacity: .45; cursor: not-allowed; }
+    #hint { background: #3a2a20; color: var(--gold); border: 1px solid #e8c37a44; }
+    .toast {
+      position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%);
+      background: #2a1c14ee; border: 1px solid var(--gold);
+      color: var(--cream); padding: 8px 14px; border-radius: 999px;
+      font-size: .78rem; opacity: 0; pointer-events: none;
+      transition: opacity .2s; z-index: 30; max-width: 90%;
+      text-align: center;
+    }
+    .toast.show { opacity: 1; }
+    .help { font-size: .68rem; color: #c9a36aaa; text-align: center; margin: 3px 0 0; }
+    #book {
+      display: none;
+      position: fixed; inset: 0;
+      background: #140e0ccc;
+      z-index: 40;
+      align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    #book.open, #trailFail.open, #trailWin.open, #chest.open { display: flex; }
+    #chest {
+      display: none; position: fixed; inset: 0;
+      background: #140e0ccc; z-index: 43;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    #chest .panel {
+      width: min(420px, 100%); background: #2a1c16;
+      border: 1px solid #e8c37a55; border-radius: 16px; padding: 16px; text-align: center;
+    }
+    #chest h2 { margin: 0 0 6px; color: var(--gold); }
+    #trailWin {
+      display: none;
+      position: fixed; inset: 0;
+      background: #140e0ccc;
+      z-index: 42;
+      align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    #trailWin .panel {
+      width: min(420px, 100%);
+      background: #2a1c16;
+      border: 1px solid #e8c37a55;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+    #trailWin h2 { margin: 0 0 6px; color: var(--gold); font-size: 1.1rem; }
+    #trailWin .sub { margin: 0 0 12px; color: #c9a36a; font-size: .8rem; }
+    #trailWin .loot {
+      text-align: left;
+      background: #1c1410;
+      border: 1px solid #e8c37a33;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+    #trailWin .loot div {
+      padding: 6px 0;
+      font-size: .85rem;
+      border-bottom: 1px solid #e8c37a22;
+    }
+    #trailWin .loot div:last-child { border-bottom: 0; }
+    #trailFail {
+      display: none;
+      position: fixed; inset: 0;
+      background: #140e0ccc;
+      z-index: 41;
+      align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    #trailFail .panel {
+      width: min(420px, 100%);
+      background: #2a1c16;
+      border: 1px solid #e8c37a55;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+    #trailFail h2 { margin: 0 0 8px; font-size: 1.05rem; color: var(--gold); }
+    #trailFail p { margin: 0 0 12px; font-size: .82rem; color: #c9a36a; line-height: 1.35; }
+    #trailFail .row { display: flex; gap: 8px; }
+    #trailFail .row button { flex: 1; }
+    #restartTrail { background: linear-gradient(#e37a3a, #b84a1c); color: #fff; }
+    #homeTrail { background: #3a2a20; color: var(--gold); border: 1px solid #e8c37a44; }
+    #book .panel {
+      width: min(420px, 100%);
+      background: #2a1c16;
+      border: 1px solid #e8c37a55;
+      border-radius: 16px;
+      padding: 12px;
+    }
+    #book h2 { margin: 0 0 8px; font-size: 1rem; color: var(--gold); }
+    #book .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    #book .card {
+      background: #1c1410;
+      border: 1px solid #e8c37a33;
+      border-radius: 12px;
+      padding: 8px;
+      min-height: 78px;
+    }
+    #book .card.locked { opacity: .45; }
+    #book .card .nm { font-size: .8rem; color: var(--gold); }
+    #book .card .bl { font-size: .68rem; color: #c9a36a; margin-top: 4px; line-height: 1.3; }
+    #book .close {
+      margin-top: 10px; width: 100%;
+      background: #3a2a20; color: var(--gold);
+      border: 1px solid #e8c37a44;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1 id="title">Ember <span>Nest</span></h1>
+      <div class="stats">
+        <div class="chip">● <span id="coins">0</span></div>
+        <div class="chip">✦ <span id="energy">5</span>/<span id="energyMax">5</span> <span id="regen" style="opacity:.7"></span></div>
+        <div class="chip btn" id="bookBtn">Book <span id="bookCount">0</span>/6</div>
+        <div class="chip" id="lvlChip">Lv 1</div>
+      </div>
+    </header>
+
+    <div class="quest" id="questBox"></div>
+
+    <div class="nest-wrap home-only">
+      <p class="nest-title">The Nest · bonus x<span id="bonus">1</span></p>
+      <div class="nest" id="nest"></div>
+      <p class="nest-title" style="margin-top:7px">The Mountain · <span id="roomCount">1</span>/5</p>
+      <div class="mountain" id="mountain"></div>
+      <p class="nest-title" id="hearthGoal" style="margin-top:7px">Goal · Hatch a Hearth</p>
+      <p class="nest-title" style="margin-top:7px">Perch · park a dragon to rest</p>
+      <div class="perch-row" id="perchRow"></div>
+    </div>
+
+    <div id="board"></div>
+    <p class="help">5-merge to grow · tap fogged tiles to open land · quests use one dragon</p>
+    <footer>
+      <button id="gather">Gather egg · 1✦</button>
+      <button id="buyEgg">Buy egg</button>
+      <button id="hint">Ash Trail</button>
+    </footer>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div id="chest">
+    <div class="panel">
+      <h2 id="chestTitle">Level up</h2>
+      <p class="sub" id="chestSub" style="color:#c9a36a;font-size:.8rem;margin:0 0 10px"></p>
+      <button id="chestBox" style="display:none;width:100%;height:96px;margin:8px 0 12px;border-radius:14px;border:1px solid #e8c37a66;background:#3a2818;color:var(--gold);font-size:2rem;cursor:pointer">▣</button>
+      <div class="loot" id="chestLoot" style="display:none;text-align:left;background:#1c1410;border:1px solid #e8c37a33;border-radius:12px;padding:10px 12px;margin:10px 0"></div>
+      <button id="chestOk" style="width:100%;background:linear-gradient(#e37a3a,#b84a1c);color:#fff">Continue</button>
+    </div>
+  </div>
+  <div id="trailWin">
+    <div class="panel">
+      <h2>Trail cleared</h2>
+      <p class="sub" id="winSub">The nest takes what you carried home.</p>
+      <div class="loot" id="winLoot"></div>
+      <div class="row" style="display:flex;gap:8px">
+        <button id="winHome" style="flex:1;background:linear-gradient(#e37a3a,#b84a1c);color:#fff">Return home</button>
+        <button id="winAgain" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Walk again</button>
+      </div>
+    </div>
+  </div>
+  <div id="trailFail">
+    <div class="panel">
+      <h2>The trail closed</h2>
+      <p id="failWhy">No 5-merge left and the pouch is empty. The nest is still safe.</p>
+      <div class="row">
+        <button id="restartTrail">Restart trail</button>
+        <button id="homeTrail">Return home</button>
+      </div>
+    </div>
+  </div>
+  <div id="book">
+    <div class="panel">
+      <h2>Dragon book</h2>
+      <div class="grid" id="bookGrid"></div>
+      <button class="close" id="bookClose">Close</button>
+      <button class="close" id="resetAll" style="margin-top:6px;color:#e37a3a">Reset all progress</button>
+    </div>
+  </div>
+
+  <script>
+    const COLS = 6, ROWS = 7, MAX_ENERGY = 5, SAVE = "ember-nest-v3";
+    const REGEN_MS = 8000;
+    const PERCH_MS = 20000;
+    const OPEN_START = COLS * 5;
+    const STAGE_GOAL = 3;
+    const ASH_GRACE = 0;
+    const ASH_PER_MERGE = 1;
+    const ASH_FAIL = 12;
+    const ASH_GOAL = 6;
+    const TRAIL_GATHERS = 6;
+    const ASH_COOLDOWN = 24 * 60 * 60 * 1000;
+    const DAILY_PAYS = [1200, 800, 400];
+    const DAILY_CLEARS = 3;
+
+    const CHAIN = [
+      { id: "egg",   name: "Egg",       color: "#6b4a32" },
+      { id: "hatch", name: "Hatchling", color: "#8a5a30" },
+      { id: "wyrm",  name: "Wyrmling",  color: "#a35a28" },
+      { id: "young", name: "Young",     color: "#c45c24" },
+      { id: "adult", name: "Hearth",    color: "#e37a3a" },
+      { id: "elder", name: "Elder",     color: "#f0a050" },
+    ];
+    const LORE = [
+      "Warm to the touch. Keep it in the moss.",
+      "Eats crumbs. Sleeps in a teacup if allowed.",
+      "Learns the shape of the cave by walking it.",
+      "First real fire. Still asks to be carried.",
+      "Guards the kettle. Will not share the good perch.",
+      "The nest remembers this one. So does the mountain.",
+    ];
+    const ROOMS = [
+      { id: "hatchery", name: "Hatchery", need: null, art: "⌂" },
+      { id: "alcove", name: "Moss alcove", need: "moss", art: "🌿" },
+      { id: "walk", name: "Lamp walk", need: "lamp", art: "🪔" },
+      { id: "gallery", name: "Spring hall", need: "pool", art: "♨" },
+      { id: "vault", name: "Tea vault", need: "hoard", art: "🫖" },
+    ];
+    const DECOR = [
+      { id: "moss",  name: "Moss bed",   art: "🌿", cost: 800,   bonus: 1 },
+      { id: "lamp",  name: "Ember lamp", art: "🪔", cost: 2500,  bonus: 2 },
+      { id: "pool",  name: "Hot spring", art: "♨",  cost: 8000,  bonus: 3 },
+      { id: "hoard", name: "Tea hoard",  art: "🫖", cost: 22000, bonus: 5 },
+      { id: "roost", name: "Star roost", art: "⭐", cost: 50000, bonus: 6 },
+    ];
+    const QUESTS = [
+      { want: 0, text: "A cold stone wants an egg to warm it.", reward: 180 },
+      { want: 1, text: "A sleepy hatchling wants a sibling to pile with.", reward: 320 },
+      { want: 2, text: "The spring is lonely. Bring a wyrmling.", reward: 520 },
+      { want: 3, text: "A young ember wants a perch-mate.", reward: 860 },
+      { want: 1, text: "Tuck a hatchling into the moss.", reward: 300 },
+    ];
+
+    let audioCtx = null;
+    function beep(freq, dur, type, vol) {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type || "sine";
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(vol || 0.05, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (dur || 0.12));
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + (dur || 0.12));
+      } catch (e) {}
+    }
+    function sfx(kind) {
+      if (kind === "merge") { beep(320, 0.07, "triangle", 0.05); setTimeout(() => beep(480, 0.1, "triangle", 0.06), 50); }
+      else if (kind === "ash") beep(140, 0.16, "sawtooth", 0.03);
+      else if (kind === "win") { beep(440, 0.12, "sine", 0.06); setTimeout(() => beep(660, 0.18, "sine", 0.06), 90); }
+      else if (kind === "fail") beep(110, 0.28, "square", 0.04);
+      else if (kind === "gather") beep(260, 0.06, "sine", 0.04);
+      else if (kind === "buy") { beep(500, 0.08, "sine", 0.05); setTimeout(() => beep(700, 0.12, "sine", 0.05), 70); }
+      else if (kind === "room") { beep(360, 0.1, "triangle", 0.05); setTimeout(() => beep(540, 0.16, "triangle", 0.05), 80); }
+    }
+    function xpNeed(lv) {
+      return 30 + lv * 20;
+    }
+    const levelQueue = [];
+    let levelShowing = false;
+    function addXp(n) {
+      if (!n) return;
+      state.xp = (state.xp || 0) + n;
+      state.level = state.level || 1;
+      while (state.xp >= xpNeed(state.level)) {
+        state.xp -= xpNeed(state.level);
+        state.level += 1;
+        const u = applyLevelUnlock(state.level);
+        levelQueue.push({
+          level: state.level,
+          unlock: u,
+          chest: state.level % 5 === 0,
+        });
+      }
+      if (!levelShowing) showLevelEvent();
+    }
+    function showLevelEvent() {
+      const ev = levelQueue.shift();
+      if (!ev) { levelShowing = false; return; }
+      levelShowing = true;
+      const t = document.getElementById("chestTitle");
+      const s = document.getElementById("chestSub");
+      const box = document.getElementById("chestBox");
+      const loot = document.getElementById("chestLoot");
+      const ok = document.getElementById("chestOk");
+      if (t) t.textContent = "Level " + ev.level;
+      if (s) s.textContent = ev.unlock || "You climbed the mountain.";
+      if (loot) { loot.style.display = "none"; loot.innerHTML = ""; }
+      if (box) {
+        box.style.display = ev.chest ? "block" : "none";
+        box.textContent = "▣";
+        box.dataset.level = ev.chest ? String(ev.level) : "";
+        box.disabled = false;
+      }
+      if (ok) ok.textContent = "Continue";
+      document.getElementById("chest").classList.add("open");
+      sfx("room");
+    }
+    function revealChest() {
+      const box = document.getElementById("chestBox");
+      const lv = box && box.dataset.level ? +box.dataset.level : 0;
+      if (!lv) return;
+      const tier = Math.max(1, Math.floor(lv / 5));
+      const coins = 3000 * tier;
+      const eggs = Math.min(8, 2 + tier * 2);
+      state.coins += coins;
+      const lines = ["● " + coins + " ember coins", eggs + " eggs → nest"];
+      for (let i = 0; i < eggs; i++) spawn(0, 1);
+      if (tier >= 2) { spawn(1, 1); spawn(1, 1); lines.push("2 hatchlings → nest"); }
+      if (tier >= 3) { spawn(2, 1); lines.push("1 wyrmling → nest"); }
+      if (tier >= 5) { spawn(3, 1); lines.push("1 Young → nest"); }
+      const loot = document.getElementById("chestLoot");
+      if (loot) {
+        loot.style.display = "block";
+        loot.innerHTML = lines.map(x => "<div style='padding:5px 0'>" + x + "</div>").join("");
+      }
+      if (box) { box.textContent = "▢"; box.disabled = true; }
+      const ok = document.getElementById("chestOk");
+      if (ok) ok.textContent = "Take";
+      sfx("win");
+      save(); render();
+    }
+    function applyLevelUnlock(lv) {
+      if (lv === 2) { state.pouchBonus = (state.pouchBonus || 0) + 3; return "trail pouch +3"; }
+      if (lv === 3) return "Hearth wish unlocked";
+      if (lv === 4) { openFogFree(3); return "3 land opened"; }
+      if (lv === 6) { state.maxEnergy = Math.max(state.maxEnergy || 5, 6); return "max energy 6"; }
+      if (lv === 8) { state.pouchBonus = (state.pouchBonus || 0) + 3; return "trail pouch +3"; }
+      return "climbed the mountain";
+    }
+    function openChest(lv) { revealChest(); }
+    function completeHearthGoal() {
+      if (state.hearthDone) return;
+      state.hearthDone = true;
+      state.maxEnergy = Math.max(state.maxEnergy || 5, 6);
+      state.coins += 5000;
+      sfx("win");
+      toast("Hearth hatched · the mountain warms · +5000● · max energy 6");
+    }
+    function roomsOpen() {
+      return ROOMS.filter(r => !r.need || state.decor[r.need]).length;
+    }
+    function perchOpen(i) {
+      if (i === 0) return true;
+      if (i === 1) return roomsOpen() >= 2;
+      if (i === 2) return !!(state.hearthDone || roomsOpen() >= 5);
+      return false;
+    }
+    function applyTheme(id) {
+      state.theme = id || "hatchery";
+      const app = document.getElementById("app");
+      if (app) app.setAttribute("data-theme", state.theme === "hatchery" ? "" : state.theme);
+    }
+    let perchArmed = -1;
+    function perchPay() {
+      let coins = 0;
+      (state.perch || []).forEach(p => {
+        if (p) coins += 8 + p.level * 12;
+      });
+      if (coins) {
+        state.coins += coins;
+        toast("Perch · +" + coins + "●");
+      }
+    }
+    function seatPerch(slot, boardI) {
+      if (!perchOpen(slot) || state.mode === "stage") return;
+      const cells = board();
+      const it = cells[boardI];
+      if (!it) return;
+      if (state.perch[slot]) {
+        if (!spawn(state.perch[slot].level, state.perch[slot].count)) return;
+      }
+      state.perch[slot] = { level: it.level, count: 1 };
+      if (it.count > 1) it.count -= 1;
+      else cells[boardI] = null;
+      perchArmed = -1;
+      sfx("buy");
+      save(); render();
+    }
+    function emptyPerch(slot) {
+      const p = state.perch[slot];
+      if (!p) return;
+      if (!spawn(p.level, p.count)) { toast("Board full"); return; }
+      state.perch[slot] = null;
+      perchArmed = -1;
+      save(); render();
+    }
+    function openFogFree(n) {
+      let left = n;
+      for (let i = 0; i < state.locked.length && left > 0; i++) {
+        if (state.locked[i]) { state.locked[i] = false; left--; }
+      }
+    }
+    function oneSprite(level, hi, lo) {
+      if (level === 0) {
+        return `<ellipse cx="16" cy="18" rx="9" ry="11" fill="${hi}"/><ellipse cx="13" cy="15" rx="3" ry="2" fill="#fff6"/><path d="M16 7 Q18 4 16 3 Q14 4 16 7" fill="${lo}"/>`;
+      }
+      if (level === 1) {
+        return `<ellipse cx="16" cy="22" rx="8" ry="6" fill="${lo}"/><circle cx="16" cy="14" r="7" fill="${hi}"/><circle cx="13" cy="13" r="1.3" fill="#2a1c14"/><circle cx="19" cy="13" r="1.3" fill="#2a1c14"/><path d="M10 10 L8 6 L12 9" fill="${lo}"/><path d="M22 10 L24 6 L20 9" fill="${lo}"/>`;
+      }
+      if (level === 2) {
+        return `<path d="M6 22 Q16 10 26 22 Q16 26 6 22" fill="${lo}"/><path d="M8 18 Q16 8 24 18 L22 20 Q16 12 10 20Z" fill="${hi}"/><circle cx="20" cy="14" r="1.2" fill="#2a1c14"/><path d="M24 16 L28 12 L24 14" fill="${hi}"/>`;
+      }
+      if (level === 3) {
+        return `<path d="M4 24 Q16 18 28 24 L26 26 Q16 22 6 26Z" fill="${lo}"/><path d="M8 20 Q16 6 24 20 Q16 16 8 20" fill="${hi}"/><path d="M14 10 L12 4 L16 8" fill="${lo}"/><path d="M18 10 L20 4 L16 8" fill="${lo}"/><circle cx="20" cy="12" r="1.2" fill="#2a1c14"/>`;
+      }
+      if (level === 4) {
+        return `<path d="M3 24 Q16 16 29 24 L27 27 Q16 21 5 27Z" fill="${lo}"/><path d="M7 20 Q16 4 25 20 Q16 14 7 20" fill="${hi}"/><path d="M12 8 L10 2 L15 7M20 8 L22 2 L17 7" fill="${lo}"/><circle cx="21" cy="11" r="1.3" fill="#2a1c14"/><path d="M25 14 L30 9 L26 13" fill="#ffd090"/>`;
+      }
+      return `<path d="M2 25 Q16 14 30 25 L28 28 Q16 20 4 28Z" fill="${lo}"/><path d="M6 20 Q16 2 26 20 Q16 13 6 20" fill="${hi}"/><path d="M11 7 L8 0 L14 6M21 7 L24 0 L18 6M16 6 L16 0" fill="#ffe08a"/><circle cx="21" cy="10" r="1.4" fill="#2a1c14"/><path d="M16 16 Q18 20 16 22 Q14 20 16 16" fill="#ff7040"/>`;
+    }
+    function stackLayout(n) {
+      if (n <= 1) return [[16, 16, 1]];
+      if (n === 2) return [[10, 16, 0.72], [22, 16, 0.72]];
+      if (n === 3) return [[16, 10, 0.62], [9, 20, 0.62], [23, 20, 0.62]];
+      return [[10, 10, 0.55], [22, 10, 0.55], [10, 22, 0.55], [22, 22, 0.55]];
+    }
+    function dragonSvg(level, size = 28, count = 1) {
+      const pal = [
+        ["#c9a36a", "#8a5a30"],
+        ["#e8c37a", "#c45c24"],
+        ["#e37a3a", "#8a2a12"],
+        ["#f0a050", "#c45c24"],
+        ["#ffb060", "#e37a3a"],
+        ["#ffe08a", "#e37a3a"],
+      ][level] || ["#e8c37a", "#c45c24"];
+      const [hi, lo] = pal;
+      const n = Math.max(1, Math.min(4, count || 1));
+      const body = oneSprite(level, hi, lo);
+      const bits = stackLayout(n).map(([x, y, s]) =>
+        `<g transform="translate(${x},${y}) scale(${s}) translate(-16,-16)">${body}</g>`
+      ).join("");
+      return `<svg viewBox="0 0 32 32" width="${size}" height="${size}">${bits}</svg>`;
+    }
+    function ashSvg() {
+      return `<svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" fill="#2a1c14"/>
+        <path d="M4 6 L9 14 L6 18 L12 22 L8 28" fill="none" stroke="#6a4a38" stroke-width="1.4"/>
+        <path d="M16 3 L14 10 L18 16 L15 24 L20 30" fill="none" stroke="#8a6a50" stroke-width="1.3"/>
+        <path d="M26 5 L22 12 L28 17 L24 26" fill="none" stroke="#5a3a28" stroke-width="1.4"/>
+        <path d="M2 20 L10 18 L16 21 L30 16" fill="none" stroke="#4a3024" stroke-width="1.1"/>
+        <path d="M11 8 L13 12" stroke="#c9a36a55" stroke-width="0.8"/>
+      </svg>`;
+    }
+
+    const defaultState = () => ({
+      coins: 20,
+      energy: 5,
+      cells: Array(COLS * ROWS).fill(null),
+      locked: Array.from({ length: COLS * ROWS }, (_, i) => i >= OPEN_START),
+      decor: {},
+      quest: 0,
+      questDone: false,
+      nextEnergyAt: Date.now() + REGEN_MS,
+      mode: "home",
+      stageCells: Array(COLS * ROWS).fill(null),
+      ash: Array(COLS * ROWS).fill(false),
+      stageMerges: 0,
+      trailGathers: 6,
+      ashCleared: false,
+      ashWins: 0,
+      lastAshWinAt: 0,
+      ashDayKey: "",
+      ashDayWins: 0,
+      book: { 0: true },
+      gives: 0,
+      maxEnergy: 5,
+      hearthDone: false,
+      eggsBought: 0,
+      xp: 0,
+      level: 1,
+      pouchBonus: 0,
+      perch: [null, null, null],
+      theme: "hatchery",
+      perchAt: 0,
+    });
+
+    let state = defaultState();
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(SAVE);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        state = { ...defaultState(), ...s };
+        if (!Array.isArray(state.cells) || state.cells.length !== COLS * ROWS) state.cells = defaultState().cells;
+        if (!Array.isArray(state.locked)) state.locked = defaultState().locked;
+        if (!Array.isArray(state.stageCells) || state.stageCells.length !== COLS * ROWS) {
+          state.stageCells = Array(COLS * ROWS).fill(null);
+        }
+        state.mode = "home";
+        state.ash = Array(COLS * ROWS).fill(false);
+        state.stageMerges = 0;
+      } catch (e) {}
+    }
+    function save() {
+      localStorage.setItem(SAVE, JSON.stringify(state));
+    }
+
+    const boardEl = document.getElementById("board");
+    const nestEl = document.getElementById("nest");
+    const toastEl = document.getElementById("toast");
+    const gatherBtn = document.getElementById("gather");
+
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(() => toastEl.classList.remove("show"), 1700);
+    }
+    function bonus() {
+      return 1 + Object.keys(state.decor).reduce((s, id) => {
+        const d = DECOR.find(x => x.id === id);
+        return s + (d ? d.bonus : 0);
+      }, 0);
+    }
+    function board() {
+      return state.mode === "stage" ? state.stageCells : state.cells;
+    }
+    function isLocked(i) {
+      return state.mode !== "stage" && !!state.locked[i];
+    }
+    function isAsh(i) {
+      return state.mode === "stage" && !!(state.ash && state.ash[i]);
+    }
+    function ashCount() {
+      return (state.ash || []).filter(Boolean).length;
+    }
+    function emptyOpen() {
+      const cells = board();
+      return cells.map((v, i) => (!v && !isLocked(i) && !isAsh(i) ? i : -1)).filter(i => i >= 0);
+    }
+    function spawn(level, count = 1, at) {
+      const cells = board();
+      const free = emptyOpen();
+      if (!free.length) { toast("Board full — merge or open land"); return false; }
+      const i = at != null && !cells[at] && !isLocked(at) ? at : free[Math.floor(Math.random() * free.length)];
+      cells[i] = { level, count };
+      return true;
+    }
+    function findLevel(level) {
+      return state.cells.findIndex(c => c && c.level === level);
+    }
+    function consumeOne(level) {
+      const i = findLevel(level);
+      if (i < 0) return false;
+      const it = state.cells[i];
+      if (it.count > 1) it.count -= 1;
+      else state.cells[i] = null;
+      return true;
+    }
+
+    function mergeInto(fromI, toI) {
+      const cells = board();
+      const a = cells[fromI];
+      const b = cells[toI];
+      if (!a || !b || fromI === toI) return false;
+      if (a.level !== b.level) return false;
+      if (a.level >= CHAIN.length - 1) { toast("Elders keep watch — no further merge"); return false; }
+
+      let total = a.count + b.count;
+      cells[fromI] = null;
+      let produced = 0;
+      while (total >= 5) {
+        total -= 5;
+        produced += 1;
+      }
+      if (produced) {
+        const next = a.level + 1;
+        const payout = state.mode === "stage" ? 0 : (80 + next * 45) * bonus();
+        if (payout) state.coins += payout;
+        if (state.mode !== "stage" && next === 4) completeHearthGoal();
+        if (state.mode !== "stage") addXp(15 + next * 10);
+        sfx("merge");
+        toast(payout
+          ? `${CHAIN[next].name} hatched · +${payout}●`
+          : `${CHAIN[next].name} hatched`);
+        discover(next);
+        let landed = toI;
+        if (total > 0) {
+          cells[toI] = { level: a.level, count: total };
+          const free = emptyOpen();
+          if (free.length) {
+            landed = free[0];
+            cells[landed] = { level: next, count: produced };
+          } else {
+            cells[toI] = { level: next, count: produced };
+          }
+        } else {
+          cells[toI] = { level: next, count: produced };
+        }
+        if (state.mode === "stage") {
+          applyWarmth(landed, next);
+          if (state._flash && state._flash.length) sfx("ash");
+          state.stageMerges = (state.stageMerges || 0) + 1;
+          if ((state.ashBurned || 0) >= ASH_GOAL) {
+            state.trailWon = true;
+            setTimeout(winStage, 400);
+            return true;
+          }
+          if (state.stageMerges > ASH_GRACE) {
+            const ok = spawnAsh(ASH_PER_MERGE);
+            if (!ok || ashCount() >= ASH_FAIL) {
+              setTimeout(failStage, 250);
+            }
+          }
+        }
+      } else {
+        cells[toI] = { level: a.level, count: total };
+      }
+      return true;
+    }
+
+    function neighbors(i) {
+      const c = i % COLS, r = Math.floor(i / COLS);
+      const out = [];
+      if (c > 0) out.push(i - 1);
+      if (c < COLS - 1) out.push(i + 1);
+      if (r > 0) out.push(i - COLS);
+      if (r < ROWS - 1) out.push(i + COLS);
+      return out;
+    }
+
+    function clearAshAt(i) {
+      if (!state.ash || !state.ash[i]) return false;
+      state.ash[i] = false;
+      state.ashBurned = (state.ashBurned || 0) + 1;
+      return true;
+    }
+
+    function applyWarmth(landed, nextLevel) {
+      if (nextLevel < 1) return;
+      const flashes = [];
+      const burnNear = (max) => {
+        const spots = neighbors(landed).filter(i => state.ash && state.ash[i]);
+        spots.slice(0, max).forEach(i => {
+          if (clearAshAt(i)) flashes.push(i);
+        });
+      };
+      const burnRow = () => {
+        const row = Math.floor(landed / COLS);
+        for (let c = 0; c < COLS; c++) {
+          const i = row * COLS + c;
+          if (clearAshAt(i)) flashes.push(i);
+        }
+      };
+      const burnCol = () => {
+        const col = landed % COLS;
+        for (let r = 0; r < ROWS; r++) {
+          const i = r * COLS + col;
+          if (clearAshAt(i)) flashes.push(i);
+        }
+      };
+      if (nextLevel >= 5) { burnRow(); burnCol(); }
+      else if (nextLevel >= 3) burnRow();
+      else if (nextLevel === 2) burnNear(2);
+      else burnNear(1);
+      state._flash = flashes;
+    }
+
+    const TRAIL_BAG = [2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0];
+    const TRAIL_ASH = 5;
+
+    function tallyLevel(level) {
+      return board().reduce((s, it) => s + (it && it.level === level ? it.count : 0), 0);
+    }
+    function ashNeighbors4(i, ash) {
+      const c = i % COLS, r = Math.floor(i / COLS);
+      let n = 0;
+      if (c > 0 && ash[i - 1]) n++;
+      if (c < COLS - 1 && ash[i + 1]) n++;
+      if (r > 0 && ash[i - COLS]) n++;
+      if (r < ROWS - 1 && ash[i + COLS]) n++;
+      return n;
+    }
+    function clumpAshOnce() {
+      const ash = state.ash.slice();
+      const next = ash.slice();
+      for (let i = 0; i < ash.length; i++) {
+        if (state.stageCells[i]) continue;
+        const n = ashNeighbors4(i, ash);
+        if (ash[i] && n === 0) next[i] = false;
+        else if (!ash[i] && n >= 2) next[i] = true;
+      }
+      state.ash = next;
+      let extra = ashCount() - TRAIL_ASH;
+      const lit = state.ash.map((v, i) => v ? i : -1).filter(i => i >= 0);
+      while (extra > 0 && lit.length) {
+        const k = Math.floor(Math.random() * lit.length);
+        state.ash[lit[k]] = false;
+        lit.splice(k, 1);
+        extra--;
+      }
+      while (ashCount() < TRAIL_ASH) {
+        if (!spawnAsh(1)) break;
+      }
+    }
+    function trailLayoutOk() {
+      return tallyLevel(1) >= 5 && tallyLevel(2) >= 4 && ashCount() === TRAIL_ASH;
+    }
+    function generateTrail() {
+      for (let attempt = 0; attempt < 24; attempt++) {
+        state.stageCells = Array(COLS * ROWS).fill(null);
+        state.ash = Array(COLS * ROWS).fill(false);
+        TRAIL_BAG.forEach(lv => spawn(lv, 1));
+        spawnAsh(TRAIL_ASH);
+        clumpAshOnce();
+        if (trailLayoutOk()) return;
+      }
+      state.stageCells = Array(COLS * ROWS).fill(null);
+      state.ash = Array(COLS * ROWS).fill(false);
+      TRAIL_BAG.forEach(lv => spawn(lv, 1));
+      spawnAsh(TRAIL_ASH);
+    }
+
+    function spawnAsh(n) {
+      const free = emptyOpen();
+      if (!free.length) return false;
+      const bag = free.slice();
+      for (let k = 0; k < n; k++) {
+        if (!bag.length) return false;
+        const pick = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
+        state.ash[pick] = true;
+      }
+      return true;
+    }
+
+    function resetTrail() {
+      state.stageCells = Array(COLS * ROWS).fill(null);
+      state.ash = Array(COLS * ROWS).fill(false);
+      state.stageMerges = 0;
+      state.trailGathers = TRAIL_GATHERS + (state.pouchBonus || 0);
+      state.ashBurned = 0;
+      state.trailWon = false;
+      state._flash = [];
+    }
+
+    function bookKnown() {
+      state.book = state.book || { 0: true };
+      return Object.keys(state.book).filter(k => state.book[k]).length;
+    }
+    function discover(level) {
+      state.book = state.book || { 0: true };
+      if (state.book[level]) return;
+      state.book[level] = true;
+      const pay = 120 + level * 80;
+      state.coins += pay;
+      toast(`Book: ${CHAIN[level].name} · +${pay}●`);
+    }
+    function scanBook() {
+      [state.cells, state.stageCells].forEach(arr => {
+        (arr || []).forEach(it => { if (it) discover(it.level); });
+      });
+    }
+    function renderBook() {
+      const grid = document.getElementById("bookGrid");
+      if (!grid) return;
+      state.book = state.book || { 0: true };
+      grid.innerHTML = CHAIN.map((spec, i) => {
+        const known = !!state.book[i];
+        return `<div class="card ${known ? "" : "locked"}">
+          <div>${known ? dragonSvg(i, 28) : "✦"}</div>
+          <div class="nm">${known ? spec.name : "Unknown"}</div>
+          <div class="bl">${known ? LORE[i] : "Not yet hatched."}</div>
+        </div>`;
+      }).join("");
+      const n = document.getElementById("bookCount");
+      if (n) n.textContent = bookKnown();
+    }
+    function canFiveMerge() {
+      const tally = {};
+      board().forEach(it => {
+        if (!it) return;
+        tally[it.level] = (tally[it.level] || 0) + it.count;
+      });
+      return Object.values(tally).some(n => n >= 5);
+    }
+    function showTrailFail(why) {
+      const el = document.getElementById("trailFail");
+      const p = document.getElementById("failWhy");
+      if (p) p.textContent = why;
+      if (el) el.classList.add("open");
+    }
+    function hideTrailFail() {
+      const el = document.getElementById("trailFail");
+      if (el) el.classList.remove("open");
+    }
+    function checkTrailStuck() {
+      if (state.mode !== "stage") return;
+      if (state.trailWon || (state.ashBurned || 0) >= ASH_GOAL) return;
+      if ((state.trailGathers || 0) > 0) return;
+      if (canFiveMerge()) return;
+      sfx("fail");
+      showTrailFail("The pouch is empty and nothing can 5-merge. The nest is still safe.");
+    }
+    function restartTrail() {
+      hideTrailFail();
+      state.mode = "stage";
+      resetTrail();
+      generateTrail();
+      toast("Ash Trail · burn " + ASH_GOAL + " ash to finish");
+      save(); render();
+    }
+    function failStage() {
+      if (state.mode !== "stage") return;
+      if (state.trailWon || (state.ashBurned || 0) >= ASH_GOAL) return;
+      sfx("fail");
+      showTrailFail("Ash covered the path. The nest is still safe.");
+    }
+
+    function dayKey() {
+      const d = new Date();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return d.getFullYear() + "-" + m + "-" + day;
+    }
+    function rollDaily() {
+      const k = dayKey();
+      if (state.ashDayKey !== k) {
+        state.ashDayKey = k;
+        state.ashDayWins = 0;
+      }
+    }
+    function msToMidnight() {
+      const n = new Date();
+      const next = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1);
+      return next.getTime() - n.getTime();
+    }
+    function midnightLabel() {
+      const ms = msToMidnight();
+      const h = Math.floor(ms / 3600000);
+      const m = Math.ceil((ms % 3600000) / 60000);
+      if (h <= 0) return m + "m";
+      return h + "h " + (m === 60 ? 0 : m) + "m";
+    }
+    function dailyLeft() {
+      rollDaily();
+      return Math.max(0, DAILY_CLEARS - (state.ashDayWins || 0));
+    }
+    function nextPay() {
+      rollDaily();
+      const i = state.ashDayWins || 0;
+      return i < DAILY_PAYS.length ? DAILY_PAYS[i] : 0;
+    }
+    function trailReady() {
+      return true;
+    }
+    function trailWaitLabel() {
+      const left = dailyLeft();
+      if (left > 0) return "Ash Trail " + (DAILY_CLEARS - left + 1) + "/" + DAILY_CLEARS;
+      return "Trail · " + midnightLabel();
+    }
+
+    function enterStage() {
+      if (state.mode === "stage") {
+        state.mode = "home";
+        resetTrail();
+        toast("Returned to the nest");
+        save(); render();
+        return;
+      }
+      state.mode = "stage";
+      resetTrail();
+      generateTrail();
+      toast("Ash Trail · burn " + ASH_GOAL + " ash to finish");
+      save(); render();
+    }
+
+    function highestOwned() {
+      let high = 0;
+      Object.keys(state.book || {}).forEach(k => {
+        if (state.book[k]) high = Math.max(high, +k);
+      });
+      (state.cells || []).forEach(it => {
+        if (it) high = Math.max(high, it.level);
+      });
+      return high;
+    }
+    function trailGiftLevel() {
+      const high = highestOwned();
+      return Math.min(2, Math.max(0, high - 1));
+    }
+    function eggPrice() {
+      return 250 + (state.eggsBought || 0) * 40;
+    }
+    function buyEgg() {
+      if (state.mode === "stage") {
+        toast("Buy eggs at the nest");
+        return;
+      }
+      const cost = eggPrice();
+      if (state.coins < cost) { toast("Need " + cost + "● for an egg"); return; }
+      if (!spawn(0, 1)) return;
+      state.coins -= cost;
+      state.eggsBought = (state.eggsBought || 0) + 1;
+      sfx("buy");
+      toast("Egg bought · " + cost + "●");
+      save(); render();
+    }
+
+    function hideTrailWin() {
+      const el = document.getElementById("trailWin");
+      if (el) el.classList.remove("open");
+    }
+    function showTrailWin(lines, sub) {
+      const box = document.getElementById("winLoot");
+      const s = document.getElementById("winSub");
+      if (s) s.textContent = sub;
+      if (box) box.innerHTML = lines.map(t => `<div>${t}</div>`).join("");
+      const el = document.getElementById("trailWin");
+      if (el) el.classList.add("open");
+    }
+    function winStage() {
+      if (state.mode !== "stage") return;
+      rollDaily();
+      const first = !state.ashCleared;
+      const paid = dailyLeft() > 0;
+      const pay = nextPay();
+      const gift = paid ? trailGiftLevel() : -1;
+      state.ashCleared = true;
+      state.ashWins = (state.ashWins || 0) + 1;
+      if (paid) state.ashDayWins = (state.ashDayWins || 0) + 1;
+      state.lastAshWinAt = 0;
+      state.mode = "home";
+      resetTrail();
+      const lines = [];
+      if (paid) {
+        state.coins += pay;
+        spawn(gift, 1);
+        if (first) spawn(0, 1);
+        lines.push(dragonSvg(gift, 22) + " " + CHAIN[gift].name + " → nest");
+        lines.push("● " + pay + " ember coins");
+        if (first) lines.push("Egg → nest (first clear)");
+      } else {
+        lines.push("No nest gift · daily rewards spent");
+        lines.push("Resets at midnight · " + midnightLabel());
+      }
+      const left = dailyLeft();
+      lines.push("Daily clears left · " + left + "/" + DAILY_CLEARS);
+      lines.push("Ash burned · trail complete");
+      const sub = paid
+        ? (left ? "Reward " + (DAILY_CLEARS - left) + " of " + DAILY_CLEARS + " today." : "That was the last paid clear today.")
+        : "Come back after midnight for nest gifts.";
+      hideTrailFail();
+      addXp(40);
+      sfx("win");
+      showTrailWin(lines, sub);
+      save(); render();
+    }
+
+    function buyDecor(id) {
+      const d = DECOR.find(x => x.id === id);
+      if (!d || state.decor[id]) return;
+      if (state.coins < d.cost) { toast("Need more ember coins"); return; }
+      state.coins -= d.cost;
+      state.decor[id] = true;
+      toast(`${d.name} placed · bonus +${d.bonus}`);
+      sfx("buy");
+      const room = ROOMS.find(r => r.need === id);
+      if (room) {
+        openFogFree(2);
+        sfx("room");
+        toast(room.name + " opened on the mountain");
+      }
+      save(); render();
+    }
+
+    function unlockCost() {
+      const locked = state.locked.filter(Boolean).length;
+      const opened = 12 - locked;
+      return 400 + opened * 280;
+    }
+    function unlock(i) {
+      if (!state.locked[i]) return;
+      const cost = unlockCost();
+      if (state.coins < cost) { toast(`Land costs ${cost}●`); return; }
+      state.coins -= cost;
+      state.locked[i] = false;
+      toast("Land opened");
+      save(); render();
+    }
+
+    function gather() {
+      if (state.mode === "stage") {
+        if ((state.trailGathers || 0) <= 0) {
+          toast("Trail pouch is empty — merge what you have");
+          return;
+        }
+        if (!spawn(0, 1)) return;
+        state.trailGathers -= 1;
+        sfx("gather");
+        save(); render();
+        return;
+      }
+      if (state.energy <= 0) { toast("Energy empty — wait a moment"); return; }
+      if (!spawn(0, 1)) return;
+      state.energy -= 1;
+      sfx("gather");
+      save(); render();
+    }
+
+    function wishList() {
+      const list = QUESTS.slice();
+      if ((state.level || 1) >= 3) {
+        list.push({ want: 4, text: "The hearth wants another Hearth to share the perch.", reward: 1400 });
+      }
+      return list;
+    }
+    function fulfillQuest() {
+      if (state.questDone) return;
+      const list = wishList();
+      const q = list[state.quest % list.length];
+      if (!consumeOne(q.want)) { toast(`Need a ${CHAIN[q.want].name} on the board`); return; }
+      const pay = q.reward * bonus();
+      state.coins += pay;
+      state.gives = (state.gives || 0) + 1;
+      const cap = state.maxEnergy || MAX_ENERGY;
+      state.energy = Math.min(cap, state.energy + 1);
+      state.questDone = true;
+      let extra = "";
+      if (state.gives % 5 === 0) {
+        const pack = 1500 * bonus();
+        state.coins += pack;
+        state.energy = Math.min(cap, state.energy + 2);
+        const nth = state.gives / 5;
+        extra = ` · 5 gifts · +${pack}● +2✦`;
+        sfx("room");
+        spawn(0, 1); spawn(0, 1); spawn(0, 1);
+        extra += " +3 eggs";
+        if (nth % 2 === 0) {
+          spawn(2, 1);
+          extra += " +wyrmling";
+        } else {
+          spawn(1, 1);
+          extra += " +hatchling";
+        }
+      }
+      addXp(20);
+      toast(`Nest is pleased · +${pay}● +1✦` + extra);
+      setTimeout(() => {
+        state.quest = (state.quest + 1) % wishList().length;
+        state.questDone = false;
+        save(); render();
+      }, 900);
+      save(); render();
+    }
+
+    function tickEnergy() {
+      const regenEl = document.getElementById("regen");
+      const cap = state.maxEnergy || MAX_ENERGY;
+      if (state.energy >= cap) {
+        state.nextEnergyAt = Date.now() + REGEN_MS;
+        if (regenEl) regenEl.textContent = "";
+        return;
+      }
+      if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
+      const left = state.nextEnergyAt - Date.now();
+      if (left <= 0) {
+        state.energy = Math.min(cap, state.energy + 1);
+        state.nextEnergyAt = Date.now() + REGEN_MS;
+        save();
+        render();
+        return;
+      }
+      if (regenEl) regenEl.textContent = "· " + Math.ceil(left / 1000) + "s";
+      if (state.mode === "home" && (state.perch || []).some(Boolean)) {
+        if (!state.perchAt) state.perchAt = Date.now() + PERCH_MS;
+        if (Date.now() >= state.perchAt) {
+          perchPay();
+          state.perchAt = Date.now() + PERCH_MS;
+          save();
+        }
+      }
+    }
+    setInterval(tickEnergy, 250);
+
+    let drag = null, ghost = null;
+
+    function itemHtml(item) {
+      const spec = CHAIN[item.level];
+      return `<div class="item pop" style="background:${spec.color}33;border:1px solid ${spec.color}99">
+        ${dragonSvg(item.level, 28, item.count)}
+        <div class="lvl">${spec.name}${item.count > 1 ? " · " + item.count : ""}</div>
+      </div>`;
+    }
+
+    function renderQuest() {
+      if (state.mode === "stage") {
+        const have = board().some(c => c && c.level >= STAGE_GOAL);
+        document.getElementById("questBox").innerHTML = `
+          <div class="art">${dragonSvg(STAGE_GOAL, 30)}</div>
+          <p>Burn <b>${ASH_GOAL} ash</b> · cleared ${state.ashBurned || 0}/${ASH_GOAL} · live ash ${ashCount()}/${ASH_FAIL}. Young clears a whole row.</p>
+          <button id="giveBtn" disabled>${have ? "Done" : "Goal"}</button>
+        `;
+        return;
+      }
+      const list = wishList();
+      const q = list[state.quest % list.length];
+      const have = findLevel(q.want) >= 0;
+      document.getElementById("questBox").innerHTML = `
+        <div class="art">${dragonSvg(q.want, 30)}</div>
+        <p>${state.questDone ? "The nest settles. A new wish is forming…" : q.text} · gifts ${(state.gives || 0) % 5}/5</p>
+        <button id="giveBtn" ${have && !state.questDone ? "" : "disabled"}>${state.questDone ? "…" : "Give"}</button>
+      `;
+      const btn = document.getElementById("giveBtn");
+      if (btn) btn.onclick = fulfillQuest;
+    }
+
+    function render() {
+      rollDaily();
+      document.getElementById("app").classList.toggle("stage", state.mode === "stage");
+      document.getElementById("title").innerHTML = state.mode === "stage" ? "Ash <span>Trail</span>" : "Ember <span>Nest</span>";
+      document.getElementById("hint").textContent = state.mode === "stage"
+        ? "Leave trail"
+        : trailWaitLabel();
+      const lc = document.getElementById("lvlChip");
+      if (lc) lc.textContent = "Lv " + (state.level || 1) + " · " + (state.xp || 0) + "/" + xpNeed(state.level || 1);
+      document.getElementById("coins").textContent = state.coins;
+      document.getElementById("energy").textContent = state.energy;
+      const em = document.getElementById("energyMax");
+      if (em) em.textContent = state.maxEnergy || MAX_ENERGY;
+      const hg = document.getElementById("hearthGoal");
+      if (hg) hg.textContent = state.hearthDone
+        ? "Goal · Hearth hatched · mountain warm"
+        : "Goal · Hatch a Hearth";
+      tickEnergy();
+      const bonusEl = document.getElementById("bonus");
+      if (bonusEl) bonusEl.textContent = bonus();
+      gatherBtn.disabled = state.mode === "stage"
+        ? (state.trailGathers || 0) <= 0
+        : state.energy <= 0;
+      renderBook();
+      gatherBtn.textContent = state.mode === "stage"
+        ? "Gather egg · " + (state.trailGathers || 0) + " left"
+        : "Gather egg · 1✦";
+      const buy = document.getElementById("buyEgg");
+      if (buy) {
+        buy.textContent = "Buy egg · " + eggPrice() + "●";
+        buy.disabled = state.mode === "stage";
+        buy.style.opacity = state.mode === "stage" ? ".45" : "1";
+      }
+      renderQuest();
+
+      nestEl.innerHTML = DECOR.map(d => {
+        const owned = !!state.decor[d.id];
+        return `<div class="decor ${owned ? "owned" : ""}" data-decor="${d.id}">
+          <div class="ico">${d.art}</div>
+          <div>${d.name}</div>
+          <div>${owned ? "placed" : d.cost + "●"}</div>
+        </div>`;
+      }).join("");
+      const mt = document.getElementById("mountain");
+      const rc = document.getElementById("roomCount");
+      if (rc) rc.textContent = roomsOpen();
+      if (mt) {
+        const openN = roomsOpen();
+        mt.innerHTML = ROOMS.map((r, i) => {
+          const open = i < openN;
+          const now = i === openN - 1;
+          return `<div class="room ${open ? "open" : ""} ${now ? "now" : ""} ${state.theme === r.id ? "now" : ""}" data-room="${r.id}">${r.art}<br>${open ? r.name : "—"}</div>`;
+        }).join("");
+      }
+      applyTheme(state.theme || "hatchery");
+      const pr = document.getElementById("perchRow");
+      if (pr) {
+        state.perch = state.perch || [null, null, null];
+        pr.innerHTML = [0, 1, 2].map(i => {
+          const open = perchOpen(i);
+          const p = state.perch[i];
+          const armed = perchArmed === i;
+          if (!open) return `<div class="perch lock" data-perch="${i}">locked</div>`;
+          if (p) return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">${dragonSvg(p.level, 26)}<span>${CHAIN[p.level].name}</span></div>`;
+          return `<div class="perch ${armed ? "armed" : ""}" data-perch="${i}">empty perch</div>`;
+        }).join("");
+      }
+
+      const cells = board();
+      boardEl.innerHTML = "";
+      for (let i = 0; i < cells.length; i++) {
+        const cell = document.createElement("div");
+        const flashed = state._flash && state._flash.includes(i);
+        cell.className = "cell" + (isLocked(i) ? " locked" : "") + (isAsh(i) ? " ash" : "") + (flashed ? " flash" : "");
+        cell.dataset.i = i;
+        if (isLocked(i)) cell.textContent = "fog · " + unlockCost() + "●";
+        else if (isAsh(i)) cell.innerHTML = ashSvg();
+        else if (cells[i]) cell.innerHTML = itemHtml(cells[i]);
+        boardEl.appendChild(cell);
+      }
+      if (state.mode === "stage") checkTrailStuck();
+      if (state._flash && state._flash.length) {
+        setTimeout(() => { state._flash = []; }, 280);
+      }
+    }
+
+    function cellFromPoint(x, y) {
+      const el = document.elementFromPoint(x, y);
+      if (!el) return null;
+      const cell = el.closest(".cell");
+      return cell ? +cell.dataset.i : null;
+    }
+
+    boardEl.addEventListener("pointerdown", (e) => {
+      const cell = e.target.closest(".cell");
+      if (!cell) return;
+      const i = +cell.dataset.i;
+      if (isLocked(i)) { unlock(i); return; }
+      if (perchArmed >= 0 && board()[i] && state.mode !== "stage") {
+        seatPerch(perchArmed, i);
+        return;
+      }
+      if (!board()[i]) return;
+      drag = { from: i };
+      ghost = document.createElement("div");
+      ghost.className = "ghost";
+      ghost.innerHTML = dragonSvg(board()[i].level, 32, board()[i].count);
+      document.body.appendChild(ghost);
+      ghost.style.left = e.clientX + "px";
+      ghost.style.top = e.clientY + "px";
+      boardEl.setPointerCapture(e.pointerId);
+    });
+
+    boardEl.addEventListener("pointermove", (e) => {
+      if (!drag || !ghost) return;
+      ghost.style.left = e.clientX + "px";
+      ghost.style.top = e.clientY + "px";
+      document.querySelectorAll(".cell.valid").forEach(c => c.classList.remove("valid"));
+      const over = cellFromPoint(e.clientX, e.clientY);
+      if (over == null || isLocked(over) || isAsh(over)) return;
+      const a = board()[drag.from];
+      const b = board()[over];
+      if (over !== drag.from && a && ((b && a.level === b.level) || !b)) {
+        boardEl.children[over].classList.add("valid");
+      }
+    });
+
+    function endDrag(e) {
+      if (!drag) return;
+      const over = cellFromPoint(e.clientX, e.clientY);
+      const from = drag.from;
+      if (ghost) ghost.remove();
+      ghost = null;
+      document.querySelectorAll(".cell.valid").forEach(c => c.classList.remove("valid"));
+      const cells = board();
+      if (over != null && over !== from && cells[from] && !isLocked(over) && !isAsh(over)) {
+        if (cells[over] && cells[over].level === cells[from].level) {
+          mergeInto(from, over);
+        } else if (!cells[over]) {
+          cells[over] = cells[from];
+          cells[from] = null;
+        }
+      }
+      drag = null;
+      save(); render();
+    }
+    boardEl.addEventListener("pointerup", endDrag);
+    boardEl.addEventListener("pointercancel", endDrag);
+
+    nestEl.addEventListener("click", (e) => {
+      const el = e.target.closest("[data-decor]");
+      if (el) buyDecor(el.dataset.decor);
+    });
+    document.getElementById("mountain").addEventListener("click", (e) => {
+      const el = e.target.closest("[data-room]");
+      if (!el) return;
+      const id = el.dataset.room;
+      const room = ROOMS.find(r => r.id === id);
+      if (!room) return;
+      if (room.need && !state.decor[room.need]) { toast("That room is still sealed"); return; }
+      applyTheme(id);
+      save(); render();
+    });
+    document.getElementById("perchRow").addEventListener("click", (e) => {
+      const el = e.target.closest("[data-perch]");
+      if (!el) return;
+      const i = +el.dataset.perch;
+      if (!perchOpen(i) || state.mode === "stage") return;
+      if (state.perch[i] && perchArmed !== i) { emptyPerch(i); return; }
+      perchArmed = perchArmed === i ? -1 : i;
+      render();
+      if (perchArmed >= 0) toast("Tap a nest dragon to perch it");
+    });
+    gatherBtn.addEventListener("click", gather);
+    document.getElementById("buyEgg").addEventListener("click", buyEgg);
+    document.getElementById("chestOk").addEventListener("click", () => {
+      const box = document.getElementById("chestBox");
+      const needsOpen = box && box.style.display !== "none" && !box.disabled;
+      if (needsOpen) { toast("Tap the chest to open it"); return; }
+      document.getElementById("chest").classList.remove("open");
+      levelShowing = false;
+      showLevelEvent();
+    });
+    document.getElementById("chestBox").addEventListener("click", revealChest);
+    document.getElementById("hint").addEventListener("click", enterStage);
+    document.getElementById("restartTrail").addEventListener("click", restartTrail);
+    document.getElementById("winHome").addEventListener("click", hideTrailWin);
+    document.getElementById("winAgain").addEventListener("click", () => {
+      hideTrailWin();
+      restartTrail();
+    });
+    document.getElementById("homeTrail").addEventListener("click", () => {
+      hideTrailFail();
+      state.mode = "home";
+      resetTrail();
+      toast("Returned to the nest");
+      save(); render();
+    });
+    document.getElementById("bookBtn").addEventListener("click", () => {
+      renderBook();
+      document.getElementById("book").classList.add("open");
+    });
+    document.getElementById("bookClose").addEventListener("click", () => {
+      document.getElementById("book").classList.remove("open");
+    });
+    document.getElementById("resetAll").addEventListener("click", () => {
+      localStorage.removeItem(SAVE);
+      localStorage.removeItem("ember-nest-v2");
+      location.reload();
+    });
+    document.getElementById("book").addEventListener("click", (e) => {
+      if (e.target.id === "book") document.getElementById("book").classList.remove("open");
+    });
+
+    load();
+    scanBook();
+    if (!state.hearthDone && (state.cells || []).some(it => it && it.level >= 4)) {
+      completeHearthGoal();
+    }
+    if (!state.cells.some(Boolean)) {
+      [0,0,0,0,0,0,1,1,0].forEach(lv => spawn(lv, 1));
+      save();
+    }
+    render();
+  </script>
+</body>
+</html>
