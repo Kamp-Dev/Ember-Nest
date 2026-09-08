@@ -437,6 +437,18 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
   const lo = shiny ? "#e5a100" : pal[1];
   
   const n = Math.max(1, Math.min(4, count || 1));
+
+  // Special handling for Level 1 Hatchling 4-stage stack images
+  if (level === 1) {
+    const hatchlingImages = ["hatchling-1.png", "hatchling-2.png", "hatchling-3.png", "hatchling-4.png"];
+    const currentImg = hatchlingImages[n - 1] || hatchlingImages[0];
+    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
+      <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="${currentImg}" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>`;
+  }
+
   const body = oneSprite(level, hi, lo);
   const bits = stackLayout(n).map(([x, y, s]) =>
     `<g transform="translate(${x},${y}) scale(${s}) translate(-16,-16)">${body}</g>`
