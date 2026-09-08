@@ -82,6 +82,7 @@ function sfx(kind) {
   else if (kind === "gather") beep(260, 0.06, "sine", 0.04);
   else if (kind === "buy") { beep(500, 0.08, "sine", 0.05); setTimeout(() => beep(700, 0.12, "sine", 0.05), 70); }
   else if (kind === "room") { beep(360, 0.1, "triangle", 0.05); setTimeout(() => beep(540, 0.16, "triangle", 0.05), 80); }
+  else if (kind === "shiny") { beep(600, 0.1, "sine", 0.08); setTimeout(() => beep(900, 0.2, "triangle", 0.1), 80); }
 }
 
 function spawnParticles(x, y, count = 8, color = '#ffcf40') {
@@ -108,6 +109,7 @@ function spawnParticles(x, y, count = 8, color = '#ffcf40') {
 function xpNeed(lv) { return 30 + lv * 20; }
 const levelQueue = [];
 let levelShowing = false;
+let currentBookTab = 0; // 0 = Main, 1 = Rare
 
 function addXp(n) {
   if (!n) return;
@@ -212,7 +214,12 @@ function applyTheme(id) {
 let perchArmed = -1;
 function perchIncome() {
   const curve = [5, 15, 30, 60, 120, 240];
-  return (state.perch || []).reduce((s, p) => s + (p ? curve[p.level] : 0), 0);
+  return (state.perch || []).reduce((s, p) => {
+    if (!p) return s;
+    const base = curve[p.level];
+    const mult = p.shiny ? 2.5 : 1;
+    return s + Math.floor(base * mult);
+  }, 0);
 }
 
 function tributeCost() {
@@ -236,12 +243,12 @@ function seatPerch(slot, boardI) {
       toast("Perch must be empty to split stack.");
       return;
     } else {
-      state.perch[slot] = { level: draggedItem.level, count: 1 };
+      state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
       draggedItem.count -= 1;
     }
   } else {
-    state.perch[slot] = { level: draggedItem.level, count: 1 };
-    cells[boardI] = existingPerch ? { level: existingPerch.level, count: 1 } : null;
+    state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+    cells[boardI] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny } : null;
   }
 
   perchArmed = -1;
@@ -252,7 +259,7 @@ function seatPerch(slot, boardI) {
 function emptyPerch(slot) {
   const p = state.perch[slot];
   if (!p) return;
-  if (!spawn(p.level, p.count)) { toast("Board full"); return; }
+  if (!spawn(p.level, p.count, null, p.shiny)) { toast("Board full"); return; }
   state.perch[slot] = null;
   perchArmed = -1;
   save(); render();
@@ -419,7 +426,7 @@ function stackLayout(n) {
   return [[10, 10, 0.55], [22, 10, 0.55], [10, 22, 0.55], [22, 22, 0.55]];
 }
 
-function dragonSvg(level, size = 42, count = 1) {
+function dragonSvg(level, size = 42, count = 1, shiny = false) {
   const pal = [
     ["#d99b66", "#8a4f28"],
     ["#ffb554", "#d45817"],
@@ -428,13 +435,19 @@ function dragonSvg(level, size = 42, count = 1) {
     ["#ff8a47", "#d9381e"],
     ["#ffc83b", "#e04e1b"],
   ][level] || ["#ffb554", "#d45817"];
-  const [hi, lo] = pal;
+  
+  // Shift palette slightly if shiny
+  const hi = shiny ? "#ffea75" : pal[0];
+  const lo = shiny ? "#e5a100" : pal[1];
+  
   const n = Math.max(1, Math.min(4, count || 1));
   const body = oneSprite(level, hi, lo);
   const bits = stackLayout(n).map(([x, y, s]) =>
     `<g transform="translate(${x},${y}) scale(${s}) translate(-16,-16)">${body}</g>`
   ).join("");
-  return `<svg viewBox="0 0 32 32" width="${size}" height="${size}">${bits}</svg>`;
+  
+  const glow = shiny ? `<filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : ``;
+  return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>${bits}</svg>`;
 }
 
 function ashSvg() {
@@ -468,6 +481,7 @@ const defaultState = () => ({
   ashDayKey: "",
   ashDayWins: 0,
   book: { 0: true },
+  rareBook: {},
   gives: 0,
   maxEnergy: 5,
   hearthDone: false,
@@ -567,8 +581,8 @@ function emptyOpen() {
   return cells.map((v, i) => (!v && !isLocked(i) && !isAsh(i) ? i : -1)).filter(i => i >= 0);
 }
 
-function dismissPay(level) {
-  return 15 + level * 30;
+function dismissPay(level, shiny = false) {
+  return (15 + level * 30) * (shiny ? 3 : 1);
 }
 
 function freePerchSlot() {
@@ -592,7 +606,7 @@ function showOverflow() {
 
 let overflowArm = null;
 
-function spawn(level, count = 1, at) {
+function spawn(level, count = 1, at, forceShiny = false) {
   const cells = board();
   const free = emptyOpen();
   if (!free.length) {
@@ -601,7 +615,12 @@ function spawn(level, count = 1, at) {
     return false;
   }
   const i = at != null && !cells[at] && !isLocked(at) ? at : free[Math.floor(Math.random() * free.length)];
-  cells[i] = { level, count };
+  
+  // 5% chance to be shiny unless forced
+  const shiny = forceShiny || (Math.random() < 0.05);
+  if (shiny) discoverRare(level);
+
+  cells[i] = { level, count, shiny };
   return true;
 }
 
@@ -625,6 +644,10 @@ function mergeInto(fromI, toI) {
   if (!a || !b || fromI === toI) return false;
   if (a.level !== b.level) return false;
   if (a.level >= CHAIN.length - 1) { toast("Elders keep watch • no further merge"); return false; }
+  
+  // If either is shiny, the child inherits shiny status or gets a roll bonus
+  const isShiny = a.shiny || b.shiny || (Math.random() < 0.08);
+
   let total = a.count + b.count;
   cells[fromI] = null;
   let produced = 0;
@@ -634,34 +657,36 @@ function mergeInto(fromI, toI) {
   }
   if (produced) {
     const next = a.level + 1;
-    const payout = state.mode === "stage" ? 0 : (80 + next * 45) * bonus();
+    const payout = state.mode === "stage" ? 0 : (80 + next * 45) * bonus() * (isShiny ? 2 : 1);
     if (payout) state.coins += payout;
     if (state.mode !== "stage" && next === 4) completeHearthGoal();
     if (state.mode !== "stage") addXp(15 + next * 10);
-    sfx("merge");
+    sfx(isShiny ? "shiny" : "merge");
     
     const cellEl = boardEl.children[toI];
     if (cellEl) {
       const rect = cellEl.getBoundingClientRect();
-      spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, 12, '#ffcf40');
+      spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, isShiny ? 20 : 12, isShiny ? '#ffea75' : '#ffcf40');
     }
 
+    if (isShiny) discoverRare(next);
+
     toast(payout
-      ? `${CHAIN[next].name} hatched! +${payout} 🪙`
+      ? `${isShiny ? '✨ Shiny ' : ''}${CHAIN[next].name} hatched! +${payout} 🪙`
       : `${CHAIN[next].name} hatched!`);
     discover(next);
     let landed = toI;
     if (total > 0) {
-      cells[toI] = { level: a.level, count: total };
+      cells[toI] = { level: a.level, count: total, shiny: a.shiny };
       const free = emptyOpen();
       if (free.length) {
         landed = free[0];
-        cells[landed] = { level: next, count: produced };
+        cells[landed] = { level: next, count: produced, shiny: isShiny };
       } else {
-        cells[toI] = { level: next, count: produced };
+        cells[toI] = { level: next, count: produced, shiny: isShiny };
       }
     } else {
-      cells[toI] = { level: next, count: produced };
+      cells[toI] = { level: next, count: produced, shiny: isShiny };
     }
     if (state.mode === "stage") {
       applyWarmth(landed, next);
@@ -680,7 +705,7 @@ function mergeInto(fromI, toI) {
       }
     }
   } else {
-    cells[toI] = { level: a.level, count: total };
+    cells[toI] = { level: a.level, count: total, shiny: a.shiny };
   }
   return true;
 }
@@ -760,14 +785,18 @@ function generateTrail() {
   let bagIndex = 0;
   for (let i = 0; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
     if (i % 7 !== 0) { 
-      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1 };
+      const isShiny = Math.random() < 0.05;
+      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1, shiny: isShiny };
+      if (isShiny) discoverRare(TRAIL_BAG[bagIndex]);
       bagIndex++;
     }
   }
 
   for (let i = 0; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
     if (!state.stageCells[i]) {
-      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1 };
+      const isShiny = Math.random() < 0.05;
+      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1, shiny: isShiny };
+      if (isShiny) discoverRare(TRAIL_BAG[bagIndex]);
       bagIndex++;
     }
   }
@@ -808,6 +837,11 @@ function bookKnown() {
   return Object.keys(state.book).filter(k => state.book[k]).length;
 }
 
+function rareBookKnown() {
+  state.rareBook = state.rareBook || {};
+  return Object.keys(state.rareBook).filter(k => state.rareBook[k]).length;
+}
+
 function discover(level) {
   state.book = state.book || { 0: true };
   if (state.book[level]) return;
@@ -817,26 +851,62 @@ function discover(level) {
   toast(`Book unlocked: ${CHAIN[level].name} • +${pay} 🪙`);
 }
 
+function discoverRare(level) {
+  state.rareBook = state.rareBook || {};
+  if (state.rareBook[level]) return;
+  state.rareBook[level] = true;
+  const pay = 300 + level * 150;
+  state.coins += pay;
+  sfx("shiny");
+  toast(`✨ Rare Shiny Unlocked: ${CHAIN[level].name}! +${pay} 🪙`);
+}
+
 function scanBook() {
   [state.cells, state.stageCells].forEach(arr => {
-    (arr || []).forEach(it => { if (it) discover(it.level); });
+    (arr || []).forEach(it => { 
+      if (it) {
+        discover(it.level);
+        if (it.shiny) discoverRare(it.level);
+      } 
+    });
   });
 }
+
+window.switchBookTab = (tabIndex) => {
+  currentBookTab = tabIndex;
+  document.getElementById("tabMain").classList.toggle("active", tabIndex === 0);
+  document.getElementById("tabRare").classList.toggle("active", tabIndex === 1);
+  renderBook();
+};
 
 function renderBook() {
   const grid = document.getElementById("bookGrid");
   if (!grid) return;
-  state.book = state.book || { 0: true };
-  grid.innerHTML = CHAIN.map((spec, i) => {
-    const known = !!state.book[i];
-    return `<div class="card ${known ? "" : "locked"}">
-      <div>${known ? dragonSvg(i, 32) : "❓"}</div>
-      <div class="nm">${known ? spec.name : "Unknown"}</div>
-      <div class="bl">${known ? LORE[i] : "Not yet hatched."}</div>
-    </div>`;
-  }).join("");
+  
+  if (currentBookTab === 0) {
+    state.book = state.book || { 0: true };
+    grid.innerHTML = CHAIN.map((spec, i) => {
+      const known = !!state.book[i];
+      return `<div class="card ${known ? "" : "locked"}">
+        <div>${known ? dragonSvg(i, 32) : "❓"}</div>
+        <div class="nm">${known ? spec.name : "Unknown"}</div>
+        <div class="bl">${known ? LORE[i] : "Not yet hatched."}</div>
+      </div>`;
+    }).join("");
+  } else {
+    state.rareBook = state.rareBook || {};
+    grid.innerHTML = CHAIN.map((spec, i) => {
+      const known = !!state.rareBook[i];
+      return `<div class="card shiny ${known ? "" : "locked"}">
+        <div>${known ? dragonSvg(i, 32, 1, true) : "✨ ❓"}</div>
+        <div class="nm" style="color:var(--gold);">${known ? "Shiny " + spec.name : "Unknown Shiny"}</div>
+        <div class="bl">${known ? "Perch bonus 2.5x income. " + LORE[i] : "Find a shiny variant."}</div>
+      </div>`;
+    }).join("");
+  }
+
   const n = document.getElementById("bookCount");
-  if (n) n.textContent = bookKnown();
+  if (n) n.textContent = currentBookTab === 0 ? bookKnown() : rareBookKnown();
 }
 
 function canFiveMerge() {
@@ -1257,8 +1327,8 @@ let drag = null, ghost = null;
 function itemHtml(item) {
   const spec = CHAIN[item.level];
   return `<div class="item pop">
-    ${dragonSvg(item.level, 42, item.count)}
-    <div class="lvl" style="color:#fff; text-shadow:0 2px 2px #000, 0 0 4px #000;">${spec.name}${item.count > 1 ? " • " + item.count : ""}</div>
+    ${dragonSvg(item.level, 42, item.count, item.shiny)}
+    <div class="lvl" style="color:#fff; text-shadow:0 2px 2px #000, 0 0 4px #000;">${item.shiny ? '✨ ' : ''}${spec.name}${item.count > 1 ? " • " + item.count : ""}</div>
   </div>`;
 }
 
@@ -1421,7 +1491,7 @@ function render() {
       const p = state.perch[i];
       const armed = perchArmed === i;
       if (!open) return `<div class="perch lock" data-perch="${i}">locked</div>`;
-      if (p) return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">${dragonSvg(p.level, 26)}<span>${CHAIN[p.level].name}</span></div>`;
+      if (p) return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">${dragonSvg(p.level, 26, 1, p.shiny)}<span>${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}</span></div>`;
       return `<div class="perch ${armed ? "armed" : ""}" data-perch="${i}">empty perch</div>`;
     }).join("");
   }
@@ -1464,11 +1534,11 @@ boardEl.addEventListener("pointerdown", (e) => {
       seatPerch(slot, i);
     } else if (overflowArm === "dismiss") {
       const it = board()[i];
-      const pay = dismissPay(it.level);
+      const pay = dismissPay(it.level, it.shiny);
       if (it.count > 1) it.count -= 1;
       else board()[i] = null;
       state.coins += pay;
-      toast("Dismissed " + CHAIN[it.level].name + " • +" + pay + " 🪙");
+      toast(`Dismissed ${it.shiny ? '✨ Shiny ' : ''}${CHAIN[it.level].name} • +${pay} 🪙`);
       sfx("gather");
       save(); render();
     }
@@ -1483,7 +1553,7 @@ boardEl.addEventListener("pointerdown", (e) => {
   drag = { from: i };
   ghost = document.createElement("div");
   ghost.className = "ghost";
-  ghost.innerHTML = dragonSvg(board()[i].level, 42, board()[i].count);
+  ghost.innerHTML = dragonSvg(board()[i].level, 42, board()[i].count, board()[i].shiny);
   document.body.appendChild(ghost);
   ghost.style.left = e.clientX + "px";
   ghost.style.top = e.clientY + "px";
@@ -1541,13 +1611,13 @@ function endDrag(e) {
         if (existingPerch) {
            toast("Perch must be empty to split stack.");
         } else {
-           state.perch[slot] = { level: draggedItem.level, count: 1 };
+           state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
            draggedItem.count -= 1;
            sfx("buy");
         }
       } else {
-        state.perch[slot] = { level: draggedItem.level, count: 1 };
-        cells[from] = existingPerch ? { level: existingPerch.level, count: 1 } : null;
+        state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+        cells[from] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny } : null;
         sfx("buy");
       }
     }
@@ -1693,7 +1763,7 @@ document.getElementById("wipeGo").addEventListener("click", () => {
 
 document.getElementById("wipeNo").addEventListener("click", () => {
   document.getElementById("wipe").classList.remove("open");
-});
+end
 
 document.getElementById("overClose").addEventListener("click", () => {
   document.getElementById("overflow").classList.remove("open");
