@@ -409,3 +409,32 @@ button {
 #book .card.locked { opacity: .45; }
 #book .card .nm { font-size: .8rem; font-weight: 800; color: var(--gold); }
 #book .card .bl { font-size: .68rem; color: #c9a36a; margin-top: 4px; line-height: 1.3; }
+
+/* Carousel & Rare Tab Styling */
+.book-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.book-tab {
+  flex: 1;
+  background: #170d09;
+  border: 1.5px solid #452818;
+  color: #c9a36a;
+  padding: 6px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-align: center;
+}
+.book-tab.active {
+  background: linear-gradient(180deg, #5e3b24, #382113);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.card.shiny {
+  background: linear-gradient(135deg, #2a1f12, #170d09);
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 12px #ffcf4044;
+}
