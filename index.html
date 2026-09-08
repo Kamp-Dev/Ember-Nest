@@ -77,7 +77,7 @@
     .title-container { display: flex; flex-direction: column; }
     h1 { margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: .05em; color: var(--gold); text-shadow: 0 2px 4px #000a, 0 0 10px #ffaa0044; line-height: 1; }
     h1 span { color: var(--ember); }
-    #nameLine { font-size: .85rem; font-weight: 800; color: #deb781; margin-top: 4px; text-shadow: 0 1px 2px #000; cursor: pointer; }
+    #nameLine { font-size: 1rem; font-weight: 900; color: #ffcf40; margin-top: 5px; text-shadow: 0 1px 3px #000; cursor: pointer; letter-spacing: .03em; }
     
     .stats { display: flex; gap: 6px; font-size: .78rem; font-weight: 800; flex-wrap: wrap; justify-content: flex-end; max-width: 60%; }
     .chip {
@@ -367,6 +367,9 @@
     #book.open, #trailFail.open, #trailWin.open, #chest.open, #guide.open, #wipe.open, #overflow.open, #nameBox.open, #sleepyGuide.open {
       display: flex;
     }
+    #book { z-index: 50 !important; }
+    #wipe { z-index: 80 !important; }
+
     .panel {
       width: min(420px, 100%); background: #261711;
       border: 2px solid #5a3a24; border-radius: 18px; padding: 16px;
@@ -459,7 +462,7 @@
     <div class="panel">
       <h2>Ash Trail</h2>
       <p>Burn <b>6 ash</b> to clear the path. Live ash at <b>12</b> closes it.</p>
-      <p>Only a <b>5-merge</b> burns ash. Hatchling 1 side, Wyrmling 2 sides, Young a whole row.</p>
+      <p>Only a <b>5-merge</b> burns ash. Hatchling 1 side, Wyrmling 4 directions (1 block), Young a whole row.</p>
       <p>Merge <b>next to the cracks</b>. The pouch is spare eggs, not the puzzle.</p>
       <p>Win beats "no moves" if both happen on the same merge.</p>
       <button class="close" id="guideClose">Got it</button>
@@ -545,7 +548,8 @@
   </div>
 
   <script>
-    const COLS = 6, ROWS = 6, MAX_ENERGY = 5, SAVE = "ember-nest-v9";
+    const COLS = 6, ROWS = 6, MAX_ENERGY = 5;
+    const SAVE = "ember-nest-save";
     const REGEN_MS = 8000;
     const PERCH_MS = 20000;
     const OPEN_START = COLS * 5;
@@ -558,6 +562,8 @@
     const DAILY_PAYS = [1200, 800, 400];
     const DAILY_CLEARS = 3;
     const RENAME_COST = 2000;
+
+    const TRAIL_BAG = [2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
 
     const CHAIN = [
       { id: "egg",   name: "Egg",       color: "#6b4a32" },
@@ -788,7 +794,6 @@
       }
     }
 
-    // NEW: Spine-Rigged SVG Generation
     function oneSprite(level, hi, lo) {
       if (level === 0) {
         return `
@@ -1017,7 +1022,13 @@
 
     function load() {
       try {
-        const raw = localStorage.getItem(SAVE);
+        let raw = localStorage.getItem(SAVE);
+        if (!raw) {
+          for (let v = 10; v >= 1; v--) {
+            raw = localStorage.getItem("ember-nest-v" + v);
+            if (raw) break;
+          }
+        }
         if (!raw) return;
         const s = JSON.parse(raw);
         state = { ...defaultState(), ...s };
@@ -1196,16 +1207,6 @@
       return true;
     }
 
-    function neighbors(i) {
-      const c = i % COLS, r = Math.floor(i / COLS);
-      const out = [];
-      if (c > 0) out.push(i - 1);
-      if (c < COLS - 1) out.push(i + 1);
-      if (r > 0) out.push(i - COLS);
-      if (r < ROWS - 1) out.push(i + COLS);
-      return out;
-    }
-
     function clearAshAt(i) {
       if (!state.ash || !state.ash[i]) return false;
       state.ash[i] = false;
@@ -1216,100 +1217,101 @@
     function applyWarmth(landed, nextLevel) {
       if (nextLevel < 1) return;
       const flashes = [];
-      const burnNear = (max) => {
-        const spots = neighbors(landed).filter(i => state.ash && state.ash[i]);
-        spots.slice(0, max).forEach(i => {
+      const col = landed % COLS;
+      const row = Math.floor(landed / COLS);
+
+      const burnNear = () => {
+        neighbors(landed).forEach(i => {
           if (clearAshAt(i)) flashes.push(i);
         });
       };
+
+      const burnFourDirections = () => {
+        const targets = [];
+        if (row > 0) targets.push((row - 1) * COLS + col);
+        if (row < ROWS - 1) targets.push((row + 1) * COLS + col);
+        if (col > 0) targets.push(row * COLS + (col - 1));
+        if (col < COLS - 1) targets.push(row * COLS + (col + 1));
+        
+        targets.forEach(i => {
+          if (clearAshAt(i)) flashes.push(i);
+        });
+      };
+
       const burnRow = () => {
-        const row = Math.floor(landed / COLS);
         for (let c = 0; c < COLS; c++) {
           const i = row * COLS + c;
           if (clearAshAt(i)) flashes.push(i);
         }
       };
+
       const burnCol = () => {
-        const col = landed % COLS;
         for (let r = 0; r < ROWS; r++) {
           const i = r * COLS + col;
           if (clearAshAt(i)) flashes.push(i);
         }
       };
+
       if (nextLevel >= 5) { burnRow(); burnCol(); }
       else if (nextLevel >= 3) burnRow();
-      else if (nextLevel === 2) burnNear(2);
-      else burnNear(1);
+      else if (nextLevel === 2) burnFourDirections();
+      else burnNear();
+
       state._flash = flashes;
     }
 
-    const TRAIL_BAG = [2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
-    const TRAIL_ASH = 5;
-
-    function tallyLevel(level) {
-      return board().reduce((s, it) => s + (it && it.level === level ? it.count : 0), 0);
-    }
-
-    function ashNeighbors4(i, ash) {
+    function neighbors(i) {
       const c = i % COLS, r = Math.floor(i / COLS);
-      let n = 0;
-      if (c > 0 && ash[i - 1]) n++;
-      if (c < COLS - 1 && ash[i + 1]) n++;
-      if (r > 0 && ash[i - COLS]) n++;
-      if (r < ROWS - 1 && ash[i + COLS]) n++;
-      return n;
+      const out = [];
+      if (c > 0) out.push(i - 1);
+      if (c < COLS - 1) out.push(i + 1);
+      if (r > 0) out.push(i - COLS);
+      if (r < ROWS - 1) out.push(i + COLS);
+      return out;
     }
 
-    function clumpAshOnce() {
-      const ash = state.ash.slice();
-      const next = ash.slice();
-      for (let i = 0; i < ash.length; i++) {
-        if (state.stageCells[i]) continue;
-        const n = ashNeighbors4(i, ash);
-        if (ash[i] && n === 0) next[i] = false;
-        else if (!ash[i] && n >= 2) next[i] = true;
-      }
-      state.ash = next;
-      let extra = ashCount() - TRAIL_ASH;
-      const lit = state.ash.map((v, i) => v ? i : -1).filter(i => i >= 0);
-      while (extra > 0 && lit.length) {
-        const k = Math.floor(Math.random() * lit.length);
-        state.ash[lit[k]] = false;
-        lit.splice(k, 1);
-        extra--;
-      }
-      while (ashCount() < TRAIL_ASH) {
-        if (!spawnAsh(1)) break;
-      }
-    }
-
-    function trailLayoutOk() {
-      return tallyLevel(1) >= 5 && tallyLevel(2) >= 4 && ashCount() === TRAIL_ASH;
-    }
-
+    // Instant, zero-lag Ash Trail generator
     function generateTrail() {
-      for (let attempt = 0; attempt < 24; attempt++) {
-        state.stageCells = Array(COLS * ROWS).fill(null);
-        state.ash = Array(COLS * ROWS).fill(false);
-        TRAIL_BAG.forEach(lv => spawn(lv, 1));
-        spawnAsh(TRAIL_ASH);
-        clumpAshOnce();
-        if (trailLayoutOk()) return;
-      }
       state.stageCells = Array(COLS * ROWS).fill(null);
       state.ash = Array(COLS * ROWS).fill(false);
-      TRAIL_BAG.forEach(lv => spawn(lv, 1));
-      spawnAsh(TRAIL_ASH);
+      state.stageMerges = 0;
+      state.trailGathers = TRAIL_GATHERS + (state.pouchBonus || 0);
+      state.ashBurned = 0;
+      state.trailWon = false;
+      state._flash = [];
+
+      let bagIndex = 0;
+      for (let i = 0; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
+        if (i % 7 !== 0) { 
+          state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1 };
+          bagIndex++;
+        }
+      }
+
+      for (let i = 0; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
+        if (!state.stageCells[i]) {
+          state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1 };
+          bagIndex++;
+        }
+      }
+
+      let ashPlaced = 0;
+      while (ashPlaced < ASH_GOAL) {
+        const randIdx = Math.floor(Math.random() * (COLS * ROWS));
+        if (!state.stageCells[randIdx] && !state.ash[randIdx]) {
+          state.ash[randIdx] = true;
+          ashPlaced++;
+        }
+      }
     }
 
     function spawnAsh(n) {
-      const free = emptyOpen();
-      if (!free.length) return false;
-      const bag = free.slice();
+      const free = board().map((v, i) => (!v && !state.ash[i] ? i : -1)).filter(i => i >= 0);
       for (let k = 0; k < n; k++) {
-        if (!bag.length) return false;
-        const pick = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
-        state.ash[pick] = true;
+        if (!free.length) return false;
+        const pickIdx = Math.floor(Math.random() * free.length);
+        const spot = free.splice(pickIdx, 1)[0];
+        state.ash[spot] = true;
       }
       return true;
     }
@@ -1458,15 +1460,14 @@
         state.mode = "home";
         resetTrail();
         toast("Returned to the nest");
-        save(); render();
-        return;
+      } else {
+        state.mode = "stage";
+        generateTrail();
+        toast("Ash Trail • burn " + ASH_GOAL + " ash to finish");
+        if (!state.seenGuide) showGuide();
       }
-      state.mode = "stage";
-      resetTrail();
-      generateTrail();
-      toast("Ash Trail • burn " + ASH_GOAL + " ash to finish");
-      save(); render();
-      if (!state.seenGuide) showGuide();
+      save(); 
+      render();
     }
 
     function highestOwned() {
@@ -1703,14 +1704,13 @@
         }
       }
       
-      // 8h Perch Bank processing
       if (state.mode === "home" && (state.perch || []).some(Boolean)) {
         if (!state.perchAt) state.perchAt = Date.now();
         if (Date.now() >= state.perchAt + PERCH_MS) {
           const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
           if (ticks > 0) {
             const inc = perchIncome() * ticks;
-            const maxBank = perchIncome() * 1440; // 8 hours of 20s ticks
+            const maxBank = perchIncome() * 1440;
             state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
             state.perchAt += ticks * PERCH_MS;
             save();
@@ -1866,10 +1866,6 @@
       document.getElementById("energy").textContent = state.energy;
       const em = document.getElementById("energyMax");
       if (em) em.textContent = state.maxEnergy || MAX_ENERGY;
-      const hg = document.getElementById("hearthGoal");
-      if (hg) hg.textContent = state.hearthDone
-        ? "Goal: Hearth hatched • mountain warm"
-        : "Goal: Hatch a Hearth";
       
       const nl = document.getElementById("nameLine");
       if (nl) {
@@ -1886,7 +1882,7 @@
       const help = document.getElementById("helpText");
       if (help) {
         help.textContent = state.mode === "stage"
-          ? "Merge next to ash to clear it • Young dragons clear whole rows"
+          ? "Merge next to ash to clear it • Wyrmlings clear 4 directions"
           : "5-merge to grow • tap fogged tiles to open land • quests use one dragon";
       }
 
@@ -1957,7 +1953,7 @@
         setTimeout(() => { state._flash = []; }, 280);
       }
 
-      tickEnergy(); // Force one initial UI sync for bank
+      tickEnergy();
     }
 
     function cellFromPoint(x, y) {
@@ -2017,7 +2013,6 @@
       const cell = el ? el.closest(".cell") : null;
       const perch = el ? el.closest("[data-perch]") : null;
 
-      // Highlight drag-and-drop on Perch
       if (perch && state.mode !== "stage") {
         if (perchOpen(+perch.dataset.perch)) {
           perch.classList.add("valid");
@@ -2047,7 +2042,6 @@
 
       const cells = board();
 
-      // Accept Drag and Drop directly onto the Perch
       if (perchEl && state.mode !== "stage") {
         const slot = +perchEl.dataset.perch;
         if (perchOpen(slot) && cells[from]) {
@@ -2124,7 +2118,9 @@
       showLevelEvent();
     });
     document.getElementById("chestBox").addEventListener("click", revealChest);
+    
     document.getElementById("hint").addEventListener("click", enterStage);
+    
     document.getElementById("restartTrail").addEventListener("click", restartTrail);
     document.getElementById("winHome").addEventListener("click", hideTrailWin);
     document.getElementById("winAgain").addEventListener("click", () => {
@@ -2202,7 +2198,7 @@
     document.getElementById("wipeGo").addEventListener("click", () => {
       if (document.getElementById("wipeInput").value.trim() !== "Delete") return;
       localStorage.removeItem(SAVE);
-      localStorage.removeItem("ember-nest-v8");
+      for (let v = 1; v <= 10; v++) localStorage.removeItem("ember-nest-v" + v);
       location.reload();
     });
 
