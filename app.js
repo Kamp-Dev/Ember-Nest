@@ -1763,7 +1763,7 @@ document.getElementById("wipeGo").addEventListener("click", () => {
 
 document.getElementById("wipeNo").addEventListener("click", () => {
   document.getElementById("wipe").classList.remove("open");
-end
+});
 
 document.getElementById("overClose").addEventListener("click", () => {
   document.getElementById("overflow").classList.remove("open");
