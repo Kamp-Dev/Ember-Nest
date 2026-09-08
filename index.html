@@ -268,7 +268,33 @@
       align-items: center; justify-content: center;
       padding: 16px;
     }
-    #book.open, #trailFail.open, #trailWin.open, #chest.open, #guide.open, #wipe.open { display: flex; }
+    #book.open, #trailFail.open, #trailWin.open, #chest.open, #guide.open, #wipe.open, #overflow.open, #nameBox.open { display: flex; }
+    #nameBox {
+      display: none; position: fixed; inset: 0;
+      background: #140e0ccc; z-index: 44;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    #nameBox .panel {
+      width: min(420px, 100%); background: #2a1c16;
+      border: 1px solid #e8c37a55; border-radius: 16px; padding: 16px;
+    }
+    #nameBox h2 { margin: 0 0 8px; color: var(--gold); }
+    #nameBox p { margin: 0 0 8px; color: #c9a36a; font-size: .82rem; }
+    #nameInput {
+      width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #e8c37a55;
+      background: #1c1410; color: var(--cream); font-size: 1rem;
+    }
+    #overflow {
+      display: none; position: fixed; inset: 0;
+      background: #140e0ccc; z-index: 44;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    #overflow .panel {
+      width: min(420px, 100%); background: #2a1c16;
+      border: 1px solid #e8c37a55; border-radius: 16px; padding: 16px;
+    }
+    #overflow h2 { margin: 0 0 8px; color: var(--gold); }
+    #overflow p { margin: 0; color: #c9a36a; font-size: .82rem; line-height: 1.35; }
     #guide, #wipe {
       display: none; position: fixed; inset: 0;
       background: #140e0ccc; z-index: 44;
@@ -387,12 +413,14 @@
         <div class="chip">✦ <span id="energy">5</span>/<span id="energyMax">5</span> <span id="regen" style="opacity:.7"></span></div>
         <div class="chip btn" id="bookBtn">Book <span id="bookCount">0</span>/6</div>
         <div class="chip" id="lvlChip">Lv 1</div>
+        <div class="chip btn" id="muteBtn">♪</div>
       </div>
     </header>
 
     <div class="quest" id="questBox"></div>
 
     <div class="nest-wrap home-only">
+      <p class="nest-title btn" id="nameLine" style="cursor:pointer">Keeper · tap to name</p>
       <p class="nest-title">The Nest · bonus x<span id="bonus">1</span></p>
       <div class="nest" id="nest"></div>
       <p class="nest-title" style="margin-top:7px">The Mountain · <span id="roomCount">1</span>/5</p>
@@ -420,6 +448,28 @@
       <p>Merge <b>next to the cracks</b>. The pouch is spare eggs, not the puzzle.</p>
       <p>Win beats “no moves” if both happen on the same merge.</p>
       <button class="close" id="guideClose">Got it</button>
+    </div>
+  </div>
+  <div id="overflow">
+    <div class="panel">
+      <h2>Board full</h2>
+      <p id="overWhy">Seat a dragon on a perch, or dismiss one for a few coins (no bonus).</p>
+      <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button id="overPerch" style="flex:1;background:linear-gradient(#e37a3a,#b84a1c);color:#fff">Perch</button>
+        <button id="overDrop" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Dismiss</button>
+        <button id="overClose" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="nameBox">
+    <div class="panel">
+      <h2>Keeper name</h2>
+      <p id="nameHint">First change is free. After that, 2000●.</p>
+      <input id="nameInput" type="text" maxlength="16" placeholder="Name" />
+      <div class="row" style="display:flex;gap:8px;margin-top:10px">
+        <button id="nameGo" style="flex:1;background:linear-gradient(#e37a3a,#b84a1c);color:#fff">Save</button>
+        <button id="nameNo" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Cancel</button>
+      </div>
     </div>
   </div>
   <div id="wipe">
@@ -486,6 +536,8 @@
     const ASH_COOLDOWN = 24 * 60 * 60 * 1000;
     const DAILY_PAYS = [1200, 800, 400];
     const DAILY_CLEARS = 3;
+    const RENAME_COST = 2000;
+    const RENAME_COST = 2000;
 
     const CHAIN = [
       { id: "egg",   name: "Egg",       color: "#6b4a32" },
@@ -541,6 +593,7 @@
       } catch (e) {}
     }
     function sfx(kind) {
+      if (state.muted) return;
       if (kind === "merge") { beep(320, 0.07, "triangle", 0.05); setTimeout(() => beep(480, 0.1, "triangle", 0.06), 50); }
       else if (kind === "ash") beep(140, 0.16, "sawtooth", 0.03);
       else if (kind === "win") { beep(440, 0.12, "sine", 0.06); setTimeout(() => beep(660, 0.18, "sine", 0.06), 90); }
@@ -776,6 +829,11 @@
       theme: "hatchery",
       perchAt: 0,
       seenGuide: false,
+      muted: false,
+      playerName: "Keeper",
+      nameChanges: 0,
+      playerName: "Keeper",
+      nameChanges: 0,
     });
 
     let state = defaultState();
@@ -833,10 +891,38 @@
       const cells = board();
       return cells.map((v, i) => (!v && !isLocked(i) && !isAsh(i) ? i : -1)).filter(i => i >= 0);
     }
+    function dismissPay(level) {
+      return 15 + level * 30;
+    }
+    function freePerchSlot() {
+      for (let i = 0; i < 3; i++) {
+        if (perchOpen(i) && !(state.perch || [])[i]) return i;
+      }
+      return -1;
+    }
+    function boardHasRoom() {
+      return emptyOpen().length > 0;
+    }
+    function showOverflow() {
+      if (state.mode === "stage") return;
+      const el = document.getElementById("overflow");
+      const p = document.getElementById("overWhy");
+      const slot = freePerchSlot();
+      if (p) p.textContent = slot >= 0
+        ? "Seat one on a perch, or dismiss one for a few coins (no bonus)."
+        : "No free perch. Dismiss one dragon for a few coins (no bonus).";
+      document.getElementById("overPerch").disabled = slot < 0;
+      if (el) el.classList.add("open");
+    }
+    let overflowArm = null;
     function spawn(level, count = 1, at) {
       const cells = board();
       const free = emptyOpen();
-      if (!free.length) { toast("Board full — merge or open land"); return false; }
+      if (!free.length) {
+        if (state.mode !== "stage") showOverflow();
+        else toast("Board full — merge what you have");
+        return false;
+      }
       const i = at != null && !cells[at] && !isLocked(at) ? at : free[Math.floor(Math.random() * free.length)];
       cells[i] = { level, count };
       return true;
@@ -1431,6 +1517,8 @@
       document.getElementById("hint").textContent = state.mode === "stage"
         ? "Leave trail"
         : trailWaitLabel();
+      const mb = document.getElementById("muteBtn");
+      if (mb) mb.textContent = state.muted ? "🔇" : "♪";
       const lc = document.getElementById("lvlChip");
       if (lc) lc.textContent = "Lv " + (state.level || 1) + " · " + (state.xp || 0) + "/" + xpNeed(state.level || 1);
       document.getElementById("coins").textContent = state.coins;
@@ -1442,6 +1530,11 @@
         ? "Goal · Hearth hatched · mountain warm"
         : "Goal · Hatch a Hearth";
       tickEnergy();
+      const nl = document.getElementById("nameLine");
+      if (nl) {
+        const n = state.playerName || "Keeper";
+        nl.textContent = n + (state.nameChanges ? "" : " · tap to name");
+      }
       const bonusEl = document.getElementById("bonus");
       if (bonusEl) bonusEl.textContent = bonus();
       gatherBtn.disabled = state.mode === "stage"
@@ -1533,6 +1626,24 @@
       if (!cell) return;
       const i = +cell.dataset.i;
       if (isLocked(i)) { unlock(i); return; }
+      if (overflowArm && board()[i] && state.mode !== "stage") {
+        if (overflowArm === "perch") {
+          const slot = freePerchSlot();
+          if (slot < 0) { toast("No open perch"); overflowArm = null; return; }
+          seatPerch(slot, i);
+        } else if (overflowArm === "dismiss") {
+          const it = board()[i];
+          const pay = dismissPay(it.level);
+          if (it.count > 1) it.count -= 1;
+          else board()[i] = null;
+          state.coins += pay;
+          toast("Dismissed " + CHAIN[it.level].name + " · +" + pay + "●");
+          sfx("gather");
+          save(); render();
+        }
+        overflowArm = null;
+        return;
+      }
       if (perchArmed >= 0 && board()[i] && state.mode !== "stage") {
         seatPerch(perchArmed, i);
         return;
@@ -1633,6 +1744,41 @@
       toast("Returned to the nest");
       save(); render();
     });
+    document.getElementById("nameLine").addEventListener("click", () => {
+      const free = (state.nameChanges || 0) === 0;
+      document.getElementById("nameHint").textContent = free
+        ? "First change is free."
+        : "Rename costs " + RENAME_COST + "●.";
+      document.getElementById("nameInput").value = state.playerName || "";
+      document.getElementById("nameBox").classList.add("open");
+    });
+    document.getElementById("nameNo").addEventListener("click", () => {
+      document.getElementById("nameBox").classList.remove("open");
+    });
+    document.getElementById("nameGo").addEventListener("click", () => {
+      const raw = (document.getElementById("nameInput").value || "").trim().replace(/\s+/g, " ");
+      if (raw.length < 2) { toast("Need at least 2 letters"); return; }
+      if (raw.length > 16) { toast("16 letters max"); return; }
+      if (raw === (state.playerName || "Keeper")) {
+        document.getElementById("nameBox").classList.remove("open");
+        return;
+      }
+      const free = (state.nameChanges || 0) === 0;
+      if (!free) {
+        if (state.coins < RENAME_COST) { toast("Need " + RENAME_COST + "●"); return; }
+        state.coins -= RENAME_COST;
+      }
+      state.playerName = raw;
+      state.nameChanges = (state.nameChanges || 0) + 1;
+      document.getElementById("nameBox").classList.remove("open");
+      toast(free ? "Welcome, " + raw : "Renamed · −" + RENAME_COST + "●");
+      save(); render();
+    });
+    document.getElementById("muteBtn").addEventListener("click", () => {
+      state.muted = !state.muted;
+      save(); render();
+      toast(state.muted ? "Sound off" : "Sound on");
+    });
     document.getElementById("bookBtn").addEventListener("click", () => {
       renderBook();
       document.getElementById("book").classList.add("open");
@@ -1658,6 +1804,21 @@
     });
     document.getElementById("wipeNo").addEventListener("click", () => {
       document.getElementById("wipe").classList.remove("open");
+    });
+    document.getElementById("overClose").addEventListener("click", () => {
+      document.getElementById("overflow").classList.remove("open");
+      overflowArm = null;
+    });
+    document.getElementById("overPerch").addEventListener("click", () => {
+      if (freePerchSlot() < 0) { toast("No open perch"); return; }
+      overflowArm = "perch";
+      document.getElementById("overflow").classList.remove("open");
+      toast("Tap a nest dragon to perch it");
+    });
+    document.getElementById("overDrop").addEventListener("click", () => {
+      overflowArm = "dismiss";
+      document.getElementById("overflow").classList.remove("open");
+      toast("Tap a nest dragon to dismiss it");
     });
     document.getElementById("guideBtn").addEventListener("click", showGuide);
     document.getElementById("guideClose").addEventListener("click", () => {
