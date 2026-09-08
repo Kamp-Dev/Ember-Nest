@@ -274,10 +274,10 @@ function openFogFree(n) {
 
 function oneSprite(level, hi, lo) {
   if (level === 0) {
-    // Ceramic Lotus Egg using SVG image reference
+    // Ceramic Lotus Egg using an SVG group to prevent nested SVG conflicts
     return `
       <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 20px;">
-        <image href="egg-art.png" x="2" y="2" width="28" height="28" preserveAspectRatio="xMidYMid meet" />
+        <image href="egg-art.png" x="-2" y="-2" width="36" height="36" preserveAspectRatio="xMidYMid meet" />
       </g>
     `;
   }
