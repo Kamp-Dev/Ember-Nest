@@ -274,11 +274,11 @@ function openFogFree(n) {
 
 function oneSprite(level, hi, lo) {
   if (level === 0) {
-    // Ceramic Lotus Egg using custom image asset
+    // Ceramic Lotus Egg using SVG image reference
     return `
-      <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: breathe 2s infinite ease-in-out;">
-        <img src="egg-art.png" alt="Egg" style="width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
-      </div>
+      <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 20px;">
+        <image href="egg-art.png" x="2" y="2" width="28" height="28" preserveAspectRatio="xMidYMid meet" />
+      </g>
     `;
   }
   if (level === 1) {
