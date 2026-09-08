@@ -295,36 +295,129 @@ function oneSprite(level, hi, lo) {
         <path d="M21 19 C26 15 23 12 19 17 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.3"/>
       </g>
       <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 24px;">
-        <!-- Chubby body -->
         <ellipse cx="16" cy="22" rx="7.5" ry="6.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.5"/>
         <ellipse cx="16" cy="23" rx="4" ry="3.5" fill="#fce4a6"/>
-        
-        <!-- Oversized chibi head -->
         <circle cx="16" cy="13" r="9" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
-        
-        <!-- Cute stubby horns -->
         <path d="M11 6 L8 1 L13 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
         <path d="M21 6 L24 1 L19 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
-        
-        <!-- Huge expressive eyes with multi-specular highlights -->
         <ellipse cx="12.5" cy="12.5" rx="2.6" ry="3.2" fill="#1a0f08"/>
         <ellipse cx="19.5" cy="12.5" rx="2.6" ry="3.2" fill="#1a0f08"/>
         <circle cx="13.4" cy="11.4" r="1.1" fill="#fff"/>
         <circle cx="20.4" cy="11.4" r="1.1" fill="#fff"/>
         <circle cx="11.8" cy="13.8" r="0.5" fill="#fff"/>
         <circle cx="18.8" cy="13.8" r="0.5" fill="#fff"/>
-        
-        <!-- Soft blush cheeks -->
         <circle cx="9.5" cy="15" r="1.3" fill="#ff553355"/>
         <circle cx="22.5" cy="15" r="1.3" fill="#ff553355"/>
-        
-        <!-- Tiny snout -->
         <ellipse cx="16" cy="15.5" rx="2" ry="1.2" fill="#fce4a6"/>
       </g>
     `;
   }
-  // Fallback for remaining tiers for now
-  return oneSprite(1, hi, lo);
+  if (level === 2) {
+    return `
+      <g style="animation: flap-l 0.3s infinite alternate ease-in-out; transform-origin: 13px 15px;">
+        <path d="M5 19 C1 9 10 8 13 15 L8 21 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+      </g>
+      <g style="animation: flap-r 0.3s infinite alternate ease-in-out; transform-origin: 19px 15px;">
+        <path d="M27 19 C31 9 22 8 19 15 L24 21 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+      </g>
+      <g style="animation: breathe 1.5s infinite ease-in-out; transform-origin: 16px 23px;">
+        <path d="M16 23 Q25 28 26 23 Q22 21 16 22" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+        <path d="M26 23 L29 20 L27 25 Z" fill="#ffcc33"/>
+        <ellipse cx="16" cy="21" rx="6.5" ry="6.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.5"/>
+        <path d="M13 20 Q16 24 19 20 Q16 27 13 20" fill="#fce4a6"/>
+        <circle cx="16" cy="12" r="7.2" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
+        <path d="M10 7 L7 1 L13 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+        <path d="M22 7 L25 1 L19 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+        <path d="M16 5 L16 1 L17 5 Z" fill="#ffb033" stroke="#1a0f08" stroke-width="1"/>
+        <ellipse cx="13" cy="12" rx="2" ry="2.6" fill="#1a0f08"/>
+        <ellipse cx="19" cy="12" rx="2" ry="2.6" fill="#1a0f08"/>
+        <circle cx="13.7" cy="11.2" r="0.8" fill="#fff"/>
+        <circle cx="19.7" cy="11.2" r="0.8" fill="#fff"/>
+      </g>
+    `;
+  }
+  if (level === 3) {
+    // Young Dragon: Detailed chibi style inspired by reference art
+    return `
+      <g style="animation: flap-l 0.35s infinite alternate ease-in-out; transform-origin: 12px 15px;">
+        <path d="M12 16 C5 10 2 12 1 17 C4 18 8 21 12 22 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+        <path d="M11 15 C7 12 4 13 3 16" fill="none" stroke="#1a0f08" stroke-width="1"/>
+        <path d="M11 17 C7 15 5 17 4 19" fill="none" stroke="#1a0f08" stroke-width="0.8"/>
+      </g>
+      <g style="animation: flap-r 0.35s infinite alternate ease-in-out; transform-origin: 20px 15px;">
+        <path d="M20 16 C27 10 30 12 31 17 C28 18 24 21 20 22 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.4"/>
+        <path d="M21 15 C25 12 28 13 29 16" fill="none" stroke="#1a0f08" stroke-width="1"/>
+        <path d="M21 17 C25 15 27 17 28 19" fill="none" stroke="#1a0f08" stroke-width="0.8"/>
+      </g>
+      <g style="animation: breathe 1.6s infinite ease-in-out; transform-origin: 16px 22px;">
+        <ellipse cx="16" cy="21" rx="7.5" ry="7" fill="${hi}" stroke="#1a0f08" stroke-width="1.6"/>
+        <path d="M13 18 Q16 23 19 18 Q17 25 15 25 Q13 25 13 18" fill="#fce4a6" stroke="#1a0f08" stroke-width="0.8"/>
+        <circle cx="16" cy="12" r="8.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.7"/>
+        <path d="M15 5 L16 8 L17 5" fill="none" stroke="#a82e05" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M14 6.5 L18 6.5" fill="none" stroke="#a82e05" stroke-width="1"/>
+        <path d="M11 6 C9 2 6 3 8 6 C9 7 10 6 11 6 Z" fill="#b36b39" stroke="#1a0f08" stroke-width="1.2"/>
+        <path d="M21 6 C23 2 26 3 24 6 C23 7 22 6 21 6 Z" fill="#b36b39" stroke="#1a0f08" stroke-width="1.2"/>
+        <ellipse cx="12.5" cy="11.5" rx="2.5" ry="3" fill="#1a0f08"/>
+        <ellipse cx="19.5" cy="11.5" rx="2.5" ry="3" fill="#1a0f08"/>
+        <circle cx="13.4" cy="10.4" r="1" fill="#fff"/>
+        <circle cx="20.4" cy="10.4" r="1" fill="#fff"/>
+        <circle cx="11.8" cy="12.6" r="0.4" fill="#fff"/>
+        <circle cx="18.8" cy="12.6" r="0.4" fill="#fff"/>
+        <ellipse cx="16" cy="14.5" rx="3" ry="2" fill="#fce4a6" stroke="#1a0f08" stroke-width="1"/>
+        <circle cx="15" cy="14" r="0.5" fill="#1a0f08"/>
+        <circle cx="17" cy="14" r="0.5" fill="#1a0f08"/>
+        <path d="M15 15.5 Q16 16.5 17 15.5" fill="none" stroke="#1a0f08" stroke-width="1" stroke-linecap="round"/>
+      </g>
+    `;
+  }
+  if (level === 4) {
+    return `
+      <g style="animation: flap-l-slow 1.2s infinite alternate ease-in-out; transform-origin: 14px 15px;">
+        <path d="M2 22 C-3 6 12 4 14 15 L7 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
+        <circle cx="1" cy="6" r="1.5" fill="#ffe08a"/>
+      </g>
+      <g style="animation: flap-r-slow 1.2s infinite alternate ease-in-out; transform-origin: 18px 15px;">
+        <path d="M30 22 C35 6 20 4 18 15 L25 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
+        <circle cx="31" cy="6" r="1.5" fill="#ffe08a"/>
+      </g>
+      <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 21px;">
+        <ellipse cx="16" cy="21" rx="8" ry="7.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+        <g style="animation: pulse 1.5s infinite alternate ease-in-out; transform-origin: 16px 21px;">
+          <polygon points="16,17 19,21 16,25 13,21" fill="#fff" stroke="#d93d04" stroke-width="1.2"/>
+        </g>
+        <path d="M8 7 L3 0 L10 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
+        <path d="M24 7 L29 0 L22 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
+        <path d="M14 4 L16 -1 L18 4 Z" fill="#ff9900" stroke="#1a0f08" stroke-width="1.3"/>
+        <circle cx="16" cy="11" r="7.8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+        <ellipse cx="12.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
+        <ellipse cx="19.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
+        <circle cx="12.5" cy="11" r="1.2" fill="#00ffe1"/>
+        <circle cx="19.5" cy="11" r="1.2" fill="#00ffe1"/>
+      </g>
+    `;
+  }
+  return `
+    <g style="animation: float 4s infinite ease-in-out; transform-origin: 16px 16px;">
+      <g style="animation: pulse 3s infinite ease-in-out; transform-origin: 16px 16px;">
+        <circle cx="16" cy="16" r="15" fill="none" stroke="#ffe08a44" stroke-width="2" stroke-dasharray="3 3"/>
+      </g>
+      <g style="animation: flap-l-slow 2s infinite alternate ease-in-out; transform-origin: 15px 15px;">
+        <path d="M1 23 C-5 4 13 2 15 15 L6 25 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.7"/>
+      </g>
+      <g style="animation: flap-r-slow 2s infinite alternate ease-in-out; transform-origin: 17px 15px;">
+        <path d="M31 23 C37 4 19 2 17 15 L26 25 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.7"/>
+      </g>
+      <g style="animation: breathe 2.5s infinite ease-in-out; transform-origin: 16px 21px;">
+        <ellipse cx="16" cy="21" rx="8.5" ry="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+        <path d="M12 17 Q16 21 20 17 Q16 28 12 17" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.2"/>
+        <circle cx="16" cy="11" r="8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
+        <ellipse cx="12.2" cy="11" rx="2.5" ry="2.7" fill="#1a0f08"/>
+        <ellipse cx="19.8" cy="11" rx="2.5" ry="2.7" fill="#1a0f08"/>
+        <circle cx="12.2" cy="11" r="1.4" fill="#ff4d00"/>
+        <circle cx="19.8" cy="11" r="1.4" fill="#ff4d00"/>
+      </g>
+    </g>
+  `;
 }
 
 function stackLayout(n) {
@@ -344,7 +437,6 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
     ["#ffc83b", "#e04e1b"],
   ][level] || ["#ffb554", "#d45817"];
   
-  // Shift palette slightly if shiny
   const hi = shiny ? "#ffea75" : pal[0];
   const lo = shiny ? "#e5a100" : pal[1];
   
@@ -354,7 +446,6 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
     `<g transform="translate(${x},${y}) scale(${s}) translate(-16,-16)">${body}</g>`
   ).join("");
   
-  const glow = shiny ? `<filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : ``;
   return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>${bits}</svg>`;
 }
 
@@ -524,7 +615,6 @@ function spawn(level, count = 1, at, forceShiny = false) {
   }
   const i = at != null && !cells[at] && !isLocked(at) ? at : free[Math.floor(Math.random() * free.length)];
   
-  // 5% chance to be shiny unless forced
   const shiny = forceShiny || (Math.random() < 0.05);
   if (shiny) discoverRare(level);
 
@@ -553,7 +643,6 @@ function mergeInto(fromI, toI) {
   if (a.level !== b.level) return false;
   if (a.level >= CHAIN.length - 1) { toast("Elders keep watch • no further merge"); return false; }
   
-  // If either is shiny, the child inherits shiny status or gets a roll bonus
   const isShiny = a.shiny || b.shiny || (Math.random() < 0.08);
 
   let total = a.count + b.count;
