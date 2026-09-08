@@ -143,6 +143,10 @@
   <div id="book">
     <div class="panel">
       <h2>Dragon book</h2>
+      <div class="book-tabs">
+        <button class="book-tab active" id="tabMain" onclick="switchBookTab(0)">Main Chain</button>
+        <button class="book-tab" id="tabRare" onclick="switchBookTab(1)">Rare / Shiny</button>
+      </div>
       <div class="grid" id="bookGrid"></div>
       <button class="close" id="bookClose">Close</button>
       <button class="close" id="resetAll" style="margin-top:6px;color:#ff6a20">Reset all progress</button>
