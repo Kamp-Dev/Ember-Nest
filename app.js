@@ -1483,7 +1483,7 @@ boardEl?.addEventListener("pointerdown", (e) => {
   ghost.style.top = e.clientY + "px";
   boardEl.setPointerCapture(e.pointerId);
 });
-
+let drag = null, ghost = null;
 boardEl?.addEventListener("pointermove", (e) => {
   if (!drag || !ghost) return;
   ghost.style.left = e.clientX + "px";
