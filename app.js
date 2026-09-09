@@ -1611,7 +1611,7 @@ document.getElementById("perchRow").addEventListener("click", (e) => {
 
 gatherBtn.addEventListener("click", gather);
 document.getElementById("buyEgg").addEventListener("click", buyEgg);
-document.getElementById("chestOk").addEventListener("click", () => {
+document.getElementById("chestOk")?.addEventListener("click", () => {
   const box = document.getElementById("chestBox");
   const needsOpen = box && box.style.display !== "none" && !box.disabled;
   if (needsOpen) { toast("Tap the chest to open it"); return; }
