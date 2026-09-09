@@ -1255,7 +1255,7 @@ document.getElementById("collectPerchBtn")?.addEventListener("click", () => {
   }
 });
 
-document.getElementById("tributeBtn")??.addEventListener("click", () => {
+document.getElementById("tributeBtn")?.addEventListener("click", () => {
   const cost = tributeCost();
   if (state.coins < cost) { toast(`Need ${cost} 🪙 for the Mountain Tribute`); return; }
   state.coins -= cost;
@@ -1611,7 +1611,7 @@ document.getElementById("perchRow")?.addEventListener("click", (e) => {
 
 gatherBtn?.addEventListener("click", gather);
 document.getElementById("buyEgg")?.addEventListener("click", buyEgg);
-document.getElementById("chestOk")??.addEventListener("click", () => {
+document.getElementById("chestOk")?.addEventListener("click", () => {
   const box = document.getElementById("chestBox");
   const needsOpen = box && box.style.display !== "none" && !box.disabled;
   if (needsOpen) { toast("Tap the chest to open it"); return; }
@@ -1619,7 +1619,7 @@ document.getElementById("chestOk")??.addEventListener("click", () => {
   levelShowing = false;
   showLevelEvent();
 });
-document.getElementById("chestBox")??.addEventListener("click", revealChest);
+document.getElementById("chestBox")?.addEventListener("click", revealChest);
 
 document.getElementById("hint")?.addEventListener("click", enterStage);
 
