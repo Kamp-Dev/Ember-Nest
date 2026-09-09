@@ -234,7 +234,8 @@ h1 span { color: var(--ember); }
 /* 2.5D Cel-Shaded Grid Board */
 #board {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); /* Change this from 6 to 5 */
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr); /* Ensure this is also set to 5 */
   gap: 6px;
   min-height: 310px;
   max-height: 440px;
