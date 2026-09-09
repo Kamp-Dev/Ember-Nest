@@ -38,7 +38,7 @@ body, html {
   border: 1px solid #3a2820;
 }
 
-/* Scrollable Views Area */
+/* Ensure views act as predictable block containers instead of squishing flex children */
 .view {
   display: none;
   position: absolute;
@@ -48,29 +48,21 @@ body, html {
   bottom: 70px;
   overflow-y: auto;
   padding: 15px;
+  box-sizing: border-box;
 }
 
 .view.active {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: block; /* Switch back to block layout so grid sizing is respected */
 }
 
-.section-title {
-  color: #deb781;
-  font-weight: bold;
-  margin-bottom: 12px;
-  text-align: center;
-}
-
-/* 5x5 Board Sizing & Proportions */
+/* Fix the board so it maintains its size and centers properly */
 #board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
   gap: 6px;
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   aspect-ratio: 1 / 1;
   margin: 10px auto;
 }
