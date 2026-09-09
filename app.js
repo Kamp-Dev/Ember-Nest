@@ -155,7 +155,7 @@ function showLevelEvent() {
     box.disabled = false;
   }
   if (ok) ok.textContent = "Continue";
-  document.getElementById("chest").classList.add("open");
+  document.getElementById("chest")?.classList.add("open");
   sfx("room");
 }
 
@@ -235,7 +235,7 @@ function tributeCost() {
 }
 
 function showGuide() {
-  document.getElementById("guide").classList.add("open");
+  document.getElementById("guide")?.classList.add("open");
 }
 
 function seatPerch(slot, boardI) {
@@ -496,7 +496,7 @@ const gatherBtn = document.getElementById("gather");
 function toast(msg) {
   if (!toastEl) return;
   toastEl.textContent = msg;
-  toastEl.classList.add("show");
+  toastEl?.classList.add("show");
   clearTimeout(toastEl._t);
   toastEl._t = setTimeout(() => toastEl.classList.remove("show"), 2500);
 }
@@ -549,7 +549,7 @@ function showOverflow() {
     ? "Seat one on a perch, or dismiss one for a few coins (no bonus)."
     : "No free perch. Dismiss one dragon for a few coins (no bonus).";
   document.getElementById("overPerch").disabled = slot < 0;
-  if (el) el.classList.add("open");
+  if (el) el?.classList.add("open");
 }
 
 let overflowArm = null;
@@ -868,7 +868,7 @@ function showTrailFail(why) {
   const el = document.getElementById("trailFail");
   const p = document.getElementById("failWhy");
   if (p) p.textContent = why;
-  if (el) el.classList.add("open");
+  if (el) el?.classList.add("open");
 }
 
 function hideTrailFail() {
@@ -1009,7 +1009,7 @@ function showTrailWin(lines, sub) {
   if (s) s.textContent = sub;
   if (box) box.innerHTML = lines.map(t => `<div>${t}</div>`).join("");
   const el = document.getElementById("trailWin");
-  if (el) el.classList.add("open");
+  if (el) el?.classList.add("open");
 }
 
 function winStage() {
@@ -1246,7 +1246,7 @@ function renderQuest() {
     const btn = document.getElementById("giveBtn");
     if (btn) btn.onclick = fulfillSleepy;
     const sInfo = document.getElementById("sleepyInfoBtn");
-    if (sInfo) sInfo.onclick = () => document.getElementById("sleepyGuide").classList.add("open");
+    if (sInfo) sInfo.onclick = () => document.getElementById("sleepyGuide")?.classList.add("open");
     
   } else {
     box.className = "quest";
@@ -1498,7 +1498,7 @@ boardEl?.addEventListener("pointermove", (e) => {
 
   if (perch && state.mode !== "stage") {
     if (perchOpen(+perch.dataset.perch)) {
-      perch.classList.add("valid");
+      perch?.classList.add("valid");
     }
   } else if (cell) {
     const over = +cell.dataset.i;
@@ -1506,7 +1506,7 @@ boardEl?.addEventListener("pointermove", (e) => {
     const a = board()[drag.from];
     const b = board()[over];
     if (over !== drag.from && a && ((b && a.level === b.level) || !b)) {
-      cell.classList.add("valid");
+      cell?.classList.add("valid");
     }
   }
 });
@@ -1624,7 +1624,7 @@ document.getElementById("nameLine")?.addEventListener("click", () => {
     ? "First change is free."
     : "Rename costs " + RENAME_COST + " 🪙.";
   document.getElementById("nameInput").value = state.playerName || "";
-  document.getElementById("nameBox").classList.add("open");
+  document.getElementById("nameBox")?.classList.add("open");
 });
 
 document.getElementById("nameNo")?.addEventListener("click", () => {
@@ -1659,7 +1659,7 @@ document.getElementById("muteBtn")?.addEventListener("click", () => {
 
 document.getElementById("bookBtn")?.addEventListener("click", () => {
   renderBook();
-  document.getElementById("book").classList.add("open");
+  document.getElementById("book")?.classList.add("open");
 });
 
 document.getElementById("bookClose")?.addEventListener("click", () => {
@@ -1667,7 +1667,7 @@ document.getElementById("bookClose")?.addEventListener("click", () => {
 });
 
 document.getElementById("resetAll")?.addEventListener("click", () => {
-  document.getElementById("wipe").classList.add("open");
+  document.getElementById("wipe")?.classList.add("open");
   const inp = document.getElementById("wipeInput");
   inp.value = "";
   document.getElementById("wipeGo").disabled = true;
@@ -1728,10 +1728,10 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     
     const targetTab = e.currentTarget;
-    targetTab.classList.add("active");
+    targetTab?.classList.add("active");
     
     const viewId = targetTab.dataset.tab;
-    document.getElementById(viewId).classList.add("active");
+    document.getElementById(viewId)?.classList.add("active");
   });
 });
 load();
