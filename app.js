@@ -1619,7 +1619,7 @@ document.getElementById("chestOk")?.addEventListener("click", () => {
   levelShowing = false;
   showLevelEvent();
 });
-document.getElementById("chestBox").addEventListener("click", revealChest);
+document.getElementById("chestBox")?.addEventListener("click", revealChest);
 
 document.getElementById("hint").addEventListener("click", enterStage);
 
