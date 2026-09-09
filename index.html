@@ -12,14 +12,16 @@
   <div id="app">
     <!-- Top Stats Header -->
     <header id="topBarStats">
+      
       <div class="header-left">
         <h1 id="title">Ember <span>Nest</span></h1>
         <div id="nameLine" title="Tap to rename">Keeper</div>
       </div>
       <div class="header-right">
-        <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
-        <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
-      </div>
+  <button id="bookBtn" class="icon-btn" title="Dragon Book">📖</button>
+  <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
+  <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
+</div>
     </header>
 
     <!-- === SCROLLABLE VIEWS CONTAINER === -->
@@ -92,6 +94,20 @@
     </div>
   </div>
 
+  <div id="book" class="modal">
+  <div class="modal-content book-content">
+    <div class="book-header">
+      <h2>Dragon Book</h2>
+      <button id="bookClose" class="close-btn">✕</button>
+    </div>
+    <div class="book-tabs">
+      <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="bookCount">0</span>)</button>
+      <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare / Shiny</button>
+    </div>
+    <div id="bookGrid" class="book-grid"></div>
+  </div>
+</div>
+  
   <div id="trailWin" class="modal">
     <div class="modal-content">
       <h2>Trail Cleared!</h2>
