@@ -1,5 +1,5 @@
 /* =========================================
-   EMBER NEST - FRESH APP BUILD
+   EMBER NEST - MOBILE APP BUILD (V2)
 ========================================= */
 
 /* --- 1. CORE VARIABLES & RESET --- */
@@ -25,65 +25,84 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-main);
   font-family: system-ui, -apple-system, sans-serif;
-  overflow: hidden; /* Prevents whole-page bouncing on mobile */
+  overflow: hidden; 
   height: 100vh;
   width: 100vw;
   display: flex;
-  justify-content: center;
-}
-
-/* --- 2. MAIN APP CONTAINER --- */
-#app {
-  width: 100%;
-  max-width: 500px; /* Keeps it looking like a phone on PC */
-  height: 100%;
-  display: flex;
   flex-direction: column;
-  background-color: var(--bg-dark);
-  position: relative;
-  box-shadow: 0 0 20px rgba(0,0,0,0.8);
+  align-items: center;
 }
 
-/* --- 3. TOP HEADER (STATS) --- */
-.header-stats {
+/* --- 2. TOP HEADER STATS --- */
+#topBarStats {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 12px 25px;
   background-color: var(--panel);
   border-bottom: 2px solid var(--border);
+  width: 100%;
+  max-width: 500px;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.stat-pill {
   font-weight: bold;
   font-size: 1.1rem;
-  z-index: 10;
+  color: var(--text-muted);
 }
 
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.stat span {
+.stat-pill span {
   color: var(--gold);
 }
 
-/* --- 4. VIEW AREA (SCROLLABLE) --- */
-.view-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 15px 100px 15px; /* Bottom padding keeps content above the tab bar */
-}
-
+/* --- 3. SCROLLABLE VIEWS --- */
 .view {
   display: none;
   flex-direction: column;
   align-items: center;
   width: 100%;
+  max-width: 500px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 15px 90px 15px; /* Bottom padding prevents tab bar overlap */
 }
 
 .view.active {
   display: flex;
+}
+
+.section-title {
+  color: var(--gold);
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* --- 4. HINT & ASH TRAIL BANNER --- */
+#hint {
+  background: linear-gradient(135deg, #241612, #4a291f);
+  color: var(--gold);
+  padding: 10px 24px;
+  border-radius: 20px;
+  border: 1px solid var(--ember);
+  font-weight: bold;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+#hint:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
 /* --- 5. THE 5x5 BOARD --- */
@@ -92,8 +111,8 @@ body {
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
   width: 100%;
-  max-width: 400px; /* Caps the board size on bigger screens */
-  margin: 15px 0 30px 0;
+  max-width: 400px;
+  margin-bottom: 25px;
 }
 
 .cell {
@@ -134,7 +153,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  pointer-events: none; /* Lets clicks pass through to the cell */
+  pointer-events: none;
 }
 
 .lvl {
@@ -142,20 +161,19 @@ body {
   bottom: -6px;
   font-size: 0.75rem;
   font-weight: bold;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.8);
   padding: 2px 6px;
   border-radius: 10px;
   white-space: nowrap;
 }
 
 /* --- 7. BUTTONS & UI CONTROLS --- */
-.controls {
+.action-buttons {
   display: flex;
   gap: 15px;
   width: 100%;
   max-width: 400px;
   justify-content: center;
-  margin-top: 10px;
 }
 
 button {
@@ -168,7 +186,7 @@ button {
   font-size: 1rem;
   cursor: pointer;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  transition: transform 0.1s, filter 0.2s;
+  transition: transform 0.1s;
 }
 
 button:active {
@@ -188,7 +206,7 @@ button:disabled {
   gap: 10px;
   width: 100%;
   max-width: 400px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .perch {
@@ -217,11 +235,11 @@ button:disabled {
 }
 
 /* --- 9. BOTTOM TAB BAR --- */
-.tab-bar {
-  position: absolute;
+#tabBar {
+  position: fixed;
   bottom: 0;
-  left: 0;
   width: 100%;
+  max-width: 500px;
   height: 70px;
   background-color: var(--panel);
   border-top: 2px solid var(--border);
@@ -229,7 +247,7 @@ button:disabled {
   justify-content: space-around;
   align-items: center;
   z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom); /* Fixes iPhone home bar overlap */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .tab-btn {
@@ -245,10 +263,22 @@ button:disabled {
   height: 100%;
   box-shadow: none;
   border-radius: 0;
+  padding: 0;
 }
 
 .tab-btn.active {
   color: var(--gold);
+}
+
+.tab-btn .tab-icon {
+  font-size: 1.5rem;
+  filter: grayscale(100%);
+  opacity: 0.5;
+}
+
+.tab-btn.active .tab-icon {
+  filter: none;
+  opacity: 1;
 }
 
 /* --- 10. ANIMATIONS --- */
@@ -285,6 +315,7 @@ button:disabled {
   z-index: 999;
   filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
 }
+
 /* --- 12. PARTICLES --- */
 .particle {
   position: absolute;
