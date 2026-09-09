@@ -494,6 +494,7 @@ const toastEl = document.getElementById("toast");
 const gatherBtn = document.getElementById("gather");
 
 function toast(msg) {
+  if (!toastEl) return;
   toastEl.textContent = msg;
   toastEl.classList.add("show");
   clearTimeout(toastEl._t);
@@ -1191,11 +1192,14 @@ window.toggleQuestTab = () => {
 };
 
 function tickEnergy() {
-  const regenEl = document.getElementById("regen");
   const cap = state.maxEnergy || MAX_ENERGY;
+  
+  // 1. Update the New App UI Header Stats
+  setSafeText("energyCount", state.energy + "/" + cap);
+
   if (state.energy >= cap) {
     state.nextEnergyAt = Date.now() + REGEN_MS;
-    if (regenEl) regenEl.textContent = "";
+    setSafeText("regen", "");
   } else {
     if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
     const left = state.nextEnergyAt - Date.now();
@@ -1205,7 +1209,7 @@ function tickEnergy() {
       save();
       render();
     } else {
-      if (regenEl) regenEl.textContent = "⏱ " + Math.ceil(left / 1000) + "s";
+      setSafeText("regen", "⏱ " + Math.ceil(left / 1000) + "s");
     }
   }
   
@@ -1223,183 +1227,60 @@ function tickEnergy() {
     }
   }
 
-  const pAmt = document.getElementById("perchBankAmt");
   const pBtn = document.getElementById("collectPerchBtn");
-  if (pAmt && pBtn) {
+  if (pBtn) {
     if ((state.perchBank || 0) > 0) {
       pBtn.style.display = "block";
-      pAmt.textContent = state.perchBank;
+      setSafeText("perchBankAmt", state.perchBank);
     } else {
       pBtn.style.display = "none";
     }
   }
 
-  const pl = document.getElementById("perchLabel");
   const inc = perchIncome();
-  if (pl) {
-    if (!inc) {
-      pl.textContent = "Perch: park a dragon";
-    } else {
-      const wait = Math.max(0, state.perchAt + PERCH_MS - Date.now());
-      pl.textContent = "Perch: " + Math.ceil(wait / 1000) + "s • +" + inc;
-    }
-  }
-}
-setInterval(tickEnergy, 250);
-
-document.getElementById("collectPerchBtn")?.addEventListener("click", () => {
-  if ((state.perchBank || 0) > 0) {
-    const amt = state.perchBank;
-    state.coins += amt;
-    state.perchBank = 0;
-    
-    const btn = document.getElementById("collectPerchBtn");
-    const rect = btn.getBoundingClientRect();
-    spawnParticles(rect.left + rect.width / 2, rect.top, 16, '#ffcf40');
-
-    toast(`Collected ${amt} 🪙 from the Perch!`);
-    sfx("win");
-    save(); render();
-  }
-});
-
-document.getElementById("tributeBtn")?.addEventListener("click", () => {
-  const cost = tributeCost();
-  if (state.coins < cost) { toast(`Need ${cost} 🪙 for the Mountain Tribute`); return; }
-  state.coins -= cost;
-  state.tributes = (state.tributes || 0) + 1;
-  sfx("win");
-  toast(`Tribute accepted! Bonus multiplier increased.`);
-  save(); render();
-});
-
-let drag = null, ghost = null;
-
-function itemHtml(item) {
-  const spec = CHAIN[item.level];
-  return `<div class="item pop">
-    ${dragonSvg(item.level, 42, item.count, item.shiny)}
-    <div class="lvl" style="color:#fff; text-shadow:0 2px 2px #000, 0 0 4px #000;">${item.shiny ? '✨ ' : ''}${spec.name}${item.count > 1 ? " • " + item.count : ""}</div>
-  </div>`;
-}
-
-function renderQuest() {
-  const box = document.getElementById("questBox");
-  
-  if (state.mode === "stage") {
-    const have = board().some(c => c && c.level >= STAGE_GOAL);
-    box.className = "quest";
-    box.innerHTML = `
-      <div class="art">${dragonSvg(STAGE_GOAL, 42)}</div>
-      <p>Burn <b>${ASH_GOAL} ash</b> • ${state.ashBurned || 0}/${ASH_GOAL} cleared<br>
-      <span style="font-size:0.7rem; color:#deb781;">Live ash limits: ${ashCount()}/${ASH_FAIL}</span></p>
-      <button id="giveBtn" disabled>${have ? "Done" : "Goal"}</button>
-    `;
-    return;
-  }
-
-  const hasSleepy = !state.sleepyDone && state.level >= 3;
-  if (!hasSleepy) state.questTab = 0;
-
-  const leftArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❮</button>` : ``;
-  const rightArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❯</button>` : ``;
-  const dots = hasSleepy ? `<div class="quest-dots"><span class="${state.questTab===0?'active':''}"></span><span class="${state.questTab===1?'active':''}"></span></div>` : ``;
-
-  if (hasSleepy && state.questTab === 0) {
-    const haveSleepy = findLevel(3) >= 0; 
-    box.className = "quest sleepy";
-    box.innerHTML = `
-      ${leftArrow}
-      <div style="display:flex; align-items:center; gap:8px; flex:1;">
-        <div class="art">
-          ${dragonSvg(3, 40)}
-          <div class="zzz">Zzz</div>
-        </div>
-        <div style="flex:1;">
-          <p id="wishText" style="color:#a9d6e5;">Sleepy Dragon needs a <b>Young</b> dragon.<br><span style="font-size:0.7rem;">Streak: ${state.sleepyStreak || 0}/7</span></p>
-          ${dots}
-        </div>
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <button id="giveBtn" ${haveSleepy ? "" : "disabled"}>Wake</button>
-          <button id="sleepyInfoBtn" style="padding:4px; font-size:0.7rem; background:#415a77; border-color:#e0e1dd; box-shadow:0 2px 0 #1b263b;">Info</button>
-        </div>
-      </div>
-      ${rightArrow}
-    `;
-    const btn = document.getElementById("giveBtn");
-    if (btn) btn.onclick = fulfillSleepy;
-    const sInfo = document.getElementById("sleepyInfoBtn");
-    if (sInfo) sInfo.onclick = () => document.getElementById("sleepyGuide").classList.add("open");
-    
+  if (!inc) {
+    setSafeText("perchLabel", "Perch: park a dragon");
   } else {
-    box.className = "quest";
-    const list = wishList();
-    const q = list[state.quest % list.length];
-    const have = findLevel(q.want) >= 0;
-    box.innerHTML = `
-      ${leftArrow}
-      <div style="display:flex; align-items:center; gap:8px; flex:1;">
-        <div class="art">${dragonSvg(q.want, 40)}</div>
-        <div style="flex:1;">
-          <p id="wishText">${state.questDone ? "The nest settles..." : q.text}<br><span style="font-size:0.7rem;">Gifts: ${(state.gives || 0) % 5}/5</span></p>
-          ${dots}
-        </div>
-        <button id="giveBtn" ${have && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
-      </div>
-      ${rightArrow}
-    `;
-    const btn = document.getElementById("giveBtn");
-    if (btn) btn.onclick = fulfillQuest;
-    const wish = document.getElementById("wishText");
-    if (wish && !state.questDone) {
-      wish.style.cursor = "pointer";
-      wish.onclick = () => {
-        const pay = q.reward * bonus();
-        toast(CHAIN[q.want].name + " • " + q.reward + " × " + bonus() + " = " + pay + " 🪙");
-      };
-    }
+    const wait = Math.max(0, state.perchAt + PERCH_MS - Date.now());
+    setSafeText("perchLabel", "Perch: " + Math.ceil(wait / 1000) + "s • +" + inc);
   }
 }
 
 function render() {
   rollDaily();
-  document.getElementById('some-old-element')?.classList.add('hidden');
-  document.getElementById("title").innerHTML = state.mode === "stage" ? "Ash <span>Trail</span>" : "Ember <span>Nest</span>";
-  document.getElementById("hint").textContent = state.mode === "stage"
-    ? "Leave trail"
-    : trailWaitLabel();
-  const mb = document.getElementById("muteBtn");
-  if (mb) mb.textContent = state.muted ? "🔇" : "🔊";
-  const lc = document.getElementById("lvlChip");
-  if (lc) lc.textContent = "Lv " + (state.level || 1) + " • " + (state.xp || 0) + "/" + xpNeed(state.level || 1);
-  document.getElementById("coins").textContent = state.coins;
-  document.getElementById("energy").textContent = state.energy;
-  const em = document.getElementById("energyMax");
-  if (em) em.textContent = state.maxEnergy || MAX_ENERGY;
+  
+  // Update texts safely without crashing
+  setSafeHTML("title", state.mode === "stage" ? "Ash <span>Trail</span>" : "Ember <span>Nest</span>");
+  setSafeText("hint", state.mode === "stage" ? "Leave trail" : trailWaitLabel());
+  setSafeText("muteBtn", state.muted ? "🔇" : "🔊");
+  setSafeText("lvlChip", "Lv " + (state.level || 1) + " • " + (state.xp || 0) + "/" + xpNeed(state.level || 1));
+  
+  // 1. Update the New App UI Header Stats
+  setSafeText("coinCount", state.coins);
+  setSafeText("energyCount", state.energy + "/" + (state.maxEnergy || MAX_ENERGY));
   
   const nl = document.getElementById("nameLine");
   if (nl) {
     const n = state.playerName || "Keeper";
     nl.textContent = n + (state.nameChanges ? "" : " • tap to name");
   }
-  const bonusEl = document.getElementById("bonus");
-  if (bonusEl) bonusEl.textContent = bonus();
+  setSafeText("bonus", bonus());
   
-  gatherBtn.disabled = state.mode === "stage"
-    ? (state.trailGathers || 0) <= 0
-    : state.energy <= 0;
-
-  const help = document.getElementById("helpText");
-  if (help) {
-    help.textContent = state.mode === "stage"
-      ? "Merge next to ash to clear it • Wyrmlings clear 4 directions"
-      : "5-merge to grow • tap fogged tiles to open land • quests use one dragon";
+  if (gatherBtn) {
+    gatherBtn.disabled = state.mode === "stage" 
+      ? (state.trailGathers || 0) <= 0 
+      : state.energy <= 0;
+    gatherBtn.textContent = state.mode === "stage" 
+      ? "Gather egg • " + (state.trailGathers || 0) + " left" 
+      : "Gather egg 🥚";
   }
 
+  setSafeText("helpText", state.mode === "stage" 
+    ? "Merge next to ash to clear it • Wyrmlings clear 4 directions" 
+    : "5-merge to grow • tap fogged tiles to open land • quests use one dragon");
+
   renderBook();
-  gatherBtn.textContent = state.mode === "stage"
-    ? "Gather egg • " + (state.trailGathers || 0) + " left"
-    : "Gather egg 🥚";
+  
   const buy = document.getElementById("buyEgg");
   if (buy) {
     buy.textContent = "Buy egg • " + eggPrice() + " 🪙";
@@ -1408,22 +1289,22 @@ function render() {
   }
   renderQuest();
   
-  const tb = document.getElementById("tributeBtn");
-  if (tb) {
-    tb.textContent = `Mountain Tribute: ${tributeCost()} 🪙 (+1 Bonus)`;
-  }
+  setSafeText("tributeBtn", `Mountain Tribute: ${tributeCost()} 🪙 (+1 Bonus)`);
 
-  nestEl.innerHTML = DECOR.map(d => {
-    const owned = !!state.decor[d.id];
-    return `<div class="decor ${owned ? "owned" : ""}" data-decor="${d.id}">
-      <div class="ico">${d.art}</div>
-      <div>${d.name}</div>
-      <div>${owned ? "placed" : d.cost + " 🪙"}</div>
-    </div>`;
-  }).join("");
+  if (nestEl) {
+    nestEl.innerHTML = DECOR.map(d => {
+      const owned = !!state.decor[d.id];
+      return `<div class="decor ${owned ? "owned" : ""}" data-decor="${d.id}">
+        <div class="ico">${d.art}</div>
+        <div>${d.name}</div>
+        <div>${owned ? "placed" : d.cost + " 🪙"}</div>
+      </div>`;
+    }).join("");
+  }
+  
+  setSafeText("roomCount", roomsOpen());
+  
   const mt = document.getElementById("mountain");
-  const rc = document.getElementById("roomCount");
-  if (rc) rc.textContent = roomsOpen();
   if (mt) {
     const openN = roomsOpen();
     mt.innerHTML = ROOMS.map((r, i) => {
@@ -1434,6 +1315,7 @@ function render() {
   }
   
   applyTheme(state.theme || "hatchery");
+  
   const pr = document.getElementById("perchRow");
   if (pr) {
     state.perch = state.perch || [null, null, null];
@@ -1446,18 +1328,22 @@ function render() {
       return `<div class="perch ${armed ? "armed" : ""}" data-perch="${i}">empty perch</div>`;
     }).join("");
   }
+  
   const cells = board();
-  boardEl.innerHTML = "";
-  for (let i = 0; i < cells.length; i++) {
-    const cell = document.createElement("div");
-    const flashed = state._flash && state._flash.includes(i);
-    cell.className = "cell" + (isLocked(i) ? " locked" : "") + (isAsh(i) ? " ash" : "") + (flashed ? " flash" : "");
-    cell.dataset.i = i;
-    if (isLocked(i)) cell.textContent = "fog • " + unlockCost() + " 🪙";
-    else if (isAsh(i)) cell.innerHTML = ashSvg();
-    else if (cells[i]) cell.innerHTML = itemHtml(cells[i]);
-    boardEl.appendChild(cell);
+  if (boardEl) {
+    boardEl.innerHTML = "";
+    for (let i = 0; i < cells.length; i++) {
+      const cell = document.createElement("div");
+      const flashed = state._flash && state._flash.includes(i);
+      cell.className = "cell" + (isLocked(i) ? " locked" : "") + (isAsh(i) ? " ash" : "") + (flashed ? " flash" : "");
+      cell.dataset.i = i;
+      if (isLocked(i)) cell.textContent = "fog • " + unlockCost() + " 🪙";
+      else if (isAsh(i)) cell.innerHTML = ashSvg();
+      else if (cells[i]) cell.innerHTML = itemHtml(cells[i]);
+      boardEl.appendChild(cell);
+    }
   }
+  
   if (state.mode === "stage") checkTrailStuck();
   if (state._flash && state._flash.length) {
     setTimeout(() => { state._flash = []; }, 280);
