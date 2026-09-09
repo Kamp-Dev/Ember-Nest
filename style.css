@@ -205,3 +205,19 @@ body, html {
   opacity: 0.5;
   background: #140e0c;
 }
+/* 1. Give the board room to breathe at the bottom */
+#board {
+  margin-bottom: 80px !important;
+}
+
+/* 2. Force the buttons into normal document flow */
+#gather, #buyEgg {
+  position: relative !important;
+  z-index: 10;
+}
+
+/* 3. If the buttons share a wrapper, pull it out of absolute positioning */
+#gather:parent { /* Failsafes to push content down */ }
+.view.active {
+  padding-bottom: 60px; /* Ensures you can scroll past the bottom row */
+}
