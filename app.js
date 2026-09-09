@@ -368,6 +368,18 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
     </svg>`;
   }
 
+  // Special handling for Level 5 Elder 
+  if (level === 5) {
+    // We only really need elder-1 since they don't merge, but this keeps the logic safe!
+    const elderImages = ["elder-1.png", "elder-1.png", "elder-1.png", "elder-1.png"]; 
+    const currentImg = elderImages[n - 1] || elderImages[0];
+    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
+      <g style="animation: float 4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="${currentImg}" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>`;
+  }
+
   // Fallback for Egg (Tier 0) using stackLayout, and Elder (Tier 5)
   const body = oneSprite(level, hi, lo);
   const bits = stackLayout(n).map(([x, y, s]) =>
