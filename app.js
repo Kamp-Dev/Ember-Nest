@@ -1239,7 +1239,7 @@ function tickEnergy() {
 }
 setInterval(tickEnergy, 250);
 
-document.getElementById("collectPerchBtn")?.addEventListener("click", () => {
+document.getElementById("collectPerchBtn")??.addEventListener("click", () => {
   if ((state.perchBank || 0) > 0) {
     const amt = state.perchBank;
     state.coins += amt;
@@ -1255,7 +1255,7 @@ document.getElementById("collectPerchBtn")?.addEventListener("click", () => {
   }
 });
 
-document.getElementById("tributeBtn")?.addEventListener("click", () => {
+document.getElementById("tributeBtn")??.addEventListener("click", () => {
   const cost = tributeCost();
   if (state.coins < cost) { toast(`Need ${cost} 🪙 for the Mountain Tribute`); return; }
   state.coins -= cost;
@@ -1465,7 +1465,7 @@ function cellFromPoint(x, y) {
   return cell ? +cell.dataset.i : null;
 }
 
-boardEl.addEventListener("pointerdown", (e) => {
+boardEl?.addEventListener("pointerdown", (e) => {
   const cell = e.target.closest(".cell");
   if (!cell) return;
   const i = +cell.dataset.i;
@@ -1503,7 +1503,7 @@ boardEl.addEventListener("pointerdown", (e) => {
   boardEl.setPointerCapture(e.pointerId);
 });
 
-boardEl.addEventListener("pointermove", (e) => {
+boardEl?.addEventListener("pointermove", (e) => {
   if (!drag || !ghost) return;
   ghost.style.left = e.clientX + "px";
   ghost.style.top = e.clientY + "px";
@@ -1579,15 +1579,15 @@ function endDrag(e) {
   save(); render();
 }
 
-boardEl.addEventListener("pointerup", endDrag);
-boardEl.addEventListener("pointercancel", endDrag);
+boardEl?.addEventListener("pointerup", endDrag);
+boardEl?.addEventListener("pointercancel", endDrag);
 
-nestEl.addEventListener("click", (e) => {
+nestEl?.addEventListener("click", (e) => {
   const el = e.target.closest("[data-decor]");
   if (el) buyDecor(el.dataset.decor);
 });
 
-document.getElementById("mountain").addEventListener("click", (e) => {
+document.getElementById("mountain")?.addEventListener("click", (e) => {
   const el = e.target.closest("[data-room]");
   if (!el) return;
   const id = el.dataset.room;
@@ -1598,7 +1598,7 @@ document.getElementById("mountain").addEventListener("click", (e) => {
   save(); render();
 });
 
-document.getElementById("perchRow").addEventListener("click", (e) => {
+document.getElementById("perchRow")?.addEventListener("click", (e) => {
   const el = e.target.closest("[data-perch]");
   if (!el) return;
   const i = +el.dataset.perch;
@@ -1609,9 +1609,9 @@ document.getElementById("perchRow").addEventListener("click", (e) => {
   if (perchArmed >= 0) toast("Tap a nest dragon to perch it");
 });
 
-gatherBtn.addEventListener("click", gather);
-document.getElementById("buyEgg").addEventListener("click", buyEgg);
-document.getElementById("chestOk")?.addEventListener("click", () => {
+gatherBtn?.addEventListener("click", gather);
+document.getElementById("buyEgg")?.addEventListener("click", buyEgg);
+document.getElementById("chestOk")??.addEventListener("click", () => {
   const box = document.getElementById("chestBox");
   const needsOpen = box && box.style.display !== "none" && !box.disabled;
   if (needsOpen) { toast("Tap the chest to open it"); return; }
@@ -1619,17 +1619,17 @@ document.getElementById("chestOk")?.addEventListener("click", () => {
   levelShowing = false;
   showLevelEvent();
 });
-document.getElementById("chestBox")?.addEventListener("click", revealChest);
+document.getElementById("chestBox")??.addEventListener("click", revealChest);
 
-document.getElementById("hint").addEventListener("click", enterStage);
+document.getElementById("hint")?.addEventListener("click", enterStage);
 
-document.getElementById("restartTrail").addEventListener("click", restartTrail);
-document.getElementById("winHome").addEventListener("click", hideTrailWin);
-document.getElementById("winAgain").addEventListener("click", () => {
+document.getElementById("restartTrail")?.addEventListener("click", restartTrail);
+document.getElementById("winHome")?.addEventListener("click", hideTrailWin);
+document.getElementById("winAgain")?.addEventListener("click", () => {
   hideTrailWin();
   restartTrail();
 });
-document.getElementById("homeTrail").addEventListener("click", () => {
+document.getElementById("homeTrail")?.addEventListener("click", () => {
   hideTrailFail();
   state.mode = "home";
   resetTrail();
@@ -1637,7 +1637,7 @@ document.getElementById("homeTrail").addEventListener("click", () => {
   save(); render();
 });
 
-document.getElementById("nameLine").addEventListener("click", () => {
+document.getElementById("nameLine")?.addEventListener("click", () => {
   const free = (state.nameChanges || 0) === 0;
   document.getElementById("nameHint").textContent = free
     ? "First change is free."
@@ -1646,11 +1646,11 @@ document.getElementById("nameLine").addEventListener("click", () => {
   document.getElementById("nameBox").classList.add("open");
 });
 
-document.getElementById("nameNo").addEventListener("click", () => {
+document.getElementById("nameNo")?.addEventListener("click", () => {
   document.getElementById("nameBox").classList.remove("open");
 });
 
-document.getElementById("nameGo").addEventListener("click", () => {
+document.getElementById("nameGo")?.addEventListener("click", () => {
   const raw = (document.getElementById("nameInput").value || "").trim().replace(/\s+/g, " ");
   if (raw.length < 2) { toast("Need at least 2 letters"); return; }
   if (raw.length > 16) { toast("16 letters max"); return; }
@@ -1670,22 +1670,22 @@ document.getElementById("nameGo").addEventListener("click", () => {
   save(); render();
 });
 
-document.getElementById("muteBtn").addEventListener("click", () => {
+document.getElementById("muteBtn")?.addEventListener("click", () => {
   state.muted = !state.muted;
   save(); render();
   toast(state.muted ? "Sound off" : "Sound on");
 });
 
-document.getElementById("bookBtn").addEventListener("click", () => {
+document.getElementById("bookBtn")?.addEventListener("click", () => {
   renderBook();
   document.getElementById("book").classList.add("open");
 });
 
-document.getElementById("bookClose").addEventListener("click", () => {
+document.getElementById("bookClose")?.addEventListener("click", () => {
   document.getElementById("book").classList.remove("open");
 });
 
-document.getElementById("resetAll").addEventListener("click", () => {
+document.getElementById("resetAll")?.addEventListener("click", () => {
   document.getElementById("wipe").classList.add("open");
   const inp = document.getElementById("wipeInput");
   inp.value = "";
@@ -1693,56 +1693,56 @@ document.getElementById("resetAll").addEventListener("click", () => {
   inp.focus();
 });
 
-document.getElementById("wipeInput").addEventListener("input", (e) => {
+document.getElementById("wipeInput")?.addEventListener("input", (e) => {
   document.getElementById("wipeGo").disabled = e.target.value.trim() !== "Delete";
 });
 
-document.getElementById("wipeGo").addEventListener("click", () => {
+document.getElementById("wipeGo")?.addEventListener("click", () => {
   if (document.getElementById("wipeInput").value.trim() !== "Delete") return;
   localStorage.removeItem(SAVE);
   for (let v = 1; v <= 10; v++) localStorage.removeItem("ember-nest-v" + v);
   location.reload();
 });
 
-document.getElementById("wipeNo").addEventListener("click", () => {
+document.getElementById("wipeNo")?.addEventListener("click", () => {
   document.getElementById("wipe").classList.remove("open");
 });
 
-document.getElementById("overClose").addEventListener("click", () => {
+document.getElementById("overClose")?.addEventListener("click", () => {
   document.getElementById("overflow").classList.remove("open");
   overflowArm = null;
 });
 
-document.getElementById("overPerch").addEventListener("click", () => {
+document.getElementById("overPerch")?.addEventListener("click", () => {
   if (freePerchSlot() < 0) { toast("No open perch"); return; }
   overflowArm = "perch";
   document.getElementById("overflow").classList.remove("open");
   toast("Tap a nest dragon to perch it");
 });
 
-document.getElementById("overDrop").addEventListener("click", () => {
+document.getElementById("overDrop")?.addEventListener("click", () => {
   overflowArm = "dismiss";
   document.getElementById("overflow").classList.remove("open");
   toast("Tap a nest dragon to dismiss it");
 });
 
-document.getElementById("guideBtn").addEventListener("click", showGuide);
-document.getElementById("guideClose").addEventListener("click", () => {
+document.getElementById("guideBtn")?.addEventListener("click", showGuide);
+document.getElementById("guideClose")?.addEventListener("click", () => {
   state.seenGuide = true;
   document.getElementById("guide").classList.remove("open");
   save();
 });
 
-document.getElementById("sleepyGuideClose").addEventListener("click", () => {
+document.getElementById("sleepyGuideClose")?.addEventListener("click", () => {
   document.getElementById("sleepyGuide").classList.remove("open");
 });
 
-document.getElementById("book").addEventListener("click", (e) => {
+document.getElementById("book")?.addEventListener("click", (e) => {
   if (e.target.id === "book") document.getElementById("book").classList.remove("open");
 });
 // Tab Switching Logic
 document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", (e) => {
+  btn?.addEventListener("click", (e) => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     
