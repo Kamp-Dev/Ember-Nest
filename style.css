@@ -285,3 +285,17 @@ button:disabled {
   z-index: 999;
   filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
 }
+/* --- 12. PARTICLES --- */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 0 8px currentColor;
+  animation: particle-fly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes particle-fly {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
