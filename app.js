@@ -1355,7 +1355,7 @@ function renderQuest() {
 
 function render() {
   rollDaily();
-  document.getElementById("app").classList.toggle("stage", state.mode === "stage");
+  document.getElementById('some-old-element')?.classList.add('hidden');
   document.getElementById("title").innerHTML = state.mode === "stage" ? "Ash <span>Trail</span>" : "Ember <span>Nest</span>";
   document.getElementById("hint").textContent = state.mode === "stage"
     ? "Leave trail"
