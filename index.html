@@ -1,28 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Ember Nest — Merge & Decorate</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ember Nest</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- 1. KEEP YOUR EXISTING TOP STATS/HEADER HERE -->
-  <div style="display: flex; justify-content: space-between; padding: 10px;">
-    <!-- Your coins and energy counters are here -->
-  </div>
 
-  <!-- ========================================== -->
-  <!-- 2. REPLACE YOUR OLD CONTENT WITH THIS -->
-  <!-- ========================================== -->
+  <!-- Top Stats Header -->
+  <header id="topBarStats">
+    <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
+    <div class="stat-pill">⚡ <span id="energyCount">5/5</span></div>
+  </header>
 
-  <!-- === VIEW 1: THE BOARD (Active by default) === -->
+  <!-- === VIEW 1: THE BOARD === -->
   <div id="view-board" class="view active">
     <div id="hint"></div>
     <div id="perchRow"></div>
     <div id="board"></div>
     
-    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+    <div class="action-buttons">
       <button id="gather">Gather egg 🥚</button>
       <button id="buyEgg">Buy egg</button>
     </div>
@@ -30,13 +28,13 @@
 
   <!-- === VIEW 2: QUESTS === -->
   <div id="view-quests" class="view">
-    <div style="text-align: center; margin-bottom: 10px; color: #deb781;">The Mountain's Requests</div>
+    <div class="section-title">The Mountain's Requests</div>
     <div id="questBox"></div>
   </div>
 
-  <!-- === VIEW 3: THE NEST (Base Building) === -->
+  <!-- === VIEW 3: THE NEST === -->
   <div id="view-nest" class="view">
-    <div style="text-align: center; margin-bottom: 10px; color: #deb781;">Mountain Rooms & Decor</div>
+    <div class="section-title">Mountain Rooms & Decor</div>
     <div id="mountain"></div>
     <div id="nest"></div>
   </div>
@@ -57,9 +55,6 @@
     </button>
   </nav>
 
-  <!-- ========================================== -->
-  <!-- 3. KEEP YOUR SCRIPT TAGS AT THE VERY BOTTOM -->
-  <!-- ========================================== -->
   <script src="app.js"></script>
 </body>
 </html>
