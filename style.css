@@ -146,3 +146,62 @@ body, html {
   filter: grayscale(0%) opacity(1);
   transform: scale(1.15);
 }
+/* 1. Center everything in the active view */
+.view.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* 2. Style the Hint text */
+#hint {
+  color: #deb781;
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* 3. Make the Perch Row a horizontal grid */
+#perchRow {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 20px;
+}
+
+/* 4. Style the individual Perch slots */
+.perch {
+  background: #1e1511;
+  border: 2px solid #3a2820;
+  border-radius: 8px;
+  padding: 8px 4px;
+  flex: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #8a6b52;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+}
+
+/* 5. Active and Locked Perch States */
+.perch.on {
+  color: #f3e5dc;
+  border-color: #d48a37;
+  background: #231915;
+}
+
+.perch.lock {
+  opacity: 0.5;
+  background: #140e0c;
+}
