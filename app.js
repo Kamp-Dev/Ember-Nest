@@ -366,31 +366,15 @@ function oneSprite(level, hi, lo) {
       </g>
     `;
   }
+  // Special handling for Level 4 Hearth 4-stage stack images
   if (level === 4) {
-    return `
-      <g style="animation: flap-l-slow 1.2s infinite alternate ease-in-out; transform-origin: 14px 15px;">
-        <path d="M2 22 C-3 6 12 4 14 15 L7 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
-        <circle cx="1" cy="6" r="1.5" fill="#ffe08a"/>
+    const hearthImages = ["hearth-1.png", "hearth-2.png", "hearth-3.png", "hearth-4.png"];
+    const currentImg = hearthImages[n - 1] || hearthImages[0];
+    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
+      <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="${currentImg}" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
       </g>
-      <g style="animation: flap-r-slow 1.2s infinite alternate ease-in-out; transform-origin: 18px 15px;">
-        <path d="M30 22 C35 6 20 4 18 15 L25 24 Z" fill="${lo}" stroke="#1a0f08" stroke-width="1.6"/>
-        <circle cx="31" cy="6" r="1.5" fill="#ffe08a"/>
-      </g>
-      <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 21px;">
-        <ellipse cx="16" cy="21" rx="8" ry="7.5" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
-        <g style="animation: pulse 1.5s infinite alternate ease-in-out; transform-origin: 16px 21px;">
-          <polygon points="16,17 19,21 16,25 13,21" fill="#fff" stroke="#d93d04" stroke-width="1.2"/>
-        </g>
-        <path d="M8 7 L3 0 L10 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
-        <path d="M24 7 L29 0 L22 4 Z" fill="#ffe08a" stroke="#1a0f08" stroke-width="1.3"/>
-        <path d="M14 4 L16 -1 L18 4 Z" fill="#ff9900" stroke="#1a0f08" stroke-width="1.3"/>
-        <circle cx="16" cy="11" r="7.8" fill="${hi}" stroke="#1a0f08" stroke-width="1.8"/>
-        <ellipse cx="12.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
-        <ellipse cx="19.5" cy="11" rx="2.4" ry="2.6" fill="#1a0f08"/>
-        <circle cx="12.5" cy="11" r="1.2" fill="#00ffe1"/>
-        <circle cx="19.5" cy="11" r="1.2" fill="#00ffe1"/>
-      </g>
-    `;
+    </svg>`;
   }
   return `
     <g style="animation: float 4s infinite ease-in-out; transform-origin: 16px 16px;">
