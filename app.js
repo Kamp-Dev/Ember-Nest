@@ -449,6 +449,17 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
     </svg>`;
   }
 
+  // Special handling for Level 2 Wyrmling 4-stage stack images
+  if (level === 2) {
+    const wyrmlingImages = ["wyrmling-1.png", "wyrmling-2.png", "wyrmling-3.png", "wyrmling-4.png"];
+    const currentImg = wyrmlingImages[n - 1] || wyrmlingImages[0];
+    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
+      <g style="animation: breathe 1.5s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="${currentImg}" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>`;
+  }
+
   const body = oneSprite(level, hi, lo);
   const bits = stackLayout(n).map(([x, y, s]) =>
     `<g transform="translate(${x},${y}) scale(${s}) translate(-16,-16)">${body}</g>`
