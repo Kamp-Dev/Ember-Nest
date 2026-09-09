@@ -1239,7 +1239,7 @@ function tickEnergy() {
 }
 setInterval(tickEnergy, 250);
 
-document.getElementById("collectPerchBtn").addEventListener("click", () => {
+document.getElementById("collectPerchBtn")?.addEventListener("click", () => {
   if ((state.perchBank || 0) > 0) {
     const amt = state.perchBank;
     state.coins += amt;
