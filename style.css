@@ -235,15 +235,16 @@ h1 span { color: var(--ember); }
 #board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr); /* Ensure this is also set to 5 */
+  grid-template-rows: repeat(5, 1fr);
   gap: 6px;
-  min-height: 310px;
-  max-height: 440px;
-  margin: auto 0;
-  padding: 4px 4px 8px;
-  perspective: 900px;
+  width: 100%;
+  max-width: 420px; /* Adjust this if you want the board bigger or smaller */
+  aspect-ratio: 1 / 1; /* This forces the entire board to be a perfect square */
+  margin: 0 auto; /* Centers the board */
 }
+
 .cell {
+  aspect-ratio: 1 / 1;
   min-height: 52px;
   background: linear-gradient(180deg, var(--tile-top) 0%, var(--tile) 55%, var(--tile-shadow) 100%);
   border: 2px solid var(--tile-edge);
