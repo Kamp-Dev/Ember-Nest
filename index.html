@@ -1,332 +1,119 @@
-/* =========================================
-   EMBER NEST - MOBILE APP BUILD (V2)
-========================================= */
+<!DOCTYPE html>
 
-/* --- 1. CORE VARIABLES & RESET --- */
-:root {
-  --bg-dark: #120c0a;
-  --panel: #1e1511;
-  --border: #33241d;
-  --text-main: #f8ece4;
-  --text-muted: #8a6b52;
-  --gold: #ffcf40;
-  --ember: #d45817;
-  --danger: #a12b2b;
-}
+<html lang="en">
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  user-select: none;
-}
+<head>
 
-body {
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: system-ui, -apple-system, sans-serif;
-  overflow: hidden; 
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+  <meta charset="UTF-8">
 
-/* --- 2. TOP HEADER STATS --- */
-#topBarStats {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 25px;
-  background-color: var(--panel);
-  border-bottom: 2px solid var(--border);
-  width: 100%;
-  max-width: 500px;
-  z-index: 10;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-.stat-pill {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: var(--text-muted);
-}
+  <title>Ember Nest</title>
 
-.stat-pill span {
-  color: var(--gold);
-}
+  <link rel="stylesheet" href="style.css">
 
-/* --- 3. SCROLLABLE VIEWS --- */
-.view {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 500px;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 15px 90px 15px; /* Bottom padding prevents tab bar overlap */
-}
+</head>
 
-.view.active {
-  display: flex;
-}
+<body>
 
-.section-title {
-  color: var(--gold);
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 15px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
 
-/* --- 4. HINT & ASH TRAIL BANNER --- */
-#hint {
-  background: linear-gradient(135deg, #241612, #4a291f);
-  color: var(--gold);
-  padding: 10px 24px;
-  border-radius: 20px;
-  border: 1px solid var(--ember);
-  font-weight: bold;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 15px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-  transition: transform 0.1s, box-shadow 0.1s;
-}
 
-#hint:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.8);
-}
+  <!-- Top Stats Header -->
 
-/* --- 5. THE 5x5 BOARD --- */
-#board {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  width: 100%;
-  max-width: 400px;
-  margin-bottom: 25px;
-}
+  <header id="topBarStats">
 
-.cell {
-  aspect-ratio: 1;
-  background-color: var(--panel);
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition: all 0.2s ease;
-}
+    <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
 
-.cell.locked {
-  background-color: #0c0806;
-  border-color: #1a120e;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  text-align: center;
-}
+    <div class="stat-pill">⚡ <span id="energyCount">5/5</span></div>
 
-.cell.ash {
-  background-color: #241612;
-  border-color: #4a291f;
-}
+  </header>
 
-.cell.valid {
-  border-color: var(--gold);
-  box-shadow: inset 0 0 10px rgba(255, 207, 64, 0.3);
-}
 
-/* --- 6. DRAGONS & ITEMS --- */
-.item {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
 
-.lvl {
-  position: absolute;
-  bottom: -6px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  background: rgba(0,0,0,0.8);
-  padding: 2px 6px;
-  border-radius: 10px;
-  white-space: nowrap;
-}
+  <!-- === VIEW 1: THE BOARD === -->
 
-/* --- 7. BUTTONS & UI CONTROLS --- */
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  width: 100%;
-  max-width: 400px;
-  justify-content: center;
-}
+  <div id="view-board" class="view active">
 
-button {
-  background: linear-gradient(135deg, var(--ember), #a63f0d);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  transition: transform 0.1s;
-}
+    <div id="hint"></div>
 
-button:active {
-  transform: scale(0.95);
-}
+    <div id="perchRow"></div>
 
-button:disabled {
-  background: var(--panel);
-  color: var(--text-muted);
-  box-shadow: none;
-  cursor: not-allowed;
-}
+    <div id="board"></div>
 
-/* --- 8. PERCH ROW --- */
-#perchRow {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-  max-width: 400px;
-  margin-bottom: 15px;
-}
+    
 
-.perch {
-  flex: 1;
-  background-color: var(--panel);
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  height: 70px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
+    <div class="action-buttons">
 
-.perch.on {
-  border-style: solid;
-  border-color: var(--ember);
-}
+      <button id="gather">Gather egg 🥚</button>
 
-.perch.lock {
-  background-color: #0c0806;
-  opacity: 0.5;
-}
+      <button id="buyEgg">Buy egg</button>
 
-/* --- 9. BOTTOM TAB BAR --- */
-#tabBar {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  max-width: 500px;
-  height: 70px;
-  background-color: var(--panel);
-  border-top: 2px solid var(--border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
-}
+    </div>
 
-.tab-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 33%;
-  height: 100%;
-  box-shadow: none;
-  border-radius: 0;
-  padding: 0;
-}
+  </div>
 
-.tab-btn.active {
-  color: var(--gold);
-}
 
-.tab-btn .tab-icon {
-  font-size: 1.5rem;
-  filter: grayscale(100%);
-  opacity: 0.5;
-}
 
-.tab-btn.active .tab-icon {
-  filter: none;
-  opacity: 1;
-}
+  <!-- === VIEW 2: QUESTS === -->
 
-/* --- 10. ANIMATIONS --- */
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
-}
+  <div id="view-quests" class="view">
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-}
+    <div class="section-title">The Mountain's Requests</div>
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
+    <div id="questBox"></div>
 
-@keyframes flap-l-slow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(-15deg); }
-}
+  </div>
 
-@keyframes flap-r-slow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(15deg); }
-}
 
-/* --- 11. GHOST (DRAGGING) --- */
-.ghost {
-  position: fixed;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(1.2);
-  z-index: 999;
-  filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
-}
 
-/* --- 12. PARTICLES --- */
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1000;
-  box-shadow: 0 0 8px currentColor;
-  animation: particle-fly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
+  <!-- === VIEW 3: THE NEST === -->
 
-@keyframes particle-fly {
-  0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
-}
+  <div id="view-nest" class="view">
+
+    <div class="section-title">Mountain Rooms & Decor</div>
+
+    <div id="mountain"></div>
+
+    <div id="nest"></div>
+
+  </div>
+
+
+
+  <!-- === BOTTOM TAB BAR === -->
+
+  <nav id="tabBar">
+
+    <button data-tab="view-board" class="tab-btn active">
+
+      <span class="tab-icon">🐉</span>
+
+      <span class="tab-label">Board</span>
+
+    </button>
+
+    <button data-tab="view-quests" class="tab-btn">
+
+      <span class="tab-icon">📜</span>
+
+      <span class="tab-label">Quests</span>
+
+    </button>
+
+    <button data-tab="view-nest" class="tab-btn">
+
+      <span class="tab-icon">🏕️</span>
+
+      <span class="tab-label">Nest</span>
+
+    </button>
+
+  </nav>
+
+
+
+  <script src="app.js"></script>
+
+</body>
+
+</html> 
