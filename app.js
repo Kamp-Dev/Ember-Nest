@@ -1,13 +1,13 @@
-const COLS = 6, ROWS = 6, MAX_ENERGY = 5;
+const COLS = 5, ROWS = 5, MAX_ENERGY = 5;
 const SAVE = "ember-nest-save";
 const REGEN_MS = 8000;
 const PERCH_MS = 20000;
-const OPEN_START = COLS * 5;
+const OPEN_START = 20; // Leaves 5 tiles locked by default on a 25-tile grid
 const STAGE_GOAL = 3;
 const ASH_GRACE = 0;
 const ASH_PER_MERGE = 1;
-const ASH_FAIL = 12;
-const ASH_GOAL = 6;
+const ASH_FAIL = 10;   // Lowered slightly to match the smaller board capacity
+const ASH_GOAL = 5;    // Lowered from 6 to keep the Ash Trail balanced
 const TRAIL_GATHERS = 6;
 const DAILY_PAYS = [1200, 800, 400];
 const DAILY_CLEARS = 3;
