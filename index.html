@@ -1,122 +1,75 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
-<!-- Top Stats Header -->
-  <header id="topBarStats">
-    <div class="header-left">
-      <h1 id="title">Ember <span>Nest</span></h1>
-      <div id="nameLine" title="Tap to rename">Keeper</div>
-    </div>
-    <div class="header-right">
-      <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
-      <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
-    </div>
-  </header>
-
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ember Nest</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
 
+  <div id="app">
+    <!-- Top Stats Header -->
+    <header id="topBarStats">
+      <div class="header-left">
+        <h1 id="title">Ember <span>Nest</span></h1>
+        <div id="nameLine" title="Tap to rename">Keeper</div>
+      </div>
+      <div class="header-right">
+        <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
+        <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
+      </div>
+    </header>
 
+    <!-- === SCROLLABLE VIEWS CONTAINER === -->
+    <div class="view-container">
+      <!-- === VIEW 1: THE BOARD === -->
+      <div id="view-board" class="view active">
+        <div id="hint"></div>
+        <div id="perchRow"></div>
+        <div id="board"></div>
+        
+        <div class="action-buttons">
+          <button id="gather">Gather egg 🥚</button>
+          <button id="buyEgg">Buy egg</button>
+        </div>
+      </div>
 
-  <!-- Top Stats Header -->
+      <!-- === VIEW 2: QUESTS === -->
+      <div id="view-quests" class="view">
+        <div class="section-title">The Mountain's Requests</div>
+        <div id="questBox"></div>
+      </div>
 
-  <header id="topBarStats">
-
-    <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
-
-    <div class="stat-pill">⚡ <span id="energyCount">5/5</span></div>
-
-  </header>
-
-
-
-  <!-- === VIEW 1: THE BOARD === -->
-
-  <div id="view-board" class="view active">
-
-    <div id="hint"></div>
-
-    <div id="perchRow"></div>
-
-    <div id="board"></div>
-
-    
-
-    <div class="action-buttons">
-
-      <button id="gather">Gather egg 🥚</button>
-
-      <button id="buyEgg">Buy egg</button>
-
+      <!-- === VIEW 3: THE NEST === -->
+      <div id="view-nest" class="view">
+        <div class="section-title">Mountain Rooms & Decor</div>
+        <div id="mountain"></div>
+        <div id="nest"></div>
+      </div>
     </div>
 
+    <!-- === BOTTOM TAB BAR === -->
+    <nav id="tabBar">
+      <button data-tab="view-board" class="tab-btn active">
+        <span class="tab-icon">🐉</span>
+        <span class="tab-label">Board</span>
+      </button>
+      <button data-tab="view-quests" class="tab-btn">
+        <span class="tab-icon">📜</span>
+        <span class="tab-label">Quests</span>
+      </button>
+      <button data-tab="view-nest" class="tab-btn">
+        <span class="tab-icon">🏕️</span>
+        <span class="tab-label">Nest</span>
+      </button>
+    </nav>
   </div>
 
-
-
-  <!-- === VIEW 2: QUESTS === -->
-
-  <div id="view-quests" class="view">
-
-    <div class="section-title">The Mountain's Requests</div>
-
-    <div id="questBox"></div>
-
-  </div>
-
-
-
-  <!-- === VIEW 3: THE NEST === -->
-
-  <div id="view-nest" class="view">
-
-    <div class="section-title">Mountain Rooms & Decor</div>
-
-    <div id="mountain"></div>
-
-    <div id="nest"></div>
-
-  </div>
-
-
-
-  <!-- === BOTTOM TAB BAR === -->
-
-  <nav id="tabBar">
-
-    <button data-tab="view-board" class="tab-btn active">
-
-      <span class="tab-icon">🐉</span>
-
-      <span class="tab-label">Board</span>
-
-    </button>
-
-    <button data-tab="view-quests" class="tab-btn">
-
-      <span class="tab-icon">📜</span>
-
-      <span class="tab-label">Quests</span>
-
-    </button>
-
-    <button data-tab="view-nest" class="tab-btn">
-
-      <span class="tab-icon">🏕️</span>
-
-      <span class="tab-label">Nest</span>
-
-    </button>
-
-  </nav>
-
-
-
-  <script src="app.js"></script>
-<!-- Toast Notification Banner -->
+  <!-- === MODALS & OVERLAYS (REQUIRED FOR JS) === -->
   <div id="toast"></div>
 
-  <!-- Level Up / Chest Modal -->
   <div id="chest" class="modal">
     <div class="modal-content">
       <h2 id="chestTitle">Level Up</h2>
@@ -127,7 +80,6 @@
     </div>
   </div>
 
-  <!-- Rename Modal -->
   <div id="nameBox" class="modal">
     <div class="modal-content">
       <h2>Name Your Nest</h2>
@@ -140,7 +92,6 @@
     </div>
   </div>
 
-  <!-- Ash Trail Win Modal -->
   <div id="trailWin" class="modal">
     <div class="modal-content">
       <h2>Trail Cleared!</h2>
@@ -153,7 +104,6 @@
     </div>
   </div>
 
-  <!-- Ash Trail Fail Modal -->
   <div id="trailFail" class="modal">
     <div class="modal-content">
       <h2>Ash Overwhelmed</h2>
@@ -164,7 +114,7 @@
       </div>
     </div>
   </div>
-  
-</body>
 
-</html> 
+  <script src="app.js"></script>
+</body>
+</html>
