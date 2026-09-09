@@ -1255,7 +1255,7 @@ document.getElementById("collectPerchBtn")?.addEventListener("click", () => {
   }
 });
 
-document.getElementById("tributeBtn").addEventListener("click", () => {
+document.getElementById("tributeBtn")?.addEventListener("click", () => {
   const cost = tributeCost();
   if (state.coins < cost) { toast(`Need ${cost} 🪙 for the Mountain Tribute`); return; }
   state.coins -= cost;
