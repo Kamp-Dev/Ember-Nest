@@ -11,24 +11,48 @@
   --cyan-glow: #00e1d9;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body {
-  margin: 0; height: 100%;
-  background:
-    radial-gradient(circle at 50% 15%, #3a2218 0%, transparent 60%),
-    radial-gradient(circle at 50% 85%, #050302 0%, var(--cave) 100%);
-  color: var(--cream);
-  font-family: "Nunito", "Trebuchet MS", "Segoe UI", sans-serif;
+/* Force body to take full screen and clip overflow */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100dvh;
   overflow: hidden;
-  user-select: none;
+  background: #140e0c; /* Matches your dark theme */
+  color: #fff;
+  font-family: sans-serif;
 }
-#app {
-  max-width: 480px;
-  margin: 0 auto;
-  height: 100%;
+
+/* Ensure views fill the screen above the tab bar */
+.view {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 70px; /* Leaves exact room for the tab bar */
+  overflow-y: auto;
+  padding: 15px;
+}
+
+.view.active {
+  display: block;
+}
+
+/* Lock the Tab Bar strictly to the viewport bottom */
+#tabBar {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 70px;
+  background: #1e1511;
+  border-top: 2px solid #3a2820;
   display: flex;
-  flex-direction: column;
-  padding: 8px 10px 10px;
-  position: relative;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 9999;
+  box-shadow: 0 -4px 15px rgba(0,0,0,0.8);
 }
 #app[data-theme="alcove"] { --ember:#7ac73c; --gold:#e4ff6b; --tile:#1e2b1b; --tile-top:#2c3f27; --tile-edge:#45633b; --cave:#080d07; }
 #app[data-theme="walk"] { --ember:#ffa826; --gold:#ffe873; --tile:#382410; --tile-top:#4d3319; --tile-edge:#734b22; --cave:#0f0904; }
