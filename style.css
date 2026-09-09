@@ -475,3 +475,115 @@ button:disabled {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+/* --- DRAGON BOOK STYLES --- */
+.icon-btn {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: none;
+  padding: 0;
+  font-size: 1.1rem;
+  transition: border-color 0.2s;
+}
+
+.icon-btn:hover {
+  border-color: var(--gold);
+}
+
+.book-content {
+  max-width: 420px !important;
+  width: 92% !important;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: none;
+  padding: 5px;
+}
+
+.close-btn:hover {
+  color: var(--text-main);
+}
+
+.book-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 5px 0 15px 0;
+}
+
+.tab-btn-sub {
+  flex: 1;
+  padding: 8px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  box-shadow: none;
+}
+
+.tab-btn-sub.active {
+  background: var(--ember);
+  color: white;
+  border-color: var(--gold);
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 55vh;
+  padding-right: 4px;
+}
+
+.card {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.card.locked {
+  opacity: 0.35;
+  border-style: dashed;
+}
+
+.card .nm {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.card .bl {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
