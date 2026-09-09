@@ -1740,23 +1740,17 @@ document.getElementById("sleepyGuideClose").addEventListener("click", () => {
 document.getElementById("book").addEventListener("click", (e) => {
   if (e.target.id === "book") document.getElementById("book").classList.remove("open");
 });
-// App-Style Tab Navigation Logic
+// Tab Switching Logic
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", (e) => {
-    // 1. Remove active state from all tabs and views
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     
-    // 2. Add active state to the clicked tab
     const targetTab = e.currentTarget;
     targetTab.classList.add("active");
     
-    // 3. Show the corresponding view
     const viewId = targetTab.dataset.tab;
     document.getElementById(viewId).classList.add("active");
-    
-    // Optional: Play a tiny sound when switching tabs
-    sfx("gather"); 
   });
 });
 load();
