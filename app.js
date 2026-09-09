@@ -1191,6 +1191,93 @@ window.toggleQuestTab = () => {
   render();
 };
 
+function itemHtml(item) {
+  const spec = CHAIN[item.level];
+  return `<div class="item pop">
+    ${dragonSvg(item.level, 42, item.count, item.shiny)}
+    <div class="lvl" style="color:#fff; text-shadow:0 2px 2px #000, 0 0 4px #000;">${item.shiny ? '✨ ' : ''}${spec.name}${item.count > 1 ? " • " + item.count : ""}</div>
+  </div>`;
+}
+
+function renderQuest() {
+  const box = document.getElementById("questBox");
+  if (!box) return; // UI Safety check!
+  
+  if (state.mode === "stage") {
+    const have = board().some(c => c && c.level >= STAGE_GOAL);
+    box.className = "quest";
+    box.innerHTML = `
+      <div class="art">${dragonSvg(STAGE_GOAL, 42)}</div>
+      <p>Burn <b>${ASH_GOAL} ash</b> • ${state.ashBurned || 0}/${ASH_GOAL} cleared<br>
+      <span style="font-size:0.7rem; color:#deb781;">Live ash limits: ${ashCount()}/${ASH_FAIL}</span></p>
+      <button id="giveBtn" disabled>${have ? "Done" : "Goal"}</button>
+    `;
+    return;
+  }
+
+  const hasSleepy = !state.sleepyDone && state.level >= 3;
+  if (!hasSleepy) state.questTab = 0;
+
+  const leftArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❮</button>` : ``;
+  const rightArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❯</button>` : ``;
+  const dots = hasSleepy ? `<div class="quest-dots"><span class="${state.questTab===0?'active':''}"></span><span class="${state.questTab===1?'active':''}"></span></div>` : ``;
+
+  if (hasSleepy && state.questTab === 0) {
+    const haveSleepy = findLevel(3) >= 0; 
+    box.className = "quest sleepy";
+    box.innerHTML = `
+      ${leftArrow}
+      <div style="display:flex; align-items:center; gap:8px; flex:1;">
+        <div class="art">
+          ${dragonSvg(3, 40)}
+          <div class="zzz">Zzz</div>
+        </div>
+        <div style="flex:1;">
+          <p id="wishText" style="color:#a9d6e5;">Sleepy Dragon needs a <b>Young</b> dragon.<br><span style="font-size:0.7rem;">Streak: ${state.sleepyStreak || 0}/7</span></p>
+          ${dots}
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <button id="giveBtn" ${haveSleepy ? "" : "disabled"}>Wake</button>
+          <button id="sleepyInfoBtn" style="padding:4px; font-size:0.7rem; background:#415a77; border-color:#e0e1dd; box-shadow:0 2px 0 #1b263b;">Info</button>
+        </div>
+      </div>
+      ${rightArrow}
+    `;
+    const btn = document.getElementById("giveBtn");
+    if (btn) btn.onclick = fulfillSleepy;
+    const sInfo = document.getElementById("sleepyInfoBtn");
+    if (sInfo) sInfo.onclick = () => document.getElementById("sleepyGuide").classList.add("open");
+    
+  } else {
+    box.className = "quest";
+    const list = wishList();
+    const q = list[state.quest % list.length];
+    const have = findLevel(q.want) >= 0;
+    box.innerHTML = `
+      ${leftArrow}
+      <div style="display:flex; align-items:center; gap:8px; flex:1;">
+        <div class="art">${dragonSvg(q.want, 40)}</div>
+        <div style="flex:1;">
+          <p id="wishText">${state.questDone ? "The nest settles..." : q.text}<br><span style="font-size:0.7rem;">Gifts: ${(state.gives || 0) % 5}/5</span></p>
+          ${dots}
+        </div>
+        <button id="giveBtn" ${have && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
+      </div>
+      ${rightArrow}
+    `;
+    const btn = document.getElementById("giveBtn");
+    if (btn) btn.onclick = fulfillQuest;
+    const wish = document.getElementById("wishText");
+    if (wish && !state.questDone) {
+      wish.style.cursor = "pointer";
+      wish.onclick = () => {
+        const pay = q.reward * bonus();
+        toast(CHAIN[q.want].name + " • " + q.reward + " × " + bonus() + " = " + pay + " 🪙");
+      };
+    }
+  }
+}
+
 function tickEnergy() {
   const cap = state.maxEnergy || MAX_ENERGY;
   
