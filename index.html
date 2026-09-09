@@ -7,152 +7,59 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
-    <header>
-      <div class="title-container">
-        <h1 id="title">Ember <span>Nest</span></h1>
-        <div id="nameLine">Keeper</div>
-      </div>
-      <div class="stats">
-        <div class="chip">🪙 <span id="coins">0</span></div>
-        <div class="chip">⚡ <span id="energy">5</span>/<span id="energyMax">5</span> <span id="regen" style="opacity:.7"></span></div>
-        <div class="chip btn" id="bookBtn">Book <span id="bookCount">0</span>/6</div>
-        <div class="chip" id="lvlChip">Lv 1</div>
-        <div class="chip btn" id="muteBtn">🔊</div>
-      </div>
-    </header>
-    <div class="quest" id="questBox"></div>
-    <div class="nest-wrap home-only">
-      <p class="nest-title">The Nest • bonus x<span id="bonus">1</span></p>
-      <div class="nest" id="nest"></div>
-      <p class="nest-title" style="margin-top:7px">The Mountain • <span id="roomCount">1</span>/5</p>
-      <div class="mountain" id="mountain"></div>
-      <button id="tributeBtn" class="tribute-btn">Mountain Tribute: 25k 🪙 (+1 Bonus)</button>
-      
-      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:7px;">
-        <p class="nest-title" id="perchLabel" style="margin:0; flex:1;">Perch: park a dragon</p>
-        <button id="collectPerchBtn" style="display:none; padding:4px 12px; background:linear-gradient(180deg, #ffcf40, #ffaa00); color:#1a100c; border:2px solid #fff; border-radius:12px; font-weight:900; font-size:0.75rem; box-shadow:0 3px 0 #996600, 0 4px 6px #0006; cursor:pointer;">
-          🐉 Collect <span id="perchBankAmt">0</span>
-        </button>
-      </div>
+  <!-- 1. KEEP YOUR EXISTING TOP STATS/HEADER HERE -->
+  <div style="display: flex; justify-content: space-between; padding: 10px;">
+    <!-- Your coins and energy counters are here -->
+  </div>
 
-      <div class="perch-row" id="perchRow"></div>
-    </div>
+  <!-- ========================================== -->
+  <!-- 2. REPLACE YOUR OLD CONTENT WITH THIS -->
+  <!-- ========================================== -->
+
+  <!-- === VIEW 1: THE BOARD (Active by default) === -->
+  <div id="view-board" class="view active">
+    <div id="hint"></div>
+    <div id="perchRow"></div>
     <div id="board"></div>
-    <p id="helpText" class="help"></p>
-    <footer>
+    
+    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
       <button id="gather">Gather egg 🥚</button>
-      <button id="buyEgg" class="home-only">Buy egg</button>
-      <button id="hint">Ash Trail</button>
-      <button id="guideBtn" type="button">?</button>
-    </footer>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <div id="sleepyGuide">
-    <div class="panel">
-      <h2>The Sleepy Dragon</h2>
-      <p>Once a day, the ancient Elder awakens and demands an offering.</p>
-      <p>Give it a <b>Young</b> dragon to receive a <b>Dream Hoard</b>: a massive bounty of coins, +10 overheal energy, and 5 Ash Trail gathers.</p>
-      <p>Maintain a <b>7-day streak</b> to permanently increase your Max Energy limit!</p>
-      <button class="close" id="sleepyGuideClose">Got it</button>
+      <button id="buyEgg">Buy egg</button>
     </div>
   </div>
 
-  <div id="guide">
-    <div class="panel">
-      <h2>Ash Trail</h2>
-      <p>Burn <b>6 ash</b> to clear the path. Live ash at <b>12</b> closes it.</p>
-      <p>Only a <b>5-merge</b> burns ash. Hatchling 1 side, Wyrmling 4 directions (1 block), Young a whole row.</p>
-      <p>Merge <b>next to the cracks</b>. The pouch is spare eggs, not the puzzle.</p>
-      <p>Win beats "no moves" if both happen on the same merge.</p>
-      <button class="close" id="guideClose">Got it</button>
-    </div>
+  <!-- === VIEW 2: QUESTS === -->
+  <div id="view-quests" class="view">
+    <div style="text-align: center; margin-bottom: 10px; color: #deb781;">The Mountain's Requests</div>
+    <div id="questBox"></div>
   </div>
 
-  <div id="overflow">
-    <div class="panel">
-      <h2>Board full</h2>
-      <p id="overWhy">Seat a dragon on a perch, or dismiss one for a few coins (no bonus).</p>
-      <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-        <button id="overPerch" style="flex:1;background:linear-gradient(#ff8033,#c93b08);color:#fff">Perch</button>
-        <button id="overDrop" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Dismiss</button>
-        <button id="overClose" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Close</button>
-      </div>
-    </div>
+  <!-- === VIEW 3: THE NEST (Base Building) === -->
+  <div id="view-nest" class="view">
+    <div style="text-align: center; margin-bottom: 10px; color: #deb781;">Mountain Rooms & Decor</div>
+    <div id="mountain"></div>
+    <div id="nest"></div>
   </div>
 
-  <div id="nameBox">
-    <div class="panel">
-      <h2>Keeper name</h2>
-      <p id="nameHint">First change is free. After that, 2000 🪙.</p>
-      <input id="nameInput" type="text" maxlength="16" placeholder="Name" />
-      <div class="row" style="display:flex;gap:8px;margin-top:10px">
-        <button id="nameGo" style="flex:1;background:linear-gradient(#ff8033,#c93b08);color:#fff">Save</button>
-        <button id="nameNo" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Cancel</button>
-      </div>
-    </div>
-  </div>
+  <!-- === BOTTOM TAB BAR === -->
+  <nav id="tabBar">
+    <button data-tab="view-board" class="tab-btn active">
+      <span class="tab-icon">🐉</span>
+      <span class="tab-label">Board</span>
+    </button>
+    <button data-tab="view-quests" class="tab-btn">
+      <span class="tab-icon">📜</span>
+      <span class="tab-label">Quests</span>
+    </button>
+    <button data-tab="view-nest" class="tab-btn">
+      <span class="tab-icon">🏕️</span>
+      <span class="tab-label">Nest</span>
+    </button>
+  </nav>
 
-  <div id="wipe">
-    <div class="panel">
-      <h2>Reset all progress</h2>
-      <p>Type <b>Delete</b> to confirm. The nest will start over.</p>
-      <input id="wipeInput" type="text" autocomplete="off" placeholder="Delete" />
-      <div class="row" style="display:flex;gap:8px;margin-top:10px">
-        <button id="wipeGo" style="flex:1;background:linear-gradient(#ff8033,#c93b08);color:#fff" disabled>Confirm</button>
-        <button id="wipeNo" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="chest">
-    <div class="panel">
-      <h2 id="chestTitle">Level up</h2>
-      <p class="sub" id="chestSub" style="color:#deb781;font-size:.8rem;margin:0 0 10px"></p>
-      <button id="chestBox" style="display:none;width:100%;height:96px;margin:8px 0 12px;border-radius:14px;border:1px solid #e8c37a66;background:#3a2818;color:var(--gold);font-size:2rem;cursor:pointer">🎁</button>
-      <div class="loot" id="chestLoot" style="display:none;text-align:left;background:#150c08;border:1px solid #4a3020;border-radius:12px;padding:10px 12px;margin:10px 0"></div>
-      <button id="chestOk" style="width:100%;background:linear-gradient(#ff8033,#c93b08);color:#fff">Continue</button>
-    </div>
-  </div>
-
-  <div id="trailWin">
-    <div class="panel">
-      <h2>Trail cleared</h2>
-      <p class="sub" id="winSub">The nest takes what you carried home.</p>
-      <div class="loot" id="winLoot"></div>
-      <div class="row" style="display:flex;gap:8px">
-        <button id="winHome" style="flex:1;background:linear-gradient(#ff8033,#c93b08);color:#fff">Return home</button>
-        <button id="winAgain" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Walk again</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="trailFail">
-    <div class="panel">
-      <h2>The trail closed</h2>
-      <p id="failWhy">No 5-merge left and the pouch is empty. The nest is still safe.</p>
-      <div class="row" style="display:flex;gap:8px">
-        <button id="restartTrail" style="flex:1;background:linear-gradient(#ff8033,#c93b08);color:#fff">Restart trail</button>
-        <button id="homeTrail" style="flex:1;background:#3a2a20;color:var(--gold);border:1px solid #e8c37a44">Return home</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="book">
-    <div class="panel">
-      <h2>Dragon book</h2>
-      <div class="book-tabs">
-        <button class="book-tab active" id="tabMain" onclick="switchBookTab(0)">Main Chain</button>
-        <button class="book-tab" id="tabRare" onclick="switchBookTab(1)">Rare / Shiny</button>
-      </div>
-      <div class="grid" id="bookGrid"></div>
-      <button class="close" id="bookClose">Close</button>
-      <button class="close" id="resetAll" style="margin-top:6px;color:#ff6a20">Reset all progress</button>
-    </div>
-  </div>
-
+  <!-- ========================================== -->
+  <!-- 3. KEEP YOUR SCRIPT TAGS AT THE VERY BOTTOM -->
+  <!-- ========================================== -->
   <script src="app.js"></script>
 </body>
 </html>
