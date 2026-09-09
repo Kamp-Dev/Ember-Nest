@@ -12,7 +12,15 @@ const TRAIL_GATHERS = 6;
 const DAILY_PAYS = [1200, 800, 400];
 const DAILY_CLEARS = 3;
 const RENAME_COST = 2000;
-
+// --- UI SAFETY HELPERS ---
+function setSafeHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+function setSafeText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
 const TRAIL_BAG = [2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
 
 const CHAIN = [
