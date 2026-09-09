@@ -1059,9 +1059,15 @@ function buyDecor(id) {
 }
 
 function unlockCost() {
-  const locked = state.locked.filter(Boolean).length;
-  const opened = 12 - locked;
-  return 400 + opened * 280;
+  const lockedCount = state.locked.filter(Boolean).length;
+  
+  // Calculate how many of the 5 fog tiles have already been opened
+  const opened = 5 - lockedCount; 
+  
+  // Custom prices for the 1st, 2nd, 3rd, 4th, and 5th tile unlocks:
+  const costs = [1500, 4500, 12000, 25000, 50000]; 
+  
+  return costs[opened] || 999999;
 }
 
 function unlock(i) {
