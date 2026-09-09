@@ -2,17 +2,17 @@
 
 <html lang="en">
 
-<head>
-
-  <meta charset="UTF-8">
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-  <title>Ember Nest</title>
-
-  <link rel="stylesheet" href="style.css">
-
-</head>
+<!-- Top Stats Header -->
+  <header id="topBarStats">
+    <div class="header-left">
+      <h1 id="title">Ember <span>Nest</span></h1>
+      <div id="nameLine" title="Tap to rename">Keeper</div>
+    </div>
+    <div class="header-right">
+      <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
+      <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
+    </div>
+  </header>
 
 <body>
 
@@ -113,7 +113,58 @@
 
 
   <script src="app.js"></script>
+<!-- Toast Notification Banner -->
+  <div id="toast"></div>
 
+  <!-- Level Up / Chest Modal -->
+  <div id="chest" class="modal">
+    <div class="modal-content">
+      <h2 id="chestTitle">Level Up</h2>
+      <p id="chestSub"></p>
+      <button id="chestBox" class="chest-box">🎁</button>
+      <div id="chestLoot"></div>
+      <button id="chestOk">Continue</button>
+    </div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div id="nameBox" class="modal">
+    <div class="modal-content">
+      <h2>Name Your Nest</h2>
+      <p id="nameHint">First change is free.</p>
+      <input type="text" id="nameInput" maxlength="16" placeholder="Keeper">
+      <div class="modal-buttons">
+        <button id="nameNo">Cancel</button>
+        <button id="nameGo">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ash Trail Win Modal -->
+  <div id="trailWin" class="modal">
+    <div class="modal-content">
+      <h2>Trail Cleared!</h2>
+      <p id="winSub"></p>
+      <div id="winLoot"></div>
+      <div class="modal-buttons">
+        <button id="winHome">Return to Nest</button>
+        <button id="winAgain">Run Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ash Trail Fail Modal -->
+  <div id="trailFail" class="modal">
+    <div class="modal-content">
+      <h2>Ash Overwhelmed</h2>
+      <p id="failWhy"></p>
+      <div class="modal-buttons">
+        <button id="homeTrail">Back to Nest</button>
+        <button id="restartTrail">Try Again</button>
+      </div>
+    </div>
+  </div>
+  
 </body>
 
 </html> 
