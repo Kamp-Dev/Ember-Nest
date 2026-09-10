@@ -652,3 +652,21 @@ body {
 #title, .section-title, .modal-content h2 {
   font-family: 'Playfair Display', serif;
 }
+/* --- STYLIZED PLAYER NAME --- */
+#nameLine {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+}
+
+#nameLine:hover {
+  opacity: 1;
+  text-shadow: 0 0 8px rgba(255, 207, 64, 0.4);
+}
