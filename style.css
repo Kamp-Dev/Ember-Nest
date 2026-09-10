@@ -1,8 +1,8 @@
-/* =========================================
-   EMBER NEST - MOBILE APP BUILD (V2)
-========================================= */
+/* ==========================================================================
+   EMBER NEST - MOBILE-FIRST STYLESHEET (V2 OPTIMIZED)
+   ========================================================================== */
 
-/* --- 1. CORE VARIABLES & RESET --- */
+/* --- 1. CORE VARIABLES & GLOBAL RESET --- */
 :root {
   --bg-dark: #120c0a;
   --panel: #1e1511;
@@ -19,33 +19,91 @@
   margin: 0;
   padding: 0;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 body {
-  background-color: #120904;
-  background-image: 
-    radial-gradient(circle at 50% 20%, rgba(212, 88, 23, 0.15), transparent 60%),
-    radial-gradient(circle at 50% 90%, rgba(74, 44, 23, 0.4), transparent 70%),
-    linear-gradient(to bottom, #1a0f08, #0a0402);
-  color: #e0e1dd;
-  font-family: 'Montserrat', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* --- 2. TOP HEADER STATS --- */
+/* --- 2. MAIN APP SHELL CONTAINER --- */
+#app {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: 900px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-dark);
+  position: relative;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+  border-left: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+}
+
+/* --- 3. TOP HEADER & STATS BAR --- */
 #topBarStats {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 25px;
+  padding: 10px 15px;
   background-color: var(--panel);
   border-bottom: 2px solid var(--border);
   width: 100%;
   max-width: 500px;
   z-index: 10;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+#title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+#title span {
+  color: var(--ember);
+}
+
+#nameLine {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+}
+
+#nameLine:hover {
+  opacity: 1;
+  text-shadow: 0 0 8px rgba(255, 207, 64, 0.4);
+}
+
+.header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .stat-pill {
@@ -58,17 +116,34 @@ body {
   color: var(--gold);
 }
 
-/* --- 3. SCROLLABLE VIEWS --- */
+#regen {
+  font-size: 0.7rem;
+  color: var(--gold);
+  margin-left: 2px;
+}
+
+/* --- 4. VIEW CONTAINER & SCROLL MANAGEMENT --- */
+.view-container {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.view-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 .view {
   display: none;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 500px;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 15px 90px 15px; /* Bottom padding prevents tab bar overlap */
+  min-height: 100%;
+  padding: 20px 15px 90px 15px;
 }
 
 .view.active {
@@ -76,56 +151,52 @@ body {
 }
 
 .section-title {
+  font-family: 'Playfair Display', serif;
   color: var(--gold);
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 800;
   margin-bottom: 15px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* --- 4. HINT & ASH TRAIL BANNER --- */
-#hint {
-  background: linear-gradient(135deg, #241612, #4a291f);
-  color: var(--gold);
-  padding: 10px 24px;
-  border-radius: 20px;
-  border: 1px solid var(--ember);
-  font-weight: bold;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 15px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-  transition: transform 0.1s, box-shadow 0.1s;
+/* --- 5. GAME BOARD & CAVE BACKGROUND --- */
+#view-board {
+  background: linear-gradient(rgba(15, 10, 8, 0.85), rgba(26, 15, 10, 0.95)), 
+              radial-gradient(circle at center, #3d2314 0%, #110804 100%);
+  border-radius: 8px;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--border);
 }
 
-#hint:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.8);
-}
-
-/* --- 5. THE 5x5 BOARD --- */
 #board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  gap: 10px;
   width: 100%;
   max-width: 400px;
-  margin-bottom: 50px;
+  margin: 0 auto 30px auto;
+  touch-action: none;
 }
 
 .cell {
   aspect-ratio: 1;
-  background-color: var(--panel);
-  border: 2px solid var(--border);
-  border-radius: 10px;
+  background: linear-gradient(145deg, #1f120a, #140b06);
+  border: 2px solid #4a2c17;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.4);
   transition: all 0.2s ease;
+}
+
+.cell:hover {
+  border-color: var(--ember);
+  transform: translateY(-2px);
 }
 
 .cell.locked {
@@ -146,7 +217,11 @@ body {
   box-shadow: inset 0 0 10px rgba(255, 207, 64, 0.3);
 }
 
-/* --- 6. DRAGONS & ITEMS --- */
+.cell svg {
+  overflow: visible !important;
+}
+
+/* --- 6. DRAGONS, ITEMS & PERCHES --- */
 .item {
   width: 100%;
   height: 100%;
@@ -157,24 +232,118 @@ body {
   pointer-events: none;
 }
 
+.item svg {
+  width: 52px !important;
+  height: 52px !important;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+  overflow: visible !important;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 .lvl {
   position: absolute;
   bottom: -6px;
   font-size: 0.75rem;
   font-weight: bold;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.8);
   padding: 2px 6px;
   border-radius: 10px;
   white-space: nowrap;
 }
 
-/* --- 7. BUTTONS & UI CONTROLS --- */
+#perchRow, #perchRowNest {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.perch {
+  flex: 1;
+  min-width: 0;
+  background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
+  border: 1px solid #778da9;
+  border-bottom: 3px solid #415a77;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.perch.on {
+  border-style: solid;
+  border-color: var(--ember);
+}
+
+.perch.lock {
+  background-color: #0c0806;
+  opacity: 0.5;
+}
+
+/* --- 7. TRIALS & QUESTS VIEWS --- */
+#view-trials.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#trialBox {
+  overflow: visible !important;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 380px;
+  margin: 16px auto 0 auto;
+  border: 2px solid #deb781;
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 18px 24px;
+  background: linear-gradient(rgba(11, 22, 51, 0.85), rgba(11, 22, 51, 0.95)), url('Ash Trial.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+#view-trials, #view-trials > * {
+  overflow: visible !important;
+}
+
+#questBox {
+  background: linear-gradient(135deg, #24140a, #180d07);
+  border: 2px solid #5c3820;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin-bottom: 12px;
+}
+
+/* --- 8. BUTTONS & UI CONTROLS --- */
 .action-buttons {
   display: flex;
   gap: 15px;
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   justify-content: center;
+  margin-top: 25px;
+  margin-bottom: 20px;
 }
 
 button {
@@ -201,88 +370,50 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* --- 8. PERCH ROW --- */
-#perchRow, #perchRowNest {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  /* keep any other existing layout rules you have for it here */
-}
-
-.perch {
-  flex: 1;
-  background-color: var(--panel);
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  height: 70px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.perch.on {
-  border-style: solid;
-  border-color: var(--ember);
-}
-
-.perch.lock {
-  background-color: #0c0806;
-  opacity: 0.5;
-}
-
-/* --- 9. BOTTOM TAB BAR --- */
-/* --- SIDES & APP CONTAINER SYMMETRY --- */
-body {
-  background-color: var(--bg-dark);
+.icon-btn {
+  background: var(--panel);
+  border: 1px solid var(--border);
   color: var(--text-main);
-  font-family: system-ui, -apple-system, sans-serif;
-  overflow: hidden; 
-  height: 100vh;
-  width: 100vw;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
+  cursor: pointer;
+  box-shadow: none;
+  padding: 0;
+  font-size: 1.1rem;
+  transition: border-color 0.2s;
 }
 
-#app {
+.icon-btn:hover {
+  border-color: var(--gold);
+}
+
+.dragon-bank-btn {
+  background: linear-gradient(135deg, #1e1511, #2e1d16);
+  border: 1px solid var(--ember);
+  color: var(--text-main);
   width: 100%;
-  max-width: 500px;
-  height: 100%;
-  max-height: 900px; /* Keeps it proportioned nicely on desktop */
+  max-width: 380px;
+  padding: 10px 15px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
   display: flex;
-  flex-direction: column;
-  background-color: var(--bg-dark);
-  position: relative;
-  box-shadow: 0 0 30px rgba(0,0,0,0.9);
-  border-left: 2px solid var(--border);
-  border-right: 2px solid var(--border);
-}
-
-/* --- SCROLLABLE VIEWS --- */
-.view-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: relative;
-}
-
-.view {
-  display: none;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 20px 20px 90px 20px; /* Keeps bottom clear of the tab bar */
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  margin-bottom: 15px;
 }
 
-.view.active {
-  display: flex;
+.dragon-bank-btn span#bankCount {
+  color: var(--gold);
 }
 
-/* --- ANCHORED BOTTOM TAB BAR --- */
+/* --- 9. ANCHORED BOTTOM TAB BAR --- */
 #tabBar {
   position: absolute;
   bottom: 0;
@@ -309,11 +440,7 @@ body {
   gap: 2px;
   width: 100%;
   height: 100%;
-  box-shadow: none;
-  border-radius: 0;
-  padding: 0;
   cursor: pointer;
-  transition: color 0.2s;
 }
 
 .tab-btn.active {
@@ -333,120 +460,7 @@ body {
   transform: scale(1.1);
 }
 
-/* --- 10. ANIMATIONS --- */
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-@keyframes flap-l-slow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(-15deg); }
-}
-
-@keyframes flap-r-slow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(15deg); }
-}
-@keyframes spinCoin {
-  0%, 100% { transform: scaleX(1); }
-  50% { transform: scaleX(0.1); }
-}
-
-.spinning-coin {
-  display: inline-block;
-  animation: spinCoin 1.5s infinite ease-in-out;
-  will-change: transform;
-  padding: 8px 4px;
-  margin: -8px -4px;
-  vertical-align: middle;
-  line-height: 1;
-}
-/* --- 11. GHOST (DRAGGING) --- */
-.ghost {
-  position: fixed;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(1.2);
-  z-index: 999;
-  filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
-}
-
-/* --- 12. PARTICLES --- */
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1000;
-  box-shadow: 0 0 8px currentColor;
-  animation: particle-fly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
-@keyframes particle-fly {
-  0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
-}
-/* --- HEADER EXPANSION --- */
-#topBarStats {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  background-color: var(--panel);
-  border-bottom: 2px solid var(--border);
-  width: 100%;
-  max-width: 500px;
-}
-
-.header-left {
-  display: flex;
-  flex-direction: column;
-}
-
-#title {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: var(--text-main);
-  letter-spacing: 0.5px;
-}
-
-#title span {
-  color: var(--ember);
-}
-
-#nameLine {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-#nameLine:hover {
-  color: var(--gold);
-}
-
-.header-right {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-#regen {
-  font-size: 0.7rem;
-  color: var(--gold);
-  margin-left: 2px;
-}
-
-/* --- MODAL OVERLAYS (BANNERS) --- */
+/* --- 10. MODALS, TOASTS & OVERLAYS --- */
 .modal {
   display: none;
   position: fixed;
@@ -481,11 +495,7 @@ body {
 .modal-content h2 {
   color: var(--gold);
   font-size: 1.3rem;
-}
-
-.modal-content p {
-  font-size: 0.9rem;
-  color: var(--text-main);
+  font-family: 'Playfair Display', serif;
 }
 
 .modal-content input {
@@ -505,17 +515,6 @@ body {
   justify-content: center;
 }
 
-.chest-box {
-  background: none;
-  border: none;
-  font-size: 3rem;
-  cursor: pointer;
-  animation: breathe 2s infinite ease-in-out;
-  padding: 10px;
-  box-shadow: none;
-}
-
-/* --- TOAST NOTIFICATIONS --- */
 #toast {
   position: fixed;
   bottom: 90px;
@@ -527,7 +526,6 @@ body {
   padding: 10px 20px;
   border-radius: 20px;
   font-size: 0.85rem;
-  text-align: center;
   pointer-events: none;
   opacity: 0;
   transition: all 0.3s ease;
@@ -540,493 +538,32 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
-/* --- DRAGON BOOK STYLES --- */
-.icon-btn {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: none;
-  padding: 0;
-  font-size: 1.1rem;
-  transition: border-color 0.2s;
+
+/* --- 11. ANIMATIONS --- */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
 }
 
-.icon-btn:hover {
-  border-color: var(--gold);
+@keyframes spinCoin {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.1); }
 }
 
-.book-content {
-  max-width: 420px !important;
-  width: 92% !important;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.book-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  cursor: pointer;
-  box-shadow: none;
-  padding: 5px;
-}
-
-.close-btn:hover {
-  color: var(--text-main);
-}
-
-.book-tabs {
-  display: flex;
-  gap: 10px;
-  margin: 5px 0 15px 0;
-}
-
-.tab-btn-sub {
-  flex: 1;
-  padding: 8px;
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  box-shadow: none;
-}
-
-.tab-btn-sub.active {
-  background: var(--ember);
-  color: white;
-  border-color: var(--gold);
-}
-
-.book-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  overflow-y: auto;
-  max-height: 55vh;
-  padding-right: 4px;
-}
-
-.card {
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.card.locked {
-  opacity: 0.35;
-  border-style: dashed;
-}
-
-.card .nm {
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: var(--text-main);
-}
-
-.card .bl {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  line-height: 1.2;
-}
-/* --- PUSH ACTION BUTTONS FURTHER DOWN --- */
-.action-buttons {
-  margin-top: 35px; /* Increase this number if you want them even lower */
-  margin-bottom: 20px;
-}
-/* --- APPLY FONT SYSTEM (OPTION 2) --- */
-body {
-  font-family: 'Montserrat', system-ui, sans-serif;
-}
-
-#title, .section-title, .modal-content h2 {
-  font-family: 'Playfair Display', serif;
-}
-/* --- STYLIZED PLAYER NAME --- */
-#nameLine {
-  font-family: 'Montserrat', system-ui, sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--gold);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  opacity: 0.85;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 2px;
-}
-
-#nameLine:hover {
-  opacity: 1;
-  text-shadow: 0 0 8px rgba(255, 207, 64, 0.4);
-}
-/* --- DRAGON BANK BUTTON --- */
-.dragon-bank-btn {
-  background: linear-gradient(135deg, #1e1511, #2e1d16);
-  border: 1px solid var(--ember);
-  color: var(--text-main);
-  width: 100%;
-  max-width: 500px;
-  padding: 10px 15px;
-  border-radius: 12px;
-  font-family: 'Montserrat', system-ui, sans-serif;
-  font-size: 0.9rem;
-  font-weight: 700;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-  margin-bottom: 15px;
-  transition: all 0.2s ease;
-}
-
-.dragon-bank-btn:hover {
-  border-color: var(--gold);
-  box-shadow: 0 4px 12px rgba(212, 88, 23, 0.3);
-}
-
-.dragon-bank-btn span#bankCount {
-  color: var(--gold);
-}
-/* --- REMOVE SCROLL BAR ON HOME PAGE --- */
-.view-container {
-  overflow-y: hidden !important;
-}
-
-.view.active {
-  overflow-y: hidden !important;
-}
-/* --- CAVE BACKGROUND --- */
-#view-board {
-  background: linear-gradient(rgba(15, 10, 8, 0.85), rgba(26, 15, 10, 0.95)), 
-              radial-gradient(circle at center, #3d2314 0%, #110804 100%);
-  border-radius: 8px;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
-  border: 2px solid var(--border);
-}
-
-/* --- BIGGER & DETAILED STONE ALCOVE TILES --- */
-#board {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  padding: 10px;
-  max-width: 440px;
-  margin: 0 auto;
-}
-
-.cell {
-  aspect-ratio: 1;
-  background: linear-gradient(145deg, #1f120a, #140b06);
-  border: 2px solid #4a2c17;
-  border-radius: 14px;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 
-              0 2px 4px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s ease;
-}
-
-.cell:hover {
-  border-color: var(--ember);
-  transform: translateY(-2px);
-}
-
-.cell .item svg {
-  width: 52px !important;
-  height: 52px !important;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
-}
-/* --- PREVENT TILE CLIPPING DURING ANIMATIONS --- */
-.cell svg {
-  overflow: visible !important;
-}
-
-/* --- QUEST PAGE STYLING --- */
-#view-quests {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.section-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #ffcf40;
-  text-align: center;
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-  margin-bottom: 4px;
-}
-
-#questBox {
-  background: linear-gradient(135deg, #24140a, #180d07);
-  border: 2px solid #5c3820;
-  border-radius: 12px;
-  padding: 18px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-#questBox.sleepy {
-  background: linear-gradient(135deg, #112233, #0b1622);
-  border-color: #2b4c7e;
-}
-
-#questBox .art {
-  background: #140b06;
-  border: 1px solid #4a2c17;
-  border-radius: 8px;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 52px;
-  min-height: 52px;
-  position: relative;
-}
-
-#questBox.sleepy .art {
-  background: #070d14;
-  border-color: #1b365d;
-}
-
-#questBox p {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: #e0e1dd;
-}
-
-#questBox p b {
-  color: #ffcf40;
-}
-
-/* Quest Navigation Arrows & Dots */
-.quest-arrow {
-  background: transparent;
-  border: none;
-  color: #deb781;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.2s;
-}
-
-.quest-arrow:hover {
-  color: #ffcf40;
-}
-
-.quest-dots {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 6px;
-}
-
-.quest-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #4a2c17;
+.spinning-coin {
   display: inline-block;
+  animation: spinCoin 1.5s infinite ease-in-out;
+  will-change: transform;
+  padding: 8px 4px;
+  margin: -8px -4px;
+  vertical-align: middle;
+  line-height: 1;
 }
 
-.quest-dots span.active {
-  background: #ffcf40;
-}
-
-/* Quest Action Button Styling */
-#questBox button#giveBtn {
-  background: linear-gradient(to bottom, #d45817, #a82e05);
-  border: 1px solid #ff8a36;
-  color: #fff;
-  font-weight: 700;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(212, 88, 23, 0.3);
-  transition: transform 0.1s, opacity 0.2s;
-  white-space: nowrap;
-}
-
-#questBox button#giveBtn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-}
-
-#questBox button#giveBtn:disabled {
-  background: #2a1a12;
-  border-color: #44261a;
-  color: #7a6558;
-  box-shadow: none;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.zzz {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  font-size: 0.65rem;
-  font-weight: bold;
-  color: #a9d6e5;
-  background: #1b263b;
-  border: 1px solid #415a77;
-  padding: 1px 4px;
-  border-radius: 4px;
-  animation: pulse 2s infinite ease-in-out;
-}
-#trialBox {
-  overflow: visible !important;
-  position: relative;
-  z-index: 2; /* Ensures the breathing dragon renders cleanly on top of the box border */
-  margin-left: 25px;
-  margin-top: 16px;
-  border: 2px solid #deb781;
-  border-radius: 10px;
-  box-sizing: border-box;
-  padding: 18px 24px; /* Keeps the rectangular proportions without blowing out the width with 150px padding */
-  background: linear-gradient(rgba(11, 22, 51, 0.85), rgba(11, 22, 51, 0.95)), url('Ash Trial.jpg');
-  background-size: cover;
-  background-position: center;
-}
-
-#view-trials, #view-trials > * {
-  overflow: visible !important;
-}
-
-#trialBox .art svg {
-  overflow: visible !important;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-/* Container for the perches on the Board tab */
-#perchRow {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  gap: 10px;
-  width: 100%;
-  margin-bottom: 12px;
-  box-sizing: border-box;
-}
-
-/* Individual perch cards inside the row */
-#perchRow > * {
-  flex: 1;
-  min-width: 0; /* Prevents text overflow breaking the flex layout */
-  background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
-  border: 1px solid #778da9;
-  border-bottom: 3px solid #415a77; /* Gives it a tactile ledge/shelf look */
-  border-radius: 8px;
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  text-align: center;
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
-}
-/* Unlock vertical scrolling without adding side frames */
-.view-container {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling for iOS/Android */
-  padding-bottom: 80px !important; /* Ensures bottom content isn't hidden behind the Tab Bar */
-}
-
-/* Ensure individual views can stretch fully */
-.view {
-  min-height: 100%;
-}
-/* Hide scrollbar for Chrome, Safari, and Opera (Most mobile browsers) */
-.view-container::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for Firefox and Edge */
-.view-container {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-/* Only apply flex layout when the trials view is actually active */
-#view-trials.active {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Lock the Trial Box to a mobile-friendly width */
-#trialBox {
-  width: 100%;
-  max-width: 380px;
-  margin-left: auto;
-  margin-right: auto;
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Change to 3 if the tiles are smaller */
-  gap: 10px;
-}
-
-/* Ensure cards or buttons inside the trial box shrink to fit */
-#trialBox > * {
-  max-width: 100%;
-  box-sizing: border-box;
-  word-wrap: break-word; 
-}
-/* Prevent mobile browsers from scrolling or swiping when interacting with the grid */
-#board {
-  touch-action: none;
-  user-select: none; /* Prevents accidental text highlighting while long-pressing */
-  -webkit-user-select: none;
-}
-/* Target the container holding those large trial grid cells */
-.trial-grid-container { /* Replace with your actual class or ID for the grid wrapper */
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columns across */
-  gap: 10px;
-  width: 100%;
-  max-width: 380px;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-/* Force the individual big cells to stay square and compact instead of blowing up */
-.trial-grid-container > * {
-  width: 100%;
-  aspect-ratio: 1 / 1; /* Keeps them neat squares */
-  box-sizing: border-box;
+.ghost {
+  position: fixed;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.2);
+  z-index: 999;
+  filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
 }
