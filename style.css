@@ -980,3 +980,33 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+/* Only apply flex layout when the trials view is actually active */
+#view-trials.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Lock the Trial Box to a mobile-friendly width */
+#trialBox {
+  width: 100%;
+  max-width: 380px; /* Keeps it matching the board's width */
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+/* Ensure cards or buttons inside the trial box shrink to fit */
+#trialBox > * {
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word; 
+}
+/* Prevent mobile browsers from scrolling or swiping when interacting with the grid */
+#board {
+  touch-action: none;
+  user-select: none; /* Prevents accidental text highlighting while long-pressing */
+  -webkit-user-select: none;
+}
