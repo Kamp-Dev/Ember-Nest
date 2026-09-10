@@ -670,3 +670,32 @@ body {
   opacity: 1;
   text-shadow: 0 0 8px rgba(255, 207, 64, 0.4);
 }
+/* --- DRAGON BANK BUTTON --- */
+.dragon-bank-btn {
+  background: linear-gradient(135deg, #1e1511, #2e1d16);
+  border: 1px solid var(--ember);
+  color: var(--text-main);
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 15px;
+  border-radius: 12px;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  margin-bottom: 15px;
+  transition: all 0.2s ease;
+}
+
+.dragon-bank-btn:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(212, 88, 23, 0.3);
+}
+
+.dragon-bank-btn span#bankCount {
+  color: var(--gold);
+}
