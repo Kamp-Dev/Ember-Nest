@@ -1303,17 +1303,6 @@ function tickEnergy() {
   }
   
   if (state.mode === "home" && (state.perch || []).some(Boolean)) {
-    if (bankTimer > 0) {
-      bankTimer--;
-    } else {
-      let generationRate = perchIncome() > 0 ? Math.max(5, Math.floor(perchIncome() / 4)) : 5;
-      bankCoins += generationRate;
-      bankTimer = 60;
-    }
-  }
-  setSafeText("bankCount", bankCoins + " 🪙");
-  setSafeText("bankTimer", "Next: " + bankTimer + "s");
-  if (state.mode === "home" && (state.perch || []).some(Boolean)) {
     if (!state.perchAt) state.perchAt = Date.now();
     if (Date.now() >= state.perchAt + PERCH_MS) {
       const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
