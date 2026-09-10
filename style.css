@@ -644,3 +644,11 @@ body {
   margin-top: 35px; /* Increase this number if you want them even lower */
   margin-bottom: 20px;
 }
+/* --- APPLY FONT SYSTEM (OPTION 2) --- */
+body {
+  font-family: 'Montserrat', system-ui, sans-serif;
+}
+
+#title, .section-title, .modal-content h2 {
+  font-family: 'Playfair Display', serif;
+}
