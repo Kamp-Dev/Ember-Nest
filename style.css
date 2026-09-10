@@ -699,3 +699,11 @@ body {
 .dragon-bank-btn span#bankCount {
   color: var(--gold);
 }
+/* --- REMOVE SCROLL BAR ON HOME PAGE --- */
+.view-container {
+  overflow-y: hidden !important;
+}
+
+.view.active {
+  overflow-y: hidden !important;
+}
