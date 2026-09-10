@@ -1013,3 +1013,20 @@ body {
   user-select: none; /* Prevents accidental text highlighting while long-pressing */
   -webkit-user-select: none;
 }
+/* Target the container holding those large trial grid cells */
+.trial-grid-container { /* Replace with your actual class or ID for the grid wrapper */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns across */
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Force the individual big cells to stay square and compact instead of blowing up */
+.trial-grid-container > * {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Keeps them neat squares */
+  box-sizing: border-box;
+}
