@@ -37,12 +37,15 @@
           <div id="perchRow"></div>
 
         <button id="dragonBank" class="dragon-bank-btn">
-          <div class="bank-left">
-            <span>🐉 Dragon Bank</span>
-            <small id="bankTimer" class="bank-timer">Next: 60s</small>
-          </div>
-          <span id="bankCount">0 🪙</span>
-        </button>
+  <div class="bank-left">
+    <span>🐉 Dragon Bank</span>
+    <small id="bankTimer" class="bank-timer">Next: 60s</small>
+  </div>
+  <div style="display:flex; flex-direction:column; align-items:flex-end;">
+    <span id="bankCount">0 🪙</span>
+    <small id="bankRate" style="font-size:0.65rem; color:#ffcf40;">+0</small>
+  </div>
+</button>
 
         <div id="board"></div>
         
@@ -109,18 +112,34 @@
   </div>
 
   <div id="book" class="modal">
-  <div class="modal-content book-content">
-    <div class="book-header">
-      <h2>Dragon Book</h2>
-      <button id="bookClose" class="close-btn">✕</button>
+    <div class="modal-content book-content">
+      <div class="book-header">
+        <h2>Dragon Book</h2>
+        <button id="bookClose" class="close-btn">✕</button>
+      </div>
+      <div class="book-tabs">
+        <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="bookCount">0</span>)</button>
+        <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare / Shiny</button>
+      </div>
+      <div id="bookGrid" class="book-grid"></div>
+      <div style="margin-top: 15px; text-align: center; border-top: 1px solid var(--border); padding-top: 12px;">
+        <button id="resetBookGameBtn" class="danger-btn">Reset All Game Data</button>
+      </div>
     </div>
-    <div class="book-tabs">
-      <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="bookCount">0</span>)</button>
-      <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare / Shiny</button>
-    </div>
-    <div id="bookGrid" class="book-grid"></div>
   </div>
-</div>
+
+  <!-- === WIPE CONFIRMATION MODAL (Required for Reset) === -->
+  <div id="wipe" class="modal">
+    <div class="modal-content">
+      <h2>Reset All Game Data?</h2>
+      <p style="font-size: 0.85rem; color: #deb781; margin: 8px 0;">Type <b>Delete</b> below to confirm wiping your save completely:</p>
+      <input type="text" id="wipeInput" placeholder="Type Delete" style="width: 100%; padding: 8px; box-sizing: border-box; background: #140b06; border: 1px solid #4a2c17; color: #fff; border-radius: 6px; margin-bottom: 12px;">
+      <div class="modal-buttons">
+        <button id="wipeNo">Cancel</button>
+        <button id="wipeGo" disabled style="opacity: 0.5;">Confirm</button>
+      </div>
+    </div>
+  </div>
   
   <div id="trailWin" class="modal">
     <div class="modal-content">

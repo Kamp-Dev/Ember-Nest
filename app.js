@@ -1594,16 +1594,16 @@ document.getElementById("perchRow")?.addEventListener("click", (e) => {
 
 gatherBtn?.addEventListener("click", gather);
 document.getElementById("dragonBank")?.addEventListener("click", () => {
-  if (bankCoins > 0) {
-    state.coins += bankCoins;
-    toast("Collected " + bankCoins + " 🪙 from the Dragon Bank!");
-    bankCoins = 0;
-    bankTimer = 60;
+  const bankValue = state.perchBank || 0;
+  if (bankValue > 0) {
+    state.coins += bankValue;
+    toast("Collected " + bankValue + " 🪙 from the Dragon Bank!");
+    state.perchBank = 0;
     sfx("gather");
     save();
     render();
   } else {
-    toast("The bank is still gathering coins...");
+    toast("The perches are still gathering coins...");
   }
 });
 document.getElementById("buyEgg")?.addEventListener("click", buyEgg);
@@ -1679,14 +1679,41 @@ document.getElementById("bookBtn")?.addEventListener("click", () => {
 
 document.getElementById("bookClose")?.addEventListener("click", () => {
   document.getElementById("book").classList.remove("open");
+  
+});
+
+document.getElementById("resetBookBtn")?.addEventListener("click", () => {
+  if (confirm("Are you sure you want to reset your Dragon Book progress? This will lock discovered entries again.")) {
+    state.book = { 0: true };
+    state.rareBook = {};
+    save();
+    renderBook();
+    toast("Dragon Book reset.");
+  }
+});
+
+document.getElementById("resetBookGameBtn")?.addEventListener("click", () => {
+  // 1. Close the Dragon Book modal so it's out of the way
+  document.getElementById("book")?.classList.remove("open");
+  
+  // 2. Open your custom in-app wipe confirmation modal
+  document.getElementById("wipe")?.classList.add("open");
+  const inp = document.getElementById("wipeInput");
+  if (inp) {
+    inp.value = "";
+    document.getElementById("wipeGo").disabled = true;
+    inp.focus();
+  }
 });
 
 document.getElementById("resetAll")?.addEventListener("click", () => {
   document.getElementById("wipe")?.classList.add("open");
   const inp = document.getElementById("wipeInput");
-  inp.value = "";
-  document.getElementById("wipeGo").disabled = true;
-  inp.focus();
+  if (inp) {
+    inp.value = "";
+    document.getElementById("wipeGo").disabled = true;
+    inp.focus();
+  }
 });
 
 document.getElementById("wipeInput")?.addEventListener("input", (e) => {
@@ -1701,7 +1728,7 @@ document.getElementById("wipeGo")?.addEventListener("click", () => {
 });
 
 document.getElementById("wipeNo")?.addEventListener("click", () => {
-  document.getElementById("wipe").classList.remove("open");
+  document.getElementById("wipe")?.classList.remove("open");
 });
 
 document.getElementById("overClose")?.addEventListener("click", () => {
@@ -1750,19 +1777,50 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 load();
-// --- BACKGROUND DRAGON BANK TIMER ---
+// --- BACKGROUND DRAGON BANK SYNC ---
+// --- UNIFIED BACKGROUND TICK LOOP (Energy Regen & Dragon Bank) ---
 setInterval(() => {
-  if (state.mode === "home" && (state.perch || []).some(Boolean)) {
-    if (bankTimer > 0) {
-      bankTimer--;
-    } else {
-      let generationRate = perchIncome() > 0 ? Math.max(5, Math.floor(perchIncome() / 4)) : 5;
-      bankCoins += generationRate;
-      bankTimer = 60;
+  // 1. Handle Energy Regeneration
+  const cap = state.maxEnergy || MAX_ENERGY;
+  if (state.energy < cap) {
+    if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
+    let left = state.nextEnergyAt - Date.now();
+    if (left <= 0) {
+      state.energy = Math.min(cap, state.energy + 1);
+      state.nextEnergyAt = Date.now() + REGEN_MS;
+      save();
     }
-    // Update just the text fields live without redrawing the whole board
-    setSafeText("bankCount", bankCoins + " 🪙");
-    setSafeText("bankTimer", "Next: " + bankTimer + "s");
+  }
+
+  // 2. Handle Perch / Dragon Bank Accumulation
+  if (state.mode === "home" && (state.perch || []).some(Boolean)) {
+    if (!state.perchAt) state.perchAt = Date.now();
+    if (Date.now() >= state.perchAt + PERCH_MS) {
+      const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
+      if (ticks > 0) {
+        const inc = perchIncome() * ticks;
+        const maxBank = perchIncome() * 1440;
+        state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
+        state.perchAt += ticks * PERCH_MS;
+        save();
+      }
+    }
+  }
+
+  // 3. Refresh UI Elements Live Every Second
+  tickEnergy();
+  // Calculate current payout per tick
+  const currentInc = perchIncome();
+  // Update Dragon Bank UI Counter & Countdown
+  setSafeText("bankCount", (state.perchBank || 0) + " 🪙");
+  setSafeText("bankRate", currentInc > 0 ? "+" + currentInc : "");
+  
+  if (state.perchAt && (state.perch || []).some(Boolean)) {
+    const elapsed = Date.now() - state.perchAt;
+    const left = Math.max(0, PERCH_MS - (elapsed % PERCH_MS));
+    setSafeText("bankTimer", "Next: " + Math.ceil(left / 1000) + "s");
+  } else {
+    setSafeText("bankTimer", "Perch a dragon");
   }
 }, 1000);
 scanBook();
@@ -1770,7 +1828,8 @@ if (!state.hearthDone && (state.cells || []).some(it => it && it.level >= 4)) {
   completeHearthGoal();
 }
 if (!state.cells.some(Boolean)) {
-  [0,0,0,0,0,0,1,1,0].forEach(lv => spawn(lv, 1));
+  // Spawns a clean starter set consisting entirely of eggs (level 0)
+  [0, 0, 0, 0, 0].forEach(lv => spawn(lv, 1));
   save();
 }
 render();
