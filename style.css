@@ -358,7 +358,20 @@ body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(15deg); }
 }
+@keyframes spinCoin {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.1); }
+}
 
+.spinning-coin {
+  display: inline-block;
+  animation: spinCoin 1.5s infinite ease-in-out;
+  will-change: transform;
+  padding: 8px 4px;
+  margin: -8px -4px;
+  vertical-align: middle;
+  line-height: 1;
+}
 /* --- 11. GHOST (DRAGGING) --- */
 .ghost {
   position: fixed;
@@ -676,7 +689,7 @@ body {
   border: 1px solid var(--ember);
   color: var(--text-main);
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   padding: 10px 15px;
   border-radius: 12px;
   font-family: 'Montserrat', system-ui, sans-serif;

@@ -956,16 +956,35 @@ function enterStage() {
     state.mode = "home";
     resetTrail();
     toast("Returned to the nest");
+    // <--- NEW: Automatically switch back to the Trials view when leaving
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.querySelector('[data-tab="view-trials"]')?.classList.add("active");
+    document.getElementById("view-trials")?.classList.add("active");
+    // <--- NEW
+    // <--- NEW: Hide the button on the board when leaving
+    const exitBtn = document.getElementById("exitTrialBtn");
+    if (exitBtn) exitBtn.style.display = "none";
+    // <--- NEW
+    
   } else {
     state.mode = "stage";
     generateTrail();
     toast("Ash Trail • burn " + ASH_GOAL + " ash to finish");
     if (!state.seenGuide) showGuide();
-    // Automatically switch the active tab to the Board view so you see the trial grid!
+    
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.querySelector('[data-tab="view-board"]')?.classList.add("active");
     document.getElementById("view-board")?.classList.add("active");
+    
+    // <--- NEW: Show the exit button on the board when entering
+    const exitBtn = document.getElementById("exitTrialBtn");
+    if (exitBtn) {
+      exitBtn.style.display = "block";
+      exitBtn.onclick = enterStage; // Clicking it runs this exact function to leave!
+    }
+    // <--- NEW
   }
   save(); 
   render();
@@ -1090,7 +1109,7 @@ function unlockCost() {
 function unlock(i) {
   if (!state.locked[i]) return;
   const cost = unlockCost();
-  if (state.coins < cost) { toast(`Land costs ${cost} 🪙`); return; }
+  if (state.coins < cost) { toast(`Land costs ${cost} <span class="spinning-coin">🪙</span>`); return; }
   state.coins -= cost;
   state.locked[i] = false;
   toast("Land opened");
@@ -1214,6 +1233,12 @@ function renderQuest() {
   if (state.mode === "stage") {
     const have = board().some(c => c && c.level >= STAGE_GOAL);
     box.className = "quest";
+    // <--- NEW: Fixed the space in the URL with %20
+    box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.75), rgba(11, 22, 51, 0.9)), url('Mountains%20View.jpg')";
+    box.style.backgroundSize = "cover";
+    box.style.backgroundPosition = "center";
+    box.style.border = "1px solid #778da9"; 
+    // <--- NEW
     box.innerHTML = `
       <div class="art">${dragonSvg(STAGE_GOAL, 42)}</div>
       <p>Burn <b>${ASH_GOAL} ash</b> • ${state.ashBurned || 0}/${ASH_GOAL} cleared<br>
@@ -1222,6 +1247,11 @@ function renderQuest() {
     `;
     return;
   }
+
+  // Clear the stage background when returning to the home Ember Nest
+  box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.43), rgb(11, 22, 51)), url('Mountains%20View.jpg')";
+  box.style.backgroundSize = "cover";
+  box.style.backgroundPosition = "center";
 
   const hasSleepy = !state.sleepyDone && state.level >= 3;
   if (!hasSleepy) state.questTab = 0;
@@ -1388,7 +1418,12 @@ function render() {
   setSafeText("hint", state.mode === "stage" ? "Leave trail" : trailWaitLabel());
   setSafeText("muteBtn", state.muted ? "🔇" : "🔊");
   setSafeText("lvlChip", "Lv " + (state.level || 1) + " • " + (state.xp || 0) + "/" + xpNeed(state.level || 1));
-  
+  // <--- NEW: Hide perchRow in trials, show it on the home board
+  const perchRow = document.getElementById("perchRow");
+  if (perchRow) {
+    perchRow.style.display = (state.mode === "stage") ? "none" : "";
+  }
+  // <--- NEW
   // 1. Update the New App UI Header Stats
   setSafeText("coinCount", state.coins);
   setSafeText("energyCount", state.energy + "/" + (state.maxEnergy || MAX_ENERGY));
@@ -1418,7 +1453,7 @@ function render() {
   
   const buy = document.getElementById("buyEgg");
   if (buy) {
-    buy.textContent = "Buy egg • " + eggPrice() + " 🪙";
+    buy.innerHTML = "Buy egg • " + eggPrice() + ' <span class="spinning-coin">🪙</span>';
     buy.disabled = state.mode === "stage";
     buy.style.opacity = state.mode === "stage" ? ".45" : "1";
   }
@@ -1439,14 +1474,47 @@ function render() {
   
   setSafeText("roomCount", roomsOpen());
   
-  const mt = document.getElementById("mountain");
+const mt = document.getElementById("mountain");
   if (mt) {
     const openN = roomsOpen();
-    mt.innerHTML = ROOMS.map((r, i) => {
-      const open = i < openN;
-      const now = i === openN - 1;
-      return `<div class="room ${open ? "open" : ""} ${now ? "now" : ""} ${state.theme === r.id ? "now" : ""}" data-room="${r.id}">${r.art}<br>${open ? r.name : "🔒"}</div>`;
-    }).join("");
+    mt.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        ${ROOMS.map((r, i) => {
+          const open = i < openN;
+          const now = i === openN - 1;
+          const isSelected = state.theme === r.id;
+          
+          // Check if room requires a decor item that isn't bought yet
+          const decorItem = r.need ? DECOR.find(d => d.id === r.need) : null;
+          const isUnlocked = !r.need || state.decor[r.need];
+          const costText = decorItem ? `${decorItem.cost} 🪙` : "";
+
+          return `
+            <div class="room ${open ? "open" : ""} ${now ? "now" : ""} ${isSelected ? "now" : ""}" data-room="${r.id}"
+                 style="border: 1px solid #778da9; border-radius: 8px; padding: 12px 100px; min-height: 48px;background: ${open ? 'rgba(27, 38, 59, 0.4)' : 'rgba(15, 23, 42, 0.7)'}; opacity: ${open ? '1' : '0.75'}; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
+              
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem; filter: ${open ? 'none' : 'grayscale(100%)'};">${r.art}</span>
+                <div>
+                  <h4 style="margin: 0; color: #e0e1dd; font-size: 0.95rem;">${open ? r.name : "🔒 " + r.name}</h4>
+                  <small style="color: #deb781;">${open ? (r.need ? "Unlocked via " + r.need : "Starting Room") : "Locked"}</small>
+                </div>
+              </div>
+
+              <div>
+                ${!open && costText ? `
+                  <button onclick="event.stopPropagation(); buyDecor('${r.need}')" 
+                          style="background: linear-gradient(to bottom, #415a77, #1b263b); border: 1px solid #778da9; color: #ffcf40; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; box-shadow: 0 2px 0 #0d1b2a;">
+                    Unlock: ${costText}
+                  </button>
+                ` : `<span style="font-size: 0.8rem; color: ${isSelected ? '#ffcf40' : '#76c893'}; font-weight: 600;">${isSelected ? 'Active' : (open ? 'Ready' : '')}</span>`}
+              </div>
+
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
   }
   
   applyTheme(state.theme || "hatchery");
@@ -1487,7 +1555,7 @@ function render() {
       const flashed = state._flash && state._flash.includes(i);
       cell.className = "cell" + (isLocked(i) ? " locked" : "") + (isAsh(i) ? " ash" : "") + (flashed ? " flash" : "");
       cell.dataset.i = i;
-      if (isLocked(i)) cell.textContent = "fog • " + unlockCost() + " 🪙";
+      if (isLocked(i)) cell.innerHTML = "fog • " + unlockCost() + ' <span class="spinning-coin">🪙</span>';
       else if (isAsh(i)) cell.innerHTML = ashSvg();
       else if (cells[i]) cell.innerHTML = itemHtml(cells[i]);
       boardEl.appendChild(cell);
@@ -1825,17 +1893,94 @@ document.getElementById("book")?.addEventListener("click", (e) => {
   if (e.target.id === "book") document.getElementById("book").classList.remove("open");
 });
 // Tab Switching Logic
+let pendingTab = null;
+let pendingViewId = null;
+// Nest Sub-Tab Switching Logic
+document.querySelectorAll(".nest-tab-btn").forEach(btn => {
+  btn?.addEventListener("click", (e) => {
+    // Remove active styles/classes from sub-tab buttons
+    document.querySelectorAll(".nest-tab-btn").forEach(b => {
+      b.classList.remove("active");
+      b.style.background = "#1b263b"; // Inactive color
+    });
+    
+    // Hide all sub-views
+    document.querySelectorAll(".nest-sub-view").forEach(v => {
+      v.style.display = "none";
+    });
+    
+    // Activate clicked sub-tab
+    const targetSubTab = e.currentTarget;
+    targetSubTab.classList.add("active");
+    targetSubTab.style.background = "#415a77"; // Active color highlight
+    
+    // Show target sub-view content
+    const subViewId = targetSubTab.dataset.subtab;
+    const activeSubView = document.getElementById(subViewId);
+    if (activeSubView) {
+      activeSubView.style.display = "block";
+    }
+  });
+});
+// The function that actually switches the screens
+function executeTabSwitch(targetTab, viewId) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  
+  targetTab?.classList.add("active");
+  document.getElementById(viewId)?.classList.add("active");
+}
+
+// 1. Intercepting the Tab Click
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn?.addEventListener("click", (e) => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    
     const targetTab = e.currentTarget;
-    targetTab?.classList.add("active");
-    
     const viewId = targetTab.dataset.tab;
-    document.getElementById(viewId)?.classList.add("active");
+
+    if (state.mode === "stage" && viewId !== "view-board") {
+      // Remember where they clicked, show the modal, and STOP
+      pendingTab = targetTab;
+      pendingViewId = viewId;
+      document.getElementById("trialWarningModal").style.display = "flex";
+      return; 
+    }
+
+    // If not in a trial, just switch tabs normally
+    executeTabSwitch(targetTab, viewId);
   });
+});
+
+// 2 & 3. Handling Popup Button Clicks (Bulletproof Method)
+document.addEventListener("click", (e) => {
+  
+  // If they click "Cancel"
+  if (e.target.id === "cancelWarningBtn") {
+    document.getElementById("trialWarningModal").style.display = "none";
+    pendingTab = null;
+    pendingViewId = null;
+  }
+  
+  // If they click "Leave"
+  if (e.target.id === "confirmWarningBtn") {
+    document.getElementById("trialWarningModal").style.display = "none";
+    
+    // Forfeit the trial
+    state.mode = "home";
+    resetTrail();
+    save();
+    // <--- NEW: Explicitly hide the exit button so it doesn't linger
+    const exitBtn = document.getElementById("exitTrialBtn");
+    if (exitBtn) exitBtn.style.display = "none";
+    // <--- NEW
+    render();
+    
+    // Take them to the tab they originally clicked
+    if (pendingTab && pendingViewId) {
+      executeTabSwitch(pendingTab, pendingViewId);
+      pendingTab = null;
+      pendingViewId = null;
+    }
+  }
 });
 load();
 // --- BACKGROUND DRAGON BANK SYNC ---
@@ -1874,7 +2019,15 @@ setInterval(() => {
   // Calculate current payout per tick
   const currentInc = perchIncome();
   // Update Dragon Bank UI Counter & Countdown
-  setSafeText("bankCount", (state.perchBank || 0) + " 🪙");
+  const bankCountEl = document.getElementById("bankCount");
+  if (bankCountEl) {
+    const newVal = (state.perchBank || 0);
+    if (!bankCountEl.querySelector('.spinning-coin')) {
+      bankCountEl.innerHTML = newVal + ' <span class="spinning-coin">🪙</span>';
+    } else {
+      bankCountEl.firstChild.nodeValue = newVal + " ";
+    }
+  }
   setSafeText("bankRate", currentInc > 0 ? "+" + currentInc : "");
   
   if (state.perchAt && (state.perch || []).some(Boolean)) {
