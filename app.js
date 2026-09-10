@@ -1286,8 +1286,6 @@ function tickEnergy() {
   // 1. Update the New App UI Header Stats
   setSafeText("energyCount", state.energy + "/" + cap);
 
-  setSafeText("energyCount", state.energy + "/" + cap);
-
   if (state.energy >= cap) {
     state.nextEnergyAt = Date.now() + REGEN_MS;
     setSafeText("regen", "");
