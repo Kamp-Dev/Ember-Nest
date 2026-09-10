@@ -118,6 +118,8 @@ function xpNeed(lv) { return 30 + lv * 20; }
 const levelQueue = [];
 let levelShowing = false;
 let currentBookTab = 0; // 0 = Main, 1 = Rare
+let bankCoins = 0;
+let bankTimer = 60; // 60 seconds per collection tick
 
 function addXp(n) {
   if (!n) return;
@@ -1284,12 +1286,14 @@ function tickEnergy() {
   // 1. Update the New App UI Header Stats
   setSafeText("energyCount", state.energy + "/" + cap);
 
+  setSafeText("energyCount", state.energy + "/" + cap);
+
   if (state.energy >= cap) {
     state.nextEnergyAt = Date.now() + REGEN_MS;
     setSafeText("regen", "");
   } else {
     if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
-    const left = state.nextEnergyAt - Date.now();
+    let left = state.nextEnergyAt - Date.now();
     if (left <= 0) {
       state.energy = Math.min(cap, state.energy + 1);
       state.nextEnergyAt = Date.now() + REGEN_MS;
@@ -1300,6 +1304,17 @@ function tickEnergy() {
     }
   }
   
+  if (state.mode === "home" && (state.perch || []).some(Boolean)) {
+    if (bankTimer > 0) {
+      bankTimer--;
+    } else {
+      let generationRate = perchIncome() > 0 ? Math.max(5, Math.floor(perchIncome() / 4)) : 5;
+      bankCoins += generationRate;
+      bankTimer = 60;
+    }
+  }
+  setSafeText("bankCount", bankCoins + " 🪙");
+  setSafeText("bankTimer", "Next: " + bankTimer + "s");
   if (state.mode === "home" && (state.perch || []).some(Boolean)) {
     if (!state.perchAt) state.perchAt = Date.now();
     if (Date.now() >= state.perchAt + PERCH_MS) {
@@ -1591,6 +1606,19 @@ document.getElementById("perchRow")?.addEventListener("click", (e) => {
 });
 
 gatherBtn?.addEventListener("click", gather);
+document.getElementById("dragonBank")?.addEventListener("click", () => {
+  if (bankCoins > 0) {
+    state.coins += bankCoins;
+    toast("Collected " + bankCoins + " 🪙 from the Dragon Bank!");
+    bankCoins = 0;
+    bankTimer = 60;
+    sfx("gather");
+    save();
+    render();
+  } else {
+    toast("The bank is still gathering coins...");
+  }
+});
 document.getElementById("buyEgg")?.addEventListener("click", buyEgg);
 document.getElementById("chestOk")?.addEventListener("click", () => {
   const box = document.getElementById("chestBox");
