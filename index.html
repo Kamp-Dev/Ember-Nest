@@ -33,20 +33,9 @@
     <div class="view-container">
       <!-- === VIEW 1: THE BOARD === -->
       <div id="view-board" class="view active">
-        <div id="hint"></div>
+        <div id="questBox"></div>
+        <div id="topQuestBox" class="quest" style="margin-bottom: 12px;"></div>
           <div id="perchRow"></div>
-
-        <button id="dragonBank" class="dragon-bank-btn">
-  <div class="bank-left">
-    <span>🐉 Dragon Bank</span>
-    <small id="bankTimer" class="bank-timer">Next: 60s</small>
-  </div>
-  <div style="display:flex; flex-direction:column; align-items:flex-end;">
-    <span id="bankCount">0 🪙</span>
-    <small id="bankRate" style="font-size:0.65rem; color:#ffcf40;">+0</small>
-  </div>
-</button>
-
         <div id="board"></div>
         
         <div class="action-buttons">
@@ -55,19 +44,32 @@
         </div>
       </div>
 
-      <!-- === VIEW 2: QUESTS === -->
-      <div id="view-quests" class="view">
-        <div class="section-title">The Mountain's Requests</div>
-        <div id="questBox"></div>
-      </div>
+<!-- === VIEW 2: TRIALS (Formerly Quests) === -->
+      <div id="view-trials" class="view">
+  <div class="section-title">Trials of the Mountain</div>
+  <div id="trialBox" style="margin-bottom: 16px;"></div>
+</div>
 
-      <!-- === VIEW 3: THE NEST === -->
+<!-- === VIEW 3: THE NEST === -->
       <div id="view-nest" class="view">
         <div class="section-title">Mountain Rooms & Decor</div>
+        <!-- Duplicate Perch Row for the Nest Tab -->
+        <div id="perchRowNest" style="margin-bottom: 12px;"></div>
+        <!-- Dragon Bank lives here now -->
+        <button id="dragonBank" class="dragon-bank-btn" style="margin-bottom: 16px;">
+          <div class="bank-left">
+            <span>🐉 Dragon Bank</span>
+            <small id="bankTimer" class="bank-timer">Next: 60s</small>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end;">
+            <span id="bankCount">0 🪙</span>
+            <small id="bankRate" style="font-size:0.65rem; color:#ffcf40;">+0</small>
+          </div>
+        </button>
+
         <div id="mountain"></div>
         <div id="nest"></div>
       </div>
-    </div>
 
     <!-- === BOTTOM TAB BAR === -->
       <nav id="tabBar">
@@ -75,9 +77,9 @@
           <span class="tab-icon">🐉</span>
           <span class="tab-label">Board</span>
         </button>
-        <button data-tab="view-quests" class="tab-btn">
-          <span class="tab-icon">📜</span>
-          <span class="tab-label">Quests</span>
+        <button data-tab="view-trials" class="tab-btn">
+          <span class="tab-icon">🔥</span>
+          <span class="tab-label">Trials</span>
         </button>
         <button data-tab="view-nest" class="tab-btn">
           <span class="tab-icon">🏕️</span>

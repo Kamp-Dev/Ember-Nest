@@ -202,12 +202,11 @@ button:disabled {
 }
 
 /* --- 8. PERCH ROW --- */
-#perchRow {
+#perchRow, #perchRowNest {
   display: flex;
-  gap: 10px;
-  width: 100%;
-  max-width: 400px;
-  margin-bottom: 15px;
+  gap: 8px;
+  justify-content: center;
+  /* keep any other existing layout rules you have for it here */
 }
 
 .perch {
@@ -750,4 +749,172 @@ body {
 /* --- PREVENT TILE CLIPPING DURING ANIMATIONS --- */
 .cell svg {
   overflow: visible !important;
+}
+
+/* --- QUEST PAGE STYLING --- */
+#view-quests {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffcf40;
+  text-align: center;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  margin-bottom: 4px;
+}
+
+#questBox {
+  background: linear-gradient(135deg, #24140a, #180d07);
+  border: 2px solid #5c3820;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+#questBox.sleepy {
+  background: linear-gradient(135deg, #112233, #0b1622);
+  border-color: #2b4c7e;
+}
+
+#questBox .art {
+  background: #140b06;
+  border: 1px solid #4a2c17;
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  min-height: 52px;
+  position: relative;
+}
+
+#questBox.sleepy .art {
+  background: #070d14;
+  border-color: #1b365d;
+}
+
+#questBox p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #e0e1dd;
+}
+
+#questBox p b {
+  color: #ffcf40;
+}
+
+/* Quest Navigation Arrows & Dots */
+.quest-arrow {
+  background: transparent;
+  border: none;
+  color: #deb781;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.quest-arrow:hover {
+  color: #ffcf40;
+}
+
+.quest-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.quest-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4a2c17;
+  display: inline-block;
+}
+
+.quest-dots span.active {
+  background: #ffcf40;
+}
+
+/* Quest Action Button Styling */
+#questBox button#giveBtn {
+  background: linear-gradient(to bottom, #d45817, #a82e05);
+  border: 1px solid #ff8a36;
+  color: #fff;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(212, 88, 23, 0.3);
+  transition: transform 0.1s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+#questBox button#giveBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+#questBox button#giveBtn:disabled {
+  background: #2a1a12;
+  border-color: #44261a;
+  color: #7a6558;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.zzz {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: #a9d6e5;
+  background: #1b263b;
+  border: 1px solid #415a77;
+  padding: 1px 4px;
+  border-radius: 4px;
+  animation: pulse 2s infinite ease-in-out;
+}
+#trialBox {
+  overflow: visible !important;
+  position: relative;
+  z-index: 2; /* Ensures the breathing dragon renders cleanly on top of the box border */
+  margin-left: 25px;
+  margin-top: 16px;
+  border: 2px solid #deb781;
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 18px 24px; /* Keeps the rectangular proportions without blowing out the width with 150px padding */
+  background: linear-gradient(rgba(11, 22, 51, 0.85), rgba(11, 22, 51, 0.95)), url('Ash Trial.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+#view-trials, #view-trials > * {
+  overflow: visible !important;
+}
+
+#trialBox .art svg {
+  overflow: visible !important;
+  transform-box: fill-box;
+  transform-origin: center;
 }

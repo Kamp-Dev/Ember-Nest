@@ -324,6 +324,7 @@ function stackLayout(n) {
 }
 
 function dragonSvg(level, size = 42, count = 1, shiny = false) {
+  
   const pal = [
     ["#d99b66", "#8a4f28"],
     ["#ffb554", "#d45817"],
@@ -960,6 +961,11 @@ function enterStage() {
     generateTrail();
     toast("Ash Trail • burn " + ASH_GOAL + " ash to finish");
     if (!state.seenGuide) showGuide();
+    // Automatically switch the active tab to the Board view so you see the trial grid!
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.querySelector('[data-tab="view-board"]')?.classList.add("active");
+    document.getElementById("view-board")?.classList.add("active");
   }
   save(); 
   render();
@@ -1251,7 +1257,7 @@ function renderQuest() {
     if (sInfo) sInfo.onclick = () => document.getElementById("sleepyGuide")?.classList.add("open");
     
   } else {
-    box.className = "quest";
+    box.className = "quest sleepy";
     const list = wishList();
     const q = list[state.quest % list.length];
     const have = findLevel(q.want) >= 0;
@@ -1335,11 +1341,50 @@ function tickEnergy() {
   }
 }
 
+function renderTrialBanner() {
+  const box = document.getElementById("trialBox");
+  if (!box) return;
+  const have = board().some(c => c && c.level >= STAGE_GOAL);
+  
+  box.className = "quest sleepy";
+  box.style.width = "100%";
+  box.style.boxSizing = "border-box";
+  box.style.display = "flex";
+  box.style.alignItems = "center";
+  box.style.justifyContent = "space-between";
+  
+  box.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+      <!-- Removed background/padding constraints from .art so the svg overflows cleanly -->
+      <div class="art" style="flex-shrink: 0; background: none; border: none; padding: 0; min-width: auto; min-height: auto; margin-left: 0px;">
+        ${dragonSvg(STAGE_GOAL, 100)}
+      </div>
+      
+      <div style="flex: 1; margin-left: 10px;">
+        <p style="margin: 0; font-size: 0.9rem; color: #ffffff;">Ash Trail • Mountain Embers <b> </b><br>
+        <span style="font-size: 0.75rem; color: #deb781;">${state.ashBurned || 0}/${ASH_GOAL} cleared • Limits: ${ashCount()}/${ASH_FAIL}</span></p>
+      </div>
+      
+      <button id="trialBtn" style="background: linear-gradient(to bottom, #415a77, #1b263b); border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 8px 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 0 #0d1b2a; flex-shrink: 0; margin-left: auto;">
+        ${state.mode === "stage" ? "Leave" : "Enter"}
+      </button>
+    </div>
+  `;
+  
+  const tBtn = document.getElementById("trialBtn");
+  if (tBtn) tBtn.onclick = enterStage;
+}
+
 function render() {
   rollDaily();
   
   // Update texts safely without crashing
   setSafeHTML("title", state.mode === "stage" ? "Ash <span>Trail</span>" : "Ember <span>Nest</span>");
+
+  // Render Quests and Trials live on the screen
+  renderQuest();
+  renderTrialBanner();
+
   setSafeText("hint", state.mode === "stage" ? "Leave trail" : trailWaitLabel());
   setSafeText("muteBtn", state.muted ? "🔇" : "🔊");
   setSafeText("lvlChip", "Lv " + (state.level || 1) + " • " + (state.xp || 0) + "/" + xpNeed(state.level || 1));
@@ -1347,6 +1392,7 @@ function render() {
   // 1. Update the New App UI Header Stats
   setSafeText("coinCount", state.coins);
   setSafeText("energyCount", state.energy + "/" + (state.maxEnergy || MAX_ENERGY));
+  // ... rest of your render function code ...
   
   const nl = document.getElementById("nameLine");
   if (nl) {
@@ -1406,9 +1452,21 @@ function render() {
   applyTheme(state.theme || "hatchery");
   
   const pr = document.getElementById("perchRow");
-  if (pr) {
+  const prNest = document.getElementById("perchRowNest");
+  
+  function handlePerchClick(e) {
+  const el = e.target.closest("[data-perch]");
+  if (!el) return;
+  const i = +el.dataset.perch;
+  if (!perchOpen(i) || state.mode === "stage") return;
+  if (state.perch[i] && perchArmed !== i) { emptyPerch(i); return; }
+  perchArmed = perchArmed === i ? -1 : i;
+  render();
+  if (perchArmed >= 0) toast("Tap a nest dragon to perch it");
+}
+  if (pr || prNest) {
     state.perch = state.perch || [null, null, null];
-    pr.innerHTML = [0, 1, 2].map(i => {
+    const perchHTML = [0, 1, 2].map(i => {
       const open = perchOpen(i);
       const p = state.perch[i];
       const armed = perchArmed === i;
@@ -1416,6 +1474,9 @@ function render() {
       if (p) return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">${dragonSvg(p.level, 26, 1, p.shiny)}<span>${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}</span></div>`;
       return `<div class="perch ${armed ? "armed" : ""}" data-perch="${i}">empty perch</div>`;
     }).join("");
+
+    if (pr) pr.innerHTML = perchHTML;
+    if (prNest) prNest.innerHTML = perchHTML;
   }
   
   const cells = board();
@@ -1789,6 +1850,7 @@ setInterval(() => {
       state.energy = Math.min(cap, state.energy + 1);
       state.nextEnergyAt = Date.now() + REGEN_MS;
       save();
+      render();
     }
   }
 
