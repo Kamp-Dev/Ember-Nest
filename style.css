@@ -639,3 +639,8 @@ body {
   color: var(--text-muted);
   line-height: 1.2;
 }
+/* --- PUSH ACTION BUTTONS FURTHER DOWN --- */
+.action-buttons {
+  margin-top: 35px; /* Increase this number if you want them even lower */
+  margin-bottom: 20px;
+}
