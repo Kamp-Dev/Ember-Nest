@@ -958,33 +958,15 @@ body {
   text-align: center;
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
 }
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #0d1b2a; /* matches your dark theme */
-  color: #e0e1dd;
-  font-family: 'Montserrat', sans-serif;
-}
-
-#app {
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh; /* handles mobile browser address bars nicely */
-  max-width: 480px; /* optional: keeps it phone-sized if opened on desktop */
-  margin: 0 auto;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
+/* Unlock vertical scrolling without adding side frames */
 .view-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  padding: 12px;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling for iOS/Android */
+  padding-bottom: 80px !important; /* Ensures bottom content isn't hidden behind the Tab Bar */
+}
+
+/* Ensure individual views can stretch fully */
+.view {
+  min-height: 100%;
 }
