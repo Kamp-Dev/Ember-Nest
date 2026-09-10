@@ -992,10 +992,13 @@ body {
 /* Lock the Trial Box to a mobile-friendly width */
 #trialBox {
   width: 100%;
-  max-width: 380px; /* Keeps it matching the board's width */
+  max-width: 380px;
   margin-left: auto;
   margin-right: auto;
   box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Change to 3 if the tiles are smaller */
+  gap: 10px;
 }
 
 /* Ensure cards or buttons inside the trial box shrink to fit */
