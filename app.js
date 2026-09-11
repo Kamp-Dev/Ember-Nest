@@ -44,8 +44,8 @@ const LORE = [
 const ROOMS = [
   { id: "hatchery", name: "Hatchery", need: null, art: "🛖" },
   { id: "alcove", name: "Moss alcove", need: "moss", art: "🌿" },
-  { id: "walk", name: "Lamp walk", need: "lamp", art: "🏮" },
-  { id: "gallery", name: "Spring hall", need: "pool", art: "♨️" },
+  { id: "lamp", name: "Lamp walk", need: "lamp", art: "🏮" },
+  { id: "spring", name: "Spring hall", need: "pool", art: "♨️" },
   { id: "vault", name: "Tea vault", need: "hoard", art: "🫖" },
 ];
 
@@ -113,7 +113,15 @@ function spawnParticles(x, y, count = 8, color = '#ffcf40') {
     setTimeout(() => p.remove(), 800);
   }
 }
-
+function spawnFloatingText(x, y, text) {
+  const p = document.createElement('div');
+  p.className = 'floating-text';
+  p.innerHTML = `${text} <span class="spinning-coin">🪙</span>`;
+  p.style.left = x + 'px';
+  p.style.top = y + 'px';
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 1000);
+}
 function xpNeed(lv) { return 30 + lv * 20; }
 const levelQueue = [];
 let levelShowing = false;
@@ -248,6 +256,20 @@ function seatPerch(slot, boardI) {
   
   const existingPerch = state.perch[slot];
   
+  // Calculate income for the floating pop-up (+30, etc.)
+  const curve = [5, 15, 30, 60, 120, 240];
+  const incomeValue = Math.floor((curve[draggedItem.level] || 5) * (draggedItem.shiny ? 2.5 : 1));
+  
+  // Grab the perch element position *before* the render wipes or changes it
+  const targetPerchEl = document.querySelectorAll('.perch')[slot];
+  let spawnX = window.innerWidth / 2;
+  let spawnY = window.innerHeight / 2;
+  if (targetPerchEl) {
+    const rect = targetPerchEl.getBoundingClientRect();
+    spawnX = rect.left + rect.width / 2;
+    spawnY = rect.top + rect.height / 2;
+  }
+  
   if (draggedItem.count > 1) {
     if (existingPerch) {
       toast("Perch must be empty to split stack.");
@@ -260,6 +282,9 @@ function seatPerch(slot, boardI) {
     state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
     cells[boardI] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny } : null;
   }
+
+  // Trigger the floating text particle with the rotating coin
+  spawnFloatingText(spawnX, spawnY, `+${incomeValue}`);
 
   perchArmed = -1;
   sfx("buy");
@@ -1484,14 +1509,33 @@ const mt = document.getElementById("mountain");
           const now = i === openN - 1;
           const isSelected = state.theme === r.id;
           
-          // Check if room requires a decor item that isn't bought yet
+          // Check if room requires a decor item
           const decorItem = r.need ? DECOR.find(d => d.id === r.need) : null;
-          const isUnlocked = !r.need || state.decor[r.need];
           const costText = decorItem ? `${decorItem.cost} 🪙` : "";
+
+          // 1. ADD YOUR IMAGES HERE (Map the room's ID to its exact filename)
+          const roomImages = {
+            "hatchery": "Hatchery.jpg",
+            "alcove": "moss%20alcove.jpg",
+            "lamp": "lamp%20walk.jpg",
+            "spring": "spring%20hall.jpg",
+            "vault": "tea%20vault.jpg",
+            // You can easily add more here later!
+            // "spring": "Spring Hall.jpg",
+          };
+
+          // 2. BUILD THE BACKGROUND STYLE CLEANLY
+          const bgImage = roomImages[r.id];
+          let bgStyle = open ? 'rgba(27, 38, 59, 0.4)' : 'rgba(15, 23, 42, 0.7)'; // Default colors
+          
+          if (bgImage) {
+             // If this room has an image in our list above, use it!
+             bgStyle = `linear-gradient(rgba(11, 0, 172, 0.27), rgba(18, 12, 10, 0.9)), url('${bgImage}')`;
+          }
 
           return `
             <div class="room ${open ? "open" : ""} ${now ? "now" : ""} ${isSelected ? "now" : ""}" data-room="${r.id}"
-                 style="border: 1px solid #778da9; border-radius: 8px; padding: 12px 100px; min-height: 48px;background: ${open ? 'rgba(27, 38, 59, 0.4)' : 'rgba(15, 23, 42, 0.7)'}; opacity: ${open ? '1' : '0.75'}; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
+                 style="border: 1px solid #778da9; border-radius: 8px; padding: 12px 100px; min-height: 48px; background: ${bgStyle}; background-size: cover; background-position: center; opacity: ${open ? '1' : '0.75'}; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
               
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 1.5rem; filter: ${open ? 'none' : 'grayscale(100%)'};">${r.art}</span>
@@ -1661,6 +1705,11 @@ function endDrag(e) {
     if (perchOpen(slot) && cells[from]) {
       const draggedItem = cells[from];
       const existingPerch = state.perch[slot];
+      // Calculate income and spawn floating pop-up
+      const curve = [5, 15, 30, 60, 120, 240];
+      const incomeValue = Math.floor((curve[draggedItem.level] || 5) * (draggedItem.shiny ? 2.5 : 1));
+      const rect = perchEl.getBoundingClientRect();
+      spawnFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${incomeValue}`);
       
       if (draggedItem.count > 1) {
         if (existingPerch) {

@@ -10,8 +10,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ember Nest</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css">
-</head>
+  <link rel="stylesheet" href="style.css?v=2"></head>
+<style>
+  .coin-icon {
+    display: inline-block;
+    animation: coin-spin 1.5s linear infinite;
+    transform-style: preserve-3d;
+  }
+
+  @keyframes coin-spin {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+  }
+</style>
 <body>
 
   <div id="app">
@@ -24,7 +35,7 @@
       </div>
       <div class="header-right">
   <button id="bookBtn" class="icon-btn" title="Dragon Book">📖</button>
-  <div class="stat-pill">🪙 <span id="coinCount">0</span></div>
+  <div class="stat-pill"><span class="coin-icon" aria-hidden="true">🪙</span> <span id="coinCount">0</span></div>
   <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
 </div>
     </header>
@@ -33,7 +44,7 @@
     <div class="view-container">
       <!-- === VIEW 1: THE BOARD === -->
       <div id="view-board" class="view active">
-        
+
         <div id="questBox"></div>
         <div id="topQuestBox" class="quest" style="margin-bottom: 12px;"></div>
           <div id="perchRow"></div>
@@ -43,6 +54,8 @@
             </button>
           <!-- <--- NEW -->
           <div id="board"></div>
+        <!-- Replace "your-image.jpg" with the name/path of your image file. -->
+        <img src="Hatchery.jpg" alt="Ember Nest" style="display: block; width: 100%; max-width: 600px; height: auto; margin: 0 auto 16px; border-radius: 8px;">
         
         <div class="action-buttons">
           <button id="gather">Gather egg 🥚</button>
@@ -70,16 +83,22 @@
   <div id="sub-rooms" class="nest-sub-view" style="display: block;">
     <div id="perchRowNest" style="margin-bottom: 12px;"></div>
     
-    <button id="dragonBank" class="dragon-bank-btn" style="margin-bottom: 16px;">
-      <div class="bank-left">
-        <span>🐉 Dragon Bank</span>
-        <small id="bankTimer" class="bank-timer">Next: 60s</small>
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end;">
-        <span id="bankCount">0 🪙</span>
+<button id="dragonBank" class="dragon-bank-btn" style="margin-bottom: 16px; background: linear-gradient(rgba(11, 22, 51, 0.142), rgba(11, 22, 51, 0.9)), url('Dragon%20Bank.jpg'); background-size: cover; background-position: center bottom; border: 1px solid #778da9;">  
+  <div class="bank-left" style="display: flex; align-items: center; gap: 8px;">
+    <!-- Real dragon sprite image replacing the emoji -->
+    <img src="hearth-1.png" alt="Dragon Bank Guard" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));" />
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+<!-- Horizontal row for title and rate -->
+      <div style="display: flex; align-items: baseline; gap: 6px;">
+        <span>Dragon Bank</span> 
         <small id="bankRate" style="font-size:0.65rem; color:#ffcf40;">+0</small>
-      </div>
-    </button>
+      </div>      <small id="bankTimer" class="bank-timer">Next: 60s</small>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:column-reverse; align-items:flex-end;">
+  <span id="bankCount" style="font-size: 1.3rem;">0 🪙</span>
+</div>
+</button>
 
     <div id="mountain"></div>
   </div>

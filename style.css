@@ -304,8 +304,8 @@ body {
   overflow: visible !important;
   position: relative;
   z-index: 2;
-  width: 100%;
-  max-width: 380px;
+  width: 100% !important;
+  max-width: 1250px !important; /* <--- Increase this to match your board width (e.g., 400px to 440px) */
   margin: 16px auto 0 auto;
   border: 2px solid #deb781;
   border-radius: 10px;
@@ -330,8 +330,8 @@ body {
   align-items: center;
   gap: 14px;
   position: relative;
-  width: 100%;
-  max-width: 380px;
+  width: 100% !important; 
+  max-width: 1250px !important; /* <--- Match this width here as well */
   margin-bottom: 12px;
 }
 
@@ -340,7 +340,7 @@ body {
   display: flex;
   gap: 15px;
   width: 100%;
-  max-width: 380px;
+  max-width: 1250px !important; /* <--- Match this width here as well */
   justify-content: center;
   margin-top: 25px;
   margin-bottom: 20px;
@@ -396,7 +396,7 @@ button:disabled {
   border: 1px solid var(--ember);
   color: var(--text-main);
   width: 100%;
-  max-width: 380px;
+  max-width: 1250px;
   padding: 10px 15px;
   border-radius: 12px;
   font-size: 0.9rem;
@@ -566,4 +566,94 @@ button:disabled {
   transform: translate(-50%, -50%) scale(1.2);
   z-index: 999;
   filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+}
+/* --- PARTICLE SPARK EFFECTS --- */
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%; /* Turns them into glowing round dots */
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 0 8px currentColor;
+  animation: particle-fly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes particle-fly {
+  0% { 
+    transform: translate(0, 0) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(var(--dx), var(--dy)) scale(0); 
+    opacity: 0; 
+  }
+}
+/* --- FLOATING TEXT PARTICLE --- */
+.floating-text {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+  font-weight: bold;
+  font-size: 0.95rem;
+  pointer-events: none;
+  z-index: 1000;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  animation: float-up 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translate(-50%, 0) scale(0.7);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -10px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -45px) scale(1);
+    opacity: 0;
+  }
+}
+/* --- BOARD BACKGROUNDS BY THEME --- */
+
+/* 1. Hatchery */
+#app[data-theme="hatchery"] #view-board.active {
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("Hatchery.jpg") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: transparent !important;
+}
+
+/* 2. Moss Alcove */
+#app[data-theme="alcove"] #view-board.active {
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("moss alcove.jpg") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: transparent !important;
+}
+
+/* 3. Lamp Walk */
+#app[data-theme="lamp"] #view-board.active {
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("lamp walk.jpg") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: transparent !important;
+}
+
+/* 4. Spring Hall */
+#app[data-theme="spring"] #view-board.active {
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("spring hall.jpg") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: transparent !important;
+}
+
+/* 5. Tea Vault */
+#app[data-theme="vault"] #view-board.active {
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("tea vault.jpg") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: transparent !important;
 }
