@@ -693,3 +693,55 @@ button:disabled {
 .dragon-bank-btn.is-maxed .max-overlay {
   display: flex;
 }
+.quest-carousel {
+  display: flex !important; /* Forces the horizontal row */
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 16px;
+  -ms-overflow-style: none;  
+  scrollbar-width: none;  
+}
+
+.quest-carousel::-webkit-scrollbar {
+  display: none;
+}
+.quest-card {
+  flex: 0 0 100% !important; 
+  width: 100% !important;
+  min-width: 100% !important;
+  box-sizing: border-box !important; 
+  scroll-snap-align: center;
+  
+  /* NEW: Restoring the padding and layout structure */
+  padding: 12px 16px !important; 
+  display: flex !important;
+  align-items: center !important;
+  min-height: 85px; /* Ensures both cards stay the same height */
+}
+/* The Dots Container */
+.quest-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  min-height: 12px; /* Forces it to take up space even if empty */
+}
+
+/* Individual Dots */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Active Dot */
+.dot.active {
+  background-color: #ffaa00; /* Signature Ember Nest orange */
+  width: 24px; 
+  border-radius: 4px;
+}

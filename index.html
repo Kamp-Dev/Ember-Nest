@@ -45,8 +45,19 @@
       <!-- === VIEW 1: THE BOARD === -->
       <div id="view-board" class="view active">
 
-        <div id="questBox"></div>
-        <div id="topQuestBox" class="quest" style="margin-bottom: 12px;"></div>
+<!-- === QUEST CAROUSEL === -->
+<div id="quest-carousel-container" style="margin-bottom: 12px;">
+  
+  <!-- This wrapper forces them side-by-side -->
+  <div id="quest-carousel" class="quest-carousel">
+    <div id="questBox" class="quest-card"></div>
+    <div id="topQuestBox" class="quest-card"></div>
+  </div>
+  
+  <!-- Pagination Dots -->
+  <div id="quest-dots" class="quest-dots"></div>
+</div>
+        <!-- ======================= -->
           <div id="perchRow"></div>
           <!-- NEW: Updated styling to match the Enter button -->
             <button id="exitTrialBtn" style="display: none; font-size: 10px; background: linear-gradient(to bottom, #415a77, #1b263b); border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 10px 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 0 #0d1b2a; width: 100%; max-width: 100px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">

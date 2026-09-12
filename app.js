@@ -1253,92 +1253,122 @@ function itemHtml(item) {
 
 function renderQuest() {
   const box = document.getElementById("questBox");
-  if (!box) return; // UI Safety check!
+  const topBox = document.getElementById("topQuestBox"); // We now use both boxes!
+  if (!box || !topBox) return; // UI Safety check!
   
+  // 1. STAGE MODE (Only 1 Quest)
   if (state.mode === "stage") {
     const have = board().some(c => c && c.level >= STAGE_GOAL);
-    box.className = "quest";
-    // <--- NEW: Fixed the space in the URL with %20
+    box.className = "quest quest-card";
+    box.style.display = "block"; // Ensure it's visible
     box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.75), rgba(11, 22, 51, 0.9)), url('Mountains%20View.jpg')";
     box.style.backgroundSize = "cover";
     box.style.backgroundPosition = "center";
     box.style.border = "1px solid #778da9"; 
-    // <--- NEW
+    
     box.innerHTML = `
       <div class="art">${dragonSvg(STAGE_GOAL, 42)}</div>
       <p>Burn <b>${ASH_GOAL} ash</b> • ${state.ashBurned || 0}/${ASH_GOAL} cleared<br>
       <span style="font-size:0.7rem; color:#deb781;">Live ash limits: ${ashCount()}/${ASH_FAIL}</span></p>
-      <button id="giveBtn" disabled>${have ? "Done" : "Goal"}</button>
+      <button id="giveBtnStage" disabled>${have ? "Done" : "Goal"}</button>
     `;
+    
+    topBox.style.display = "none"; // Hide the second card
+    updateCarouselDots();
     return;
   }
 
-  // Clear the stage background when returning to the home Ember Nest
-  box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.43), rgb(11, 22, 51)), url('Mountains%20View.jpg')";
+  // 2. HOME MODE (1 or 2 Quests)
+  const homeBg = "linear-gradient(rgba(11, 22, 51, 0.43), rgb(11, 22, 51)), url('Mountains%20View.jpg')";
+  
+  // Apply base styles to both cards
+  box.className = "quest sleepy quest-card";
+  box.style.backgroundImage = homeBg;
   box.style.backgroundSize = "cover";
   box.style.backgroundPosition = "center";
 
+  topBox.className = "quest sleepy quest-card";
+  topBox.style.backgroundImage = homeBg;
+  topBox.style.backgroundSize = "cover";
+  topBox.style.backgroundPosition = "center";
+
   const hasSleepy = !state.sleepyDone && state.level >= 3;
-  if (!hasSleepy) state.questTab = 0;
 
-  const leftArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❮</button>` : ``;
-  const rightArrow = hasSleepy ? `<button class="quest-arrow" onclick="toggleQuestTab()">❯</button>` : ``;
-  const dots = hasSleepy ? `<div class="quest-dots"><span class="${state.questTab===0?'active':''}"></span><span class="${state.questTab===1?'active':''}"></span></div>` : ``;
-
-  if (hasSleepy && state.questTab === 0) {
+  // Set up Normal Quest Data (used in both scenarios)
+  const list = wishList();
+  const q = list[state.quest % list.length];
+  const haveNormal = findLevel(q.want) >= 0;
+  const normalQuestHTML = `
+    <!-- Changed flex:1 to width:100% and increased gap -->
+    <div style="display:flex; align-items:center; gap:12px; width:100%;">
+      <div class="art">${dragonSvg(q.want, 40)}</div>
+      <div style="flex:1;">
+        <p id="wishText" style="margin: 0; line-height: 1.4;">${state.questDone ? "The nest settles..." : q.text}<br>
+        <span style="font-size:0.7rem;">Gifts: ${(state.gives || 0) % 5}/5</span></p>
+      </div>
+      <button id="giveBtnNormal" ${haveNormal && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
+    </div>
+  `;
+  // --- RENDER LOGIC ---
+  if (hasSleepy) {
+    // We have TWO quests: Put Sleepy in the first box, Normal in the second box
+    box.style.display = "block";
+    topBox.style.display = "block"; 
+    
     const haveSleepy = findLevel(3) >= 0; 
-    box.className = "quest sleepy";
     box.innerHTML = `
-      ${leftArrow}
       <div style="display:flex; align-items:center; gap:8px; flex:1;">
         <div class="art">
           ${dragonSvg(3, 40)}
           <div class="zzz">Zzz</div>
         </div>
         <div style="flex:1;">
-          <p id="wishText" style="color:#a9d6e5;">Sleepy Dragon needs a <b>Young</b> dragon.<br><span style="font-size:0.7rem;">Streak: ${state.sleepyStreak || 0}/7</span></p>
-          ${dots}
+          <p style="color:#a9d6e5; margin: 0;">Sleepy Dragon needs a <b>Young</b> dragon.<br>
+          <span style="font-size:0.7rem;">Streak: ${state.sleepyStreak || 0}/7</span></p>
         </div>
         <div style="display:flex; flex-direction:column; gap:4px;">
-          <button id="giveBtn" ${haveSleepy ? "" : "disabled"}>Wake</button>
+          <button id="giveBtnSleepy" ${haveSleepy ? "" : "disabled"}>Wake</button>
           <button id="sleepyInfoBtn" style="padding:4px; font-size:0.7rem; background:#415a77; border-color:#e0e1dd; box-shadow:0 2px 0 #1b263b;">Info</button>
         </div>
       </div>
-      ${rightArrow}
     `;
-    const btn = document.getElementById("giveBtn");
-    if (btn) btn.onclick = fulfillSleepy;
+    topBox.innerHTML = normalQuestHTML;
+
+    // Attach Click Handlers for BOTH
+    const btnSleepy = document.getElementById("giveBtnSleepy");
+    if (btnSleepy) btnSleepy.onclick = fulfillSleepy;
+    
     const sInfo = document.getElementById("sleepyInfoBtn");
     if (sInfo) sInfo.onclick = () => document.getElementById("sleepyGuide")?.classList.add("open");
     
+    const btnNormal = document.getElementById("giveBtnNormal");
+    if (btnNormal) btnNormal.onclick = fulfillQuest;
+    
   } else {
-    box.className = "quest sleepy";
-    const list = wishList();
-    const q = list[state.quest % list.length];
-    const have = findLevel(q.want) >= 0;
-    box.innerHTML = `
-      ${leftArrow}
-      <div style="display:flex; align-items:center; gap:8px; flex:1;">
-        <div class="art">${dragonSvg(q.want, 40)}</div>
-        <div style="flex:1;">
-          <p id="wishText">${state.questDone ? "The nest settles..." : q.text}<br><span style="font-size:0.7rem;">Gifts: ${(state.gives || 0) % 5}/5</span></p>
-          ${dots}
-        </div>
-        <button id="giveBtn" ${have && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
-      </div>
-      ${rightArrow}
-    `;
-    const btn = document.getElementById("giveBtn");
-    if (btn) btn.onclick = fulfillQuest;
-    const wish = document.getElementById("wishText");
-    if (wish && !state.questDone) {
-      wish.style.cursor = "pointer";
-      wish.onclick = () => {
-        const pay = q.reward * bonus();
-        toast(CHAIN[q.want].name + " • " + q.reward + " × " + bonus() + " = " + pay + " 🪙");
-      };
-    }
+    // We only have ONE quest. Put it in the first box and hide the second box.
+    box.style.display = "block";
+    topBox.style.display = "none";
+    topBox.innerHTML = "";
+    
+    box.innerHTML = normalQuestHTML;
+    
+    // Attach Click Handlers
+    const btnNormal = document.getElementById("giveBtnNormal");
+    if (btnNormal) btnNormal.onclick = fulfillQuest;
   }
+  
+  // Re-attach Wish text click handler (for normal quests)
+  const wish = document.getElementById("wishText");
+  if (wish && !state.questDone) {
+    wish.style.cursor = "pointer";
+    wish.onclick = () => {
+      const pay = q.reward * bonus();
+      toast(CHAIN[q.want].name + " • " + q.reward + " × " + bonus() + " = " + pay + " 🪙");
+    };
+  }
+
+  // Update dots based on what is visible!
+  updateCarouselDots();
 }
 
 function tickEnergy() {
@@ -2116,3 +2146,41 @@ if (!state.cells.some(Boolean)) {
   save();
 }
 render();
+
+function updateCarouselDots() {
+  const carousel = document.getElementById("quest-carousel");
+  const dotsContainer = document.getElementById("quest-dots");
+  
+  if (!carousel || !dotsContainer) return;
+
+  // Find cards with actual content
+  const questCards = Array.from(carousel.querySelectorAll(".quest-card")).filter(card => card.innerHTML.trim() !== "" && card.style.display !== "none");
+
+  // Hide dots if only 1 quest is active
+  if (questCards.length <= 1) {
+    dotsContainer.innerHTML = "";
+    return;
+  }
+
+  dotsContainer.innerHTML = "";
+
+  // Generate dots
+  questCards.forEach((_, index) => {
+    const dot = document.createElement("div");
+    dot.className = "dot";
+    
+    const scrollIndex = Math.round(carousel.scrollLeft / carousel.offsetWidth) || 0;
+    if (index === scrollIndex) dot.classList.add("active");
+    
+    dotsContainer.appendChild(dot);
+  });
+
+  // Listen to swiping
+  carousel.onscroll = () => {
+    const scrollIndex = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+    const allDots = dotsContainer.querySelectorAll(".dot");
+    allDots.forEach((dot, i) => {
+      dot.classList.toggle("active", i === scrollIndex);
+    });
+  };
+}
