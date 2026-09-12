@@ -226,8 +226,8 @@ function perchOpen(i) {
 function applyTheme(id) {
   state.theme = id || "hatchery";
   const app = document.getElementById("app");
-  if (app) app.setAttribute("data-theme", state.theme === "hatchery" ? "" : state.theme);
-}
+  if (app) app.setAttribute("data-theme", state.theme);
+  }
 
 let perchArmed = -1;
 function perchIncome() {
@@ -1362,20 +1362,6 @@ function tickEnergy() {
       setSafeText("regen", "⏱ " + Math.ceil(left / 1000) + "s");
     }
   }
-  
-  if (state.mode === "home" && (state.perch || []).some(Boolean)) {
-    if (!state.perchAt) state.perchAt = Date.now();
-    if (Date.now() >= state.perchAt + PERCH_MS) {
-      const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
-      if (ticks > 0) {
-        const inc = perchIncome() * ticks;
-        const maxBank = perchIncome() * 1440;
-        state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
-        state.perchAt += ticks * PERCH_MS;
-        save();
-      }
-    }
-  }
 
   const pBtn = document.getElementById("collectPerchBtn");
   if (pBtn) {
@@ -1778,6 +1764,8 @@ document.getElementById("dragonBank")?.addEventListener("click", () => {
     toast("Collected " + bankValue + " 🪙 from the Dragon Bank!");
     state.perchBank = 0;
     sfx("gather");
+    // NEW: Instantly remove the MAX overlay so it doesn't wait for the next tick
+    document.getElementById("dragonBank").classList.remove("is-maxed");
     save();
     render();
   } else {
@@ -2048,36 +2036,67 @@ setInterval(() => {
     }
   }
 
-  // 2. Handle Perch / Dragon Bank Accumulation
+// 2. Handle Perch / Dragon Bank Accumulation
   if (state.mode === "home" && (state.perch || []).some(Boolean)) {
     if (!state.perchAt) state.perchAt = Date.now();
+    
     if (Date.now() >= state.perchAt + PERCH_MS) {
       const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
       if (ticks > 0) {
         const inc = perchIncome() * ticks;
-        const maxBank = perchIncome() * 1440;
+        
+        // Ensure this multiplier matches the UI loop! (e.g., 28800 for seconds, or 480 for minutes)
+        const maxBank = perchIncome() * 1440; // 8 hours worth (at 20s ticks)        
+        // This line safely adds the coins without going over the max limit
         state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
+        
         state.perchAt += ticks * PERCH_MS;
         save();
       }
     }
   }
 
-  // 3. Refresh UI Elements Live Every Second
+// 3. Refresh UI Elements Live Every Second
   tickEnergy();
-  // Calculate current payout per tick
+  
+  // Calculate current payout
   const currentInc = perchIncome();
-  // Update Dragon Bank UI Counter & Countdown
+  const maxBankLimit = currentInc * 1440; // 8 hours worth (at 20s ticks)  
+
+  // --- UI UPDATE LOGIC ---
   const bankCountEl = document.getElementById("bankCount");
+  const dragonBankBtn = document.getElementById("dragonBank"); 
+  const bankTimerDisplay = document.getElementById("bankTimer"); 
+
   if (bankCountEl) {
     const newVal = (state.perchBank || 0);
+
+    if (dragonBankBtn && maxBankLimit > 0) {
+      // Trigger MAX overlay if bank hits or exceeds the 8-hour limit
+      if (newVal >= maxBankLimit) {
+        dragonBankBtn.classList.add("is-maxed");
+        if (bankTimerDisplay) bankTimerDisplay.textContent = "MAX";
+      } else {
+        dragonBankBtn.classList.remove("is-maxed");
+        // Make the timer tick down visually!
+        if (bankTimerDisplay && state.perchAt) {
+           const timeRemaining = Math.max(0, Math.ceil((state.perchAt + PERCH_MS - Date.now()) / 1000));
+           bankTimerDisplay.textContent = `Next: ${timeRemaining}s`;
+        }
+      }
+    }
+
     if (!bankCountEl.querySelector('.spinning-coin')) {
       bankCountEl.innerHTML = newVal + ' <span class="spinning-coin">🪙</span>';
     } else {
       bankCountEl.firstChild.nodeValue = newVal + " ";
     }
   }
+  
   setSafeText("bankRate", currentInc > 0 ? "+" + currentInc : "");
+  
+  // Update the +Rate text
+  setSafeText("bankRate", currentInc > 0 ? "+" + currentInc + "/s" : "");
   
   if (state.perchAt && (state.perch || []).some(Boolean)) {
     const elapsed = Date.now() - state.perchAt;

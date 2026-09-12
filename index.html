@@ -55,8 +55,6 @@
           <!-- <--- NEW -->
           <div id="board"></div>
         <!-- Replace "your-image.jpg" with the name/path of your image file. -->
-        <img src="Hatchery.jpg" alt="Ember Nest" style="display: block; width: 100%; max-width: 600px; height: auto; margin: 0 auto 16px; border-radius: 8px;">
-        
         <div class="action-buttons">
           <button id="gather">Gather egg 🥚</button>
           <button id="buyEgg">Buy egg</button>
@@ -83,21 +81,33 @@
   <div id="sub-rooms" class="nest-sub-view" style="display: block;">
     <div id="perchRowNest" style="margin-bottom: 12px;"></div>
     
-<button id="dragonBank" class="dragon-bank-btn" style="margin-bottom: 16px; background: linear-gradient(rgba(11, 22, 51, 0.142), rgba(11, 22, 51, 0.9)), url('Dragon%20Bank.jpg'); background-size: cover; background-position: center bottom; border: 1px solid #778da9;">  
-  <div class="bank-left" style="display: flex; align-items: center; gap: 8px;">
-    <!-- Real dragon sprite image replacing the emoji -->
-    <img src="hearth-1.png" alt="Dragon Bank Guard" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));" />
-    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-<!-- Horizontal row for title and rate -->
-      <div style="display: flex; align-items: baseline; gap: 6px;">
-        <span>Dragon Bank</span> 
-        <small id="bankRate" style="font-size:0.65rem; color:#ffcf40;">+0</small>
-      </div>      <small id="bankTimer" class="bank-timer">Next: 60s</small>
+<button id="dragonBank" class="dragon-bank-btn" style="position: relative; overflow: hidden; margin-bottom: 16px; background: linear-gradient(rgba(11, 22, 51, 0.142), rgba(11, 22, 51, 0.9)), url('Dragon%20Bank.jpg'); background-size: cover; background-position: center bottom; border: 1px solid #778da9; display: flex; width: 100%; padding: 0;"> 
+  
+  <!-- Content Wrapper: Allows us to grayscale the inner elements easily -->
+  <div class="bank-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 8px 12px;">
+    
+    <div class="bank-left" style="display: flex; align-items: center; gap: 8px;">
+      <!-- Real dragon sprite image replacing the emoji -->
+      <img src="hearth-1.png" alt="Dragon Bank Guard" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));" />
+      <div style="display: flex; flex-direction: column; align-items: flex-start;">
+        <!-- Horizontal row for title and rate -->
+        <div style="display: flex; align-items: baseline; gap: 6px;">
+          <span>Dragon Bank</span> 
+          <small id="bankRate" style="font-size:0.65rem; color:#ffcf40;">+0</small>
+        </div>
+        <small id="bankTimer" class="bank-timer">Next: 60s</small>
+      </div>
     </div>
+    
+    <div style="display:flex; flex-direction:column-reverse; align-items:flex-end;">
+      <span id="bankCount" style="font-size: 1.3rem;">0 🪙</span>
+    </div>
+    
   </div>
-  <div style="display:flex; flex-direction:column-reverse; align-items:flex-end;">
-  <span id="bankCount" style="font-size: 1.3rem;">0 🪙</span>
-</div>
+
+  <!-- The MAX Overlay -->
+  <div class="max-overlay">MAX</div>
+  
 </button>
 
     <div id="mountain"></div>
