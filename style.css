@@ -789,3 +789,61 @@ button:disabled {
   transform: translateY(4px); 
   box-shadow: 0 0 0 #a63c00, 0 2px 5px rgba(217, 83, 15, 0.4); 
 }
+
+/* Hidden by default */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Appears when JavaScript adds the "open" class */
+.modal-overlay.open {
+  display: flex !important;
+}
+
+/* Modal styling matching your game theme */
+.modal-content {
+  background: #1b263b;
+  border: 1px solid #778da9;
+  border-radius: 8px;
+  padding: 20px;
+  width: 80%;
+  max-width: 300px;
+  color: #e0e1dd;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #a9d6e5;
+}
+
+.modal-content button {
+  margin-top: 15px;
+  background: #415a77;
+  border: 1px solid #778da9;
+  color: #e0e1dd;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+/* Target your main game wrapper class or ID */
+.game-wrapper, #app, body {
+  width: 100%;
+  max-width: 450px; /* Keeps it phone-sized on tablets or desktop browsers */
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height (automatically adjusts for mobile browser address bars) */
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  position: relative;
+}
