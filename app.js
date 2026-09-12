@@ -1299,14 +1299,16 @@ function renderQuest() {
   const q = list[state.quest % list.length];
   const haveNormal = findLevel(q.want) >= 0;
   const normalQuestHTML = `
-    <!-- Changed flex:1 to width:100% and increased gap -->
     <div style="display:flex; align-items:center; gap:12px; width:100%;">
       <div class="art">${dragonSvg(q.want, 40)}</div>
       <div style="flex:1;">
         <p id="wishText" style="margin: 0; line-height: 1.4;">${state.questDone ? "The nest settles..." : q.text}<br>
         <span style="font-size:0.7rem;">Gifts: ${(state.gives || 0) % 5}/5</span></p>
       </div>
-      <button id="giveBtnNormal" ${haveNormal && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
+      <!-- Wrapped the single button to match Sleepy's layout spacing -->
+      <div style="display:flex; flex-direction:column; justify-content:center;">
+        <button id="giveBtnNormal" ${haveNormal && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
+      </div>
     </div>
   `;
   // --- RENDER LOGIC ---
@@ -1317,16 +1319,16 @@ function renderQuest() {
     
     const haveSleepy = findLevel(3) >= 0; 
     box.innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px; flex:1;">
+      <div style="display:flex; align-items:center; gap:12px; width:100%;">
         <div class="art">
           ${dragonSvg(3, 40)}
           <div class="zzz">Zzz</div>
         </div>
         <div style="flex:1;">
-          <p style="color:#a9d6e5; margin: 0;">Sleepy Dragon needs a <b>Young</b> dragon.<br>
+          <p style="color:#a9d6e5; margin: 0; line-height: 1.4;">Sleepy Dragon needs a <b>Young</b> dragon.<br>
           <span style="font-size:0.7rem;">Streak: ${state.sleepyStreak || 0}/7</span></p>
         </div>
-        <div style="display:flex; flex-direction:column; gap:4px;">
+        <div style="display:flex; flex-direction:column; gap:4px; justify-content:center;">
           <button id="giveBtnSleepy" ${haveSleepy ? "" : "disabled"}>Wake</button>
           <button id="sleepyInfoBtn" style="padding:4px; font-size:0.7rem; background:#415a77; border-color:#e0e1dd; box-shadow:0 2px 0 #1b263b;">Info</button>
         </div>
