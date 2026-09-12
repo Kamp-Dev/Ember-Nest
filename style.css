@@ -709,11 +709,11 @@ button:disabled {
 .quest-card {
   /* 1. Shrink the width slightly and add side margins so they aren't "too wide" */
 /* Shrink the card to 90% of the screen width */
-  flex: 0 0 90% !important; 
-  min-width: 90% !important;
+  flex: 0 0 80% !important; 
+  min-width: 80% !important;
   
   /* Center the 90% card by giving the remaining 10% as side margins (5% each side) */
-  margin: 0 5% !important;
+  margin: 0 10% !important;
   
   /* 2. Force the border and rounded corners on ALL cards */
   border: 1px solid #778da9 !important;
