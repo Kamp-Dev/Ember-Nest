@@ -864,3 +864,15 @@ html, body {
   justify-content: center;
   align-items: center;
 }
+/* Constrain the Ash Trial container to fit naturally on mobile */
+#trial-container, .trial-view, #topQuestBox.trial-active {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: unset !important;
+  max-height: 250px !important; /* Limits how tall it can get */
+  box-sizing: border-box !important;
+  margin: 0 auto 12px auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
