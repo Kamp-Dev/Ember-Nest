@@ -1467,6 +1467,11 @@ function render() {
     perchRow.style.display = (state.mode === "stage") ? "none" : "";
   }
   // <--- NEW
+  // Automatically hide or show the Buy Egg button based on the game mode
+const buyEggBtn = document.getElementById("buyEgg");
+if (buyEggBtn) {
+  buyEggBtn.style.display = (state.mode === "stage") ? "none" : "inline-flex";
+}
   // 1. Update the New App UI Header Stats
   setSafeText("coinCount", state.coins);
   setSafeText("energyCount", state.energy + "/" + (state.maxEnergy || MAX_ENERGY));
