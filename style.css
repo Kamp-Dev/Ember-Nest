@@ -757,7 +757,7 @@ button:disabled {
 
 /* 1. Center the buttons and let them take up only as much width as they need */
 .action-buttons {
-  margin-top: -5px !important;
+  margin-top: 5px !important;
   display: flex !important;
   justify-content: center !important; /* Centers them horizontally */
   gap: 12px !important; /* Adds a nice gap between Gather and Buy */
@@ -846,4 +846,19 @@ button:disabled {
   box-sizing: border-box;
   overflow-x: hidden;
   position: relative;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #0b1633; /* Match your deep blue theme */
+  overflow: hidden; /* Prevents the whole browser page from scrolling outside the game */
+  overscroll-behavior-y: none; /* Stops the mobile pull-to-refresh drag */
+  touch-action: manipulation; /* Removes the 300ms click delay on mobile taps */
+  
+  /* --- NEW: Keeps the game centered on desktop web browsers --- */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
