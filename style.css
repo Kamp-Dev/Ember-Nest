@@ -754,3 +754,38 @@ button:disabled {
   width: 24px; 
   border-radius: 4px;
 }
+
+/* 1. Center the buttons and let them take up only as much width as they need */
+.action-buttons {
+  margin-top: -5px !important;
+  display: flex !important;
+  justify-content: center !important; /* Centers them horizontally */
+  gap: 12px !important; /* Adds a nice gap between Gather and Buy */
+  position: relative;
+  z-index: 10;
+}
+
+/* 2. Remove flex: 1 so they shrink to a compact, custom width */
+#gather, #buyEgg {
+  background: linear-gradient(135deg, #ff8c00, #d9530f);
+  color: #ffffff;
+  border: 1px solid #ffaa00;
+  border-radius: 18px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #a63c00, 0 8px 15px rgba(217, 83, 15, 0.3);
+  transition: all 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#gather:active, #buyEgg:active {
+  transform: translateY(4px); 
+  box-shadow: 0 0 0 #a63c00, 0 2px 5px rgba(217, 83, 15, 0.4); 
+}
