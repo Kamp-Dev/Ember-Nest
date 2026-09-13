@@ -136,7 +136,7 @@
   </div>
 </div>
 
-    <!-- === BOTTOM TAB BAR === -->
+<!-- === BOTTOM TAB BAR === -->
       <nav id="tabBar">
         <button data-tab="view-board" class="tab-btn active">
           <span class="tab-icon">🐉</span>
@@ -151,7 +151,6 @@
           <span class="tab-label">Nest</span>
         </button>
       </nav>
-  </div>
 
   <!-- === MODALS & OVERLAYS (REQUIRED FOR JS) === -->
   <div id="toast"></div>
@@ -238,19 +237,19 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
-  <!-- Paste this INSIDE your <div id="app"> container, right before the closing </div> -->
-    <div id="trialWarningModal" id="trialWarningModal">
-      <div class="modal-content">
-        <h3 style="color: #a9d6e5; margin-top: 0; font-family: 'Playfair Display', serif;">Forfeit Trial?</h3>
-        <p style="color: #e0e1dd; font-size: 0.9rem; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">Leaving the board will forfeit your current trial. Are you sure?</p>
-        
-        <div style="display: flex; gap: 10px; justify-content: center;">
-          <button id="cancelWarningBtn" style="flex: 1; background: #415a77; border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Cancel</button>
-          <button id="confirmWarningBtn" style="flex: 1; background: #a12b2b; border: 1px solid #ff4d4d; color: #ffffff; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Leave</button>
+<!-- FORFEIT MODAL (Placed INSIDE #app, immune to [id*="trial"]) -->
+      <div id="forfeitModal" style="display: none; position: absolute; inset: 0; width: 100%; height: 100%; background: rgba(4, 5, 8, 0.85); z-index: 99999;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(to bottom, #1b263b, #0d1b2a); border: 2px solid #778da9; border-radius: 10px; padding: 24px; text-align: center; width: 85%; max-width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+          <h3 style="color: #ff2600; margin-top: 0; font-family: 'Playfair Display', serif;">Forfeit Trial?</h3>
+          <p style="color: #e0e1dd; font-size: 0.9rem; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">Leaving the board will forfeit your current trial. Are you sure?</p>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button id="cancelWarningBtn" style="flex: 1; background: #415a77; border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Cancel</button>
+            <button id="confirmWarningBtn" style="flex: 1; background: #a12b2b; border: 1px solid #ff4d4d; color: #ffffff; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Leave</button>
+          </div>
         </div>
       </div>
-    </div>
+  </div>
 <!-- <--- NEW -->
+<script src="app.js"></script>
 </body>
 </html>

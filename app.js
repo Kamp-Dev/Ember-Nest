@@ -2013,50 +2013,48 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     const viewId = targetTab.dataset.tab;
 
     if (state.mode === "stage" && viewId !== "view-board") {
-      // Remember where they clicked, show the modal, and STOP
       pendingTab = targetTab;
       pendingViewId = viewId;
-      document.getElementById("trialWarningModal").style.display = "flex";
+      
+      const modal = document.getElementById("forfeitModal");
+      if (modal) modal.style.display = "block";
       return; 
     }
 
-    // If not in a trial, just switch tabs normally
     executeTabSwitch(targetTab, viewId);
   });
 });
 
-// 2 & 3. Handling Popup Button Clicks (Bulletproof Method)
-document.addEventListener("click", (e) => {
-  
-  // If they click "Cancel"
-  if (e.target.id === "cancelWarningBtn") {
-    document.getElementById("trialWarningModal").style.display = "none";
-    pendingTab = null;
-    pendingViewId = null;
-  }
-  
-  // If they click "Leave"
-  if (e.target.id === "confirmWarningBtn") {
-    document.getElementById("trialWarningModal").style.display = "none";
-    
-    // Forfeit the trial
-    state.mode = "home";
-    resetTrail();
-    save();
-    // <--- NEW: Explicitly hide the exit button so it doesn't linger
-    const exitBtn = document.getElementById("exitTrialBtn");
-    if (exitBtn) exitBtn.style.display = "none";
-    // <--- NEW
-    render();
-    
-    // Take them to the tab they originally clicked
-    if (pendingTab && pendingViewId) {
-      executeTabSwitch(pendingTab, pendingViewId);
-      pendingTab = null;
-      pendingViewId = null;
-    }
-  }
+// 2. "Cancel"
+document.getElementById("cancelWarningBtn")?.addEventListener("click", () => {
+  const modal = document.getElementById("forfeitModal");
+  if (modal) modal.style.display = "none";
+  pendingTab = null;
+  pendingViewId = null;
 });
+
+// 3. "Leave"
+document.getElementById("confirmWarningBtn")?.addEventListener("click", () => {
+  const modal = document.getElementById("forfeitModal");
+  if (modal) modal.style.display = "none";
+  
+  state.mode = "home";
+  resetTrail();
+  save();
+  
+  const exitBtn = document.getElementById("exitTrialBtn");
+  if (exitBtn) exitBtn.style.display = "none";
+  
+  render();
+  
+  if (pendingTab && pendingViewId) {
+    executeTabSwitch(pendingTab, pendingViewId);
+  }
+  
+  pendingTab = null;
+  pendingViewId = null;
+});
+
 load();
 // --- BACKGROUND DRAGON BANK SYNC ---
 // --- UNIFIED BACKGROUND TICK LOOP (Energy Regen & Dragon Bank) ---
