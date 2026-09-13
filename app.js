@@ -426,7 +426,8 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
 }
 
 function ashSvg() {
-  return `<svg viewBox="0 0 32 32" aria-hidden="true">
+  // Added width="42" height="42" to perfectly match your dragon sizing!
+  return `<svg viewBox="0 0 32 32" width="42" height="42" aria-hidden="true" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">
     <path d="M4 6 L9 14 L6 18 L12 22 L8 28" fill="none" stroke="#6a3520" stroke-width="1.8"/>
     <path d="M16 3 L14 10 L18 16 L15 24 L20 30" fill="none" stroke="#994726" stroke-width="1.5"/>
     <path d="M26 5 L22 12 L28 17 L24 26" fill="none" stroke="#7a341d" stroke-width="1.8"/>
