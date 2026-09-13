@@ -171,15 +171,18 @@ body {
   border: 2px solid var(--border);
 }
 
+/* Fix the board and trials grid shifting slightly to the right */
 #board {
-  display: grid;
+  display: grid !important;
   box-sizing: border-box !important;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 10px !important;
   width: 100% !important;
-  max-width: 400px;
-  padding: 0 12px !important; /* Adds balanced breathing room on the left and right */
-  margin: 0 auto 30px auto;
+  max-width: 420px !important; /* Slightly increased to fit 5 columns naturally */
+  padding: 0 !important; /* Removed inner padding; the parent .view handles the edges perfectly */
+  margin: 0 auto 30px auto !important; /* Locks the container to the absolute center */
+  justify-content: center !important; /* Forces the grid tracks to align dead-center */
+  align-content: center !important;
   touch-action: none;
 }
 
@@ -321,7 +324,20 @@ body {
 #view-trials, #view-trials > * {
   overflow: visible !important;
 }
+/* Prevent horizontal scrolling and hide scrollbars completely */
+#view-trials, .trial-view, #trialBox, .quest-card {
+  overflow-x: hidden !important; /* Kills accidental side-scrolling */
+  scrollbar-width: none !important; /* Hides scrollbar in Firefox */
+  -ms-overflow-style: none !important; /* Hides scrollbar in older Edge/IE */
+}
 
+/* Hides scrollbars in WebKit browsers (Chrome, Safari, iOS, Android) */
+#view-trials::-webkit-scrollbar, 
+.trial-view::-webkit-scrollbar, 
+#trialBox::-webkit-scrollbar,
+.quest-card::-webkit-scrollbar {
+  display: none !important;
+}
 #questBox {
   background: linear-gradient(135deg, #24140a, #180d07);
   border: 2px solid #5c2020;
