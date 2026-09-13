@@ -1574,7 +1574,7 @@ const mt = document.getElementById("mountain");
                           style="background: linear-gradient(to bottom, #415a77, #1b263b); border: 1px solid #778da9; color: #ffcf40; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; box-shadow: 0 2px 0 #0d1b2a;">
                     Unlock: ${costText}
                   </button>
-                ` : `<span style="font-size: 0.8rem; color: ${isSelected ? '#ffcf40' : '#76c893'}; font-weight: 600;">${isSelected ? 'Active' : (open ? 'Ready' : '')}</span>`}
+                ` : `<span class="room-status" style="color: ${isSelected ? '#ffcf40' : '#76c893'};">${isSelected ? 'Active' : (open ? 'Ready' : '')}</span>`}
               </div>
 
             </div>

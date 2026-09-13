@@ -876,3 +876,35 @@ html, body {
   display: flex !important;
   flex-direction: column !important;
 }
+/* Force all room buttons to a larger, uniform height and scale */
+.room-btn, #perchRow button, [class*="room"], [class*="perch"] {
+  height: 64px !important;            /* Increased from 48px */
+  min-height: 64px !important;        /* Increased from 48px */
+  max-height: 64px !important;        /* Increased from 48px */
+  padding: 0 20px !important;         /* Wider horizontal padding for a chunkier button look */
+  font-size: 16px !important;         /* Scaled up text size to match the bigger container */
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+/* Nudges just the text or label inside the button to the right */
+.room-btn span, #perchRow button span, [class*="room"] span {
+  margin-left: 75px !important; /* Increase this to move the text further right */
+}
+/* Force all trial and quest detail views to stay compact and un-stretched on mobile */
+#view-trials, .trial-view, .quest-active-view, [id*="trial"], [class*="trial-card"] {
+  height: auto !important;
+  max-height: 320px !important; /* Locks a strict ceiling on how tall it can get */
+  min-height: unset !important;
+  flex: none !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important; /* Allows scrolling inside the card if content is long, rather than stretching the card */
+}
+
+/* Ensure the inner container of the active trial doesn't inherit full-screen sizing */
+.trial-content, .quest-details-container {
+  height: auto !important;
+  max-height: 260px !important;
+}
