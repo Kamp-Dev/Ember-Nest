@@ -257,43 +257,78 @@ body {
   white-space: nowrap;
 }
 
+/* --- ENHANCED PERCH STYLING --- */
 #perchRow, #perchRowNest {
   display: flex;
   justify-content: center;
   align-items: stretch;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  margin-bottom: 12px;
+  max-width: 420px; /* Matches your board width */
+  margin: 0 auto 15px auto;
   box-sizing: border-box;
 }
 
 .perch {
   flex: 1;
   min-width: 0;
-  background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
-  border: 1px solid #deb781;
-  border-bottom: 3px solid #deb781;
-  border-radius: 8px;
-  padding: 8px 10px;
+  /* Layers a subtle grit texture over a deep carved-stone gradient */
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 80%),
+    linear-gradient(145deg, #18110e, #0e0907);
+  background-image: 
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
+    linear-gradient(145deg, #18110e, #0e0907);
+  
+  border: 2px solid #3d2618;
+  border-top-color: #5c3a24; /* Highlights the top edge like a light source hitting stone */
+  border-bottom: 4px solid #140b07; /* Deep chiseled shadow underneath */
+  border-radius: 12px;
+  padding: 10px 6px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   text-align: center;
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
-  font-size: 0.75rem;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.9), 0 4px 6px rgba(0, 0, 0, 0.4);
+  font-size: 0.7rem;
+  font-weight: 700;
   color: var(--text-muted);
   cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
 }
 
+.perch:hover {
+  border-color: #5c3a24;
+  transform: translateY(-2px);
+}
+
+/* Active / Occupied Perch: Ignited with an Ember Glow */
 .perch.on {
-  border-style: solid;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(145deg, #241611, #140b08);
   border-color: var(--ember);
+  border-top-color: #ff8c42;
+  border-bottom: 4px solid #702800;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.8), 0 0 14px rgba(212, 88, 23, 0.4);
+  color: var(--text-main);
 }
 
+/* Locked Perch: Heavy, dark, ancient stone look */
 .perch.lock {
-  background-color: #0c0806;
+  background: #090504;
+  border-color: #1a100a;
+  border-bottom: 4px solid #0f0906;
   opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+.perch.lock:hover {
+  transform: none;
+  border-color: #1a100a;
 }
 
 /* --- 7. TRIALS & QUESTS VIEWS --- */

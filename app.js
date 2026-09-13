@@ -1246,11 +1246,53 @@ window.toggleQuestTab = () => {
 
 function itemHtml(item) {
   const spec = CHAIN[item.level];
-  return `<div class="item pop">
+  
+  // Tier-coded border colors matching progression power
+  const tierBorders = ["#4a2c17", "#6b4a32", "#d45817", "#ff6a20", "#ffcf40", "#ffe08a"];
+  const borderColor = tierBorders[item.level] || "#4a2c17";
+
+  return `<div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
     ${dragonSvg(item.level, 42, item.count, item.shiny)}
-    <div class="lvl" style="color:#fff; text-shadow:0 2px 2px #000, 0 0 4px #000;">${item.shiny ? '✨ ' : ''}${spec.name}${item.count > 1 ? " • " + item.count : ""}</div>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: ${item.shiny ? '#ffcf40' : '#f8ece4'}; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid ${borderColor};
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    ">
+      ${item.shiny ? '✨ ' : ''}${spec.name}
+    </div>
+
+    ${item.count > 1 ? `
+      <!-- Stack Count Badge in Top-Right Corner -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        right: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      ">
+        ×${item.count}
+      </div>
+    ` : ''}
   </div>`;
 }
+
 
 function renderQuest() {
   const box = document.getElementById("questBox");
