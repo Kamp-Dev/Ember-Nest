@@ -924,28 +924,33 @@ html, body {
   height: auto !important;
   max-height: 260px !important;
 }
-/* Anchor the overlay strictly to the game container */
+/* Locks the dark overlay exactly to the #app game window */
 #trialWarningModal {
+  display: none; /* Hidden by default until JS triggers it */
   position: absolute !important; 
   top: 0 !important;
   left: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  background: rgba(0, 0, 0, 0.8) !important;
+  background: rgba(11, 22, 51, 0.85) !important;
   z-index: 9999 !important;
-
-  /* Let JavaScript handle the 'display' property, but keep centering rules */
+  
+  /* Flexbox handles the dead-center alignment natively */
   align-items: center !important;
   justify-content: center !important;
 }
 
-/* Let Flexbox handle the centering */
+/* Intercepts the JS injection to ensure Flexbox stays active */
+#trialWarningModal[style*="display: block"],
+#trialWarningModal[style*="display: flex"] {
+  display: flex !important;
+}
+
+/* Strips any stray margins or positioning from the pop-up box itself */
 #trialWarningModal .modal-content {
   position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  transform: none !important; 
-  margin: 0 auto !important;
-  max-width: 320px !important;
+  transform: none !important;
+  margin: 0 !important;
   width: 90% !important;
+  max-width: 320px !important;
 }
