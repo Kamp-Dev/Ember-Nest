@@ -175,14 +175,15 @@ body {
 #board {
   display: grid !important;
   box-sizing: border-box !important;
-  grid-template-columns: repeat(5, 1fr) !important;
+  /* Option A: Fixed column sizing based on your max-width (e.g., 5 columns + 4 gaps of 10px = 420px max) */
+  grid-template-columns: repeat(5, minmax(70px, 1fr)) !important; 
   gap: 10px !important;
   width: 100% !important;
-  max-width: 420px !important; /* Slightly increased to fit 5 columns naturally */
-  padding: 0 !important; /* Removed inner padding; the parent .view handles the edges perfectly */
-  margin: 0 auto 30px auto !important; /* Locks the container to the absolute center */
-  justify-content: center !important; /* Forces the grid tracks to align dead-center */
-  align-content: center !important;
+  max-width: 420px !important;
+  padding: 0 !important;
+  margin: 0 auto 30px auto !important;
+  justify-content: start !important; /* Prevents shifting when tracks recalculate */
+  align-content: start !important;
   touch-action: none;
 }
 
