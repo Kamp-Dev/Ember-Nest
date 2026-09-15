@@ -1348,3 +1348,36 @@ html, body {
   font-weight: 500;
   margin-left: 2px;
 }
+/* --- 1. ALLOW NORMAL APP SCROLLING GENERALLY --- */
+body, html {
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: auto;
+}
+
+/* --- 2. STRICTLY LOCK THE BOARD VIEW CONTAINER --- */
+#view-board.active, .board-container {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* --- 3. FORCE SCROLLING BACK ON OTHER TABS --- */
+.view:not(#view-board) {
+  overflow-y: auto !important;
+  touch-action: auto !important;
+}
+
+/* --- 4. BULLETPROOF WEB & MOBILE BOARD LOCK --- */
+html.lock-scroll, body.lock-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  position: fixed !important;
+  width: 100% !important;
+  touch-action: none !important;
+}
+
+#view-board {
+  max-height: 100vh;
+  overflow: hidden;
+}

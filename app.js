@@ -2178,8 +2178,22 @@ function executeTabSwitch(targetTab, viewId) {
   
   targetTab?.classList.add("active");
   document.getElementById(viewId)?.classList.add("active");
-}
 
+  // Dynamic Scroll Lock (locking both html and body)
+  if (viewId === "view-board") {
+    document.documentElement.classList.add("lock-scroll");
+    document.body.classList.add("lock-scroll");
+  } else {
+    document.documentElement.classList.remove("lock-scroll");
+    document.body.classList.remove("lock-scroll");
+  }
+}
+// 4. Prevent scrolling when the body has the "lock-scroll" class
+window.addEventListener("wheel", (e) => {
+  if (document.body.classList.contains("lock-scroll")) {
+    e.preventDefault();
+  }
+}, { passive: false });
 // 1. Intercepting the Tab Click
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn?.addEventListener("click", (e) => {
@@ -2230,6 +2244,11 @@ document.getElementById("confirmWarningBtn")?.addEventListener("click", () => {
 });
 
 load();
+
+// --- FORCE SCROLL LOCK ON INITIAL PAGE LOAD ---
+document.documentElement.classList.add("lock-scroll");
+document.body.classList.add("lock-scroll");
+
 // --- BACKGROUND DRAGON BANK SYNC ---
 // --- UNIFIED BACKGROUND TICK LOOP (Energy Regen & Dragon Bank) ---
 setInterval(() => {
@@ -2246,7 +2265,7 @@ setInterval(() => {
     }
   }
 
-// 2. Handle Perch / Dragon Bank Accumulation
+  // 2. Handle Perch / Dragon Bank Accumulation
   if (state.mode === "home" && (state.perch || []).some(Boolean)) {
     if (!state.perchAt) state.perchAt = Date.now();
     
@@ -2254,26 +2273,20 @@ setInterval(() => {
       const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
       if (ticks > 0) {
         const inc = perchIncome() * ticks;
-        
-        // Ensure this multiplier matches the UI loop! (e.g., 28800 for seconds, or 480 for minutes)
         const maxBank = perchIncome() * 1440; // 8 hours worth (at 20s ticks)        
-        // This line safely adds the coins without going over the max limit
         state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
-        
         state.perchAt += ticks * PERCH_MS;
         save();
       }
     }
   }
 
-// 3. Refresh UI Elements Live Every Second
+  // 3. Refresh UI Elements Live Every Second
   tickEnergy();
   
-  // Calculate current payout
   const currentInc = perchIncome();
-  const maxBankLimit = currentInc * 1440; // 8 hours worth (at 20s ticks)  
+  const maxBankLimit = currentInc * 1440;
 
-  // --- UI UPDATE LOGIC ---
   const bankCountEl = document.getElementById("bankCount");
   const dragonBankBtn = document.getElementById("dragonBank"); 
   const bankTimerDisplay = document.getElementById("bankTimer"); 
@@ -2282,13 +2295,11 @@ setInterval(() => {
     const newVal = (state.perchBank || 0);
 
     if (dragonBankBtn && maxBankLimit > 0) {
-      // Trigger MAX overlay if bank hits or exceeds the 8-hour limit
       if (newVal >= maxBankLimit) {
         dragonBankBtn.classList.add("is-maxed");
         if (bankTimerDisplay) bankTimerDisplay.textContent = "MAX";
       } else {
         dragonBankBtn.classList.remove("is-maxed");
-        // Make the timer tick down visually!
         if (bankTimerDisplay && state.perchAt) {
            const timeRemaining = Math.max(0, Math.ceil((state.perchAt + PERCH_MS - Date.now()) / 1000));
            bankTimerDisplay.textContent = `Next: ${timeRemaining}s`;
@@ -2303,9 +2314,6 @@ setInterval(() => {
     }
   }
   
-  setSafeText("bankRate", currentInc > 0 ? "+" + currentInc : "");
-  
-  // Update the +Rate text
   setSafeText("bankRate", currentInc > 0 ? "+" + currentInc + "/s" : "");
   
   if (state.perchAt && (state.perch || []).some(Boolean)) {
@@ -2316,16 +2324,20 @@ setInterval(() => {
     setSafeText("bankTimer", "Perch a dragon");
   }
 }, 1000);
+
 scanBook();
+
 if (!state.hearthDone && (state.cells || []).some(it => it && it.level >= 4)) {
   completeHearthGoal();
 }
+
 if (!state.cells.some(Boolean)) {
-  // Spawns a clean starter set consisting entirely of eggs (level 0)
   [0, 0, 0, 0, 0].forEach(lv => spawn(lv, 1));
   save();
 }
+
 render();
+
 
 function updateCarouselDots() {
   const carousel = document.getElementById("quest-carousel");
