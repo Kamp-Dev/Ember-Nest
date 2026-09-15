@@ -905,31 +905,6 @@ button:disabled {
   z-index: 10;
 }
 
-/* 2. Remove flex: 1 so they shrink to a compact, custom width */
-#gather, #buyEgg {
-  background: linear-gradient(135deg, #ff8c00, #d9530f);
-  color: #ffffff;
-  border: 1px solid #ffaa00;
-  border-radius: 18px;
-  padding: 10px 18px;
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #a63c00, 0 8px 15px rgba(217, 83, 15, 0.3);
-  transition: all 0.1s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-#gather:active, #buyEgg:active {
-  transform: translateY(4px); 
-  box-shadow: 0 0 0 #a63c00, 0 2px 5px rgba(217, 83, 15, 0.4); 
-}
-
 /* Hidden by default */
 .modal-overlay {
   display: none;
@@ -1162,14 +1137,103 @@ html, body {
     font-size: 0.65rem !important;
   }
 }
-/* --- BOARD TILE STABILIZER --- */
-.cell {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  line-height: 0 !important; /* Kills the phantom text spacing */
+/* --- SAFE BOARD TILE STABILIZER --- */
+.cell svg {
+  vertical-align: middle; 
+  /* This removes the phantom text baseline space without breaking JS layout! */
 }
 
-.cell svg {
-  display: block !important; /* Forces the SVG to act like an image, not a letter */
+/* --- PRIMARY ACTION BUTTONS (Forced Override) --- */
+#gather, 
+#buyEgg, 
+#autoMergeBtn {
+  background: linear-gradient(to bottom, #415a77, #1b263b) !important;
+  border: 1px solid #778da9 !important;
+  color: #e0e1dd !important;
+  font-family: 'Playfair Display', serif !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important; /* Slightly smaller to fit all 3 in a row */
+  padding: 0 10px !important;
+  border-radius: 6px !important; /* Kills the oval/pill shape! */
+  cursor: pointer !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2) !important;
+  transition: all 0.2s ease !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+  
+  /* Flex layout to keep text and icons centered */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  
+  /* Force them all to be the exact same size */
+  height: 44px !important; 
+  flex: 1 !important; 
+  box-sizing: border-box !important;
+}
+
+/* Hover State */
+#gather:hover:not(:disabled),
+#buyEgg:hover:not(:disabled),
+#autoMergeBtn.standard-btn:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #4d6889, #23314a) !important;
+  transform: translateY(-2px) !important;
+  border-color: #f7d273 !important;
+  color: #f7d273 !important;
+  box-shadow: 0 6px 10px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.3) !important;
+}
+
+/* Active State */
+#gather:active:not(:disabled),
+#buyEgg:active:not(:disabled),
+#autoMergeBtn.standard-btn:active:not(:disabled) {
+  transform: translateY(1px) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.6) !important;
+}
+
+/* Disabled & Locked State */
+#gather:disabled,
+#buyEgg:disabled,
+#autoMergeBtn.locked-btn {
+  background: #1e2226 !important;
+  border: 1px solid #3a3f47 !important;
+  color: #6a717a !important;
+  cursor: not-allowed !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+/* --- APP VIEWPORT & SCROLL LOCK --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100dvh; /* Dynamic Viewport Height: perfectly matches mobile screens even when the address bar shrinks! */
+  overflow: hidden !important; /* Kills the main browser scrollbar */
+  touch-action: none; /* Disables mobile pull-to-refresh and elastic bouncing during drag-and-drop */
+  background-color: #0d131f; /* Prevents white flashes at the edges */
+}
+
+/* Ensure the main app wrapper fills the screen but doesn't spill over */
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Allow other tabs (like Trials or Nest) to scroll internally if they have a lot of content */
+.view {
+  flex: 1;
+  overflow-y: auto; 
+  overflow-x: hidden;
+  padding-bottom: 20px; /* Gives a little breathing room at the bottom */
+}
+
+/* Explicitly LOCK the Board tab so it never, ever scrolls */
+#view-board {
+  overflow: hidden !important; 
+  display: flex;
+  flex-direction: column;
 }

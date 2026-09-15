@@ -133,9 +133,13 @@ function addXp(n) {
   if (!n) return;
   state.xp = (state.xp || 0) + n;
   state.level = state.level || 1;
+  
+  let leveledUp = false; // Helps us track if a level up actually happened this time
+
   while (state.xp >= xpNeed(state.level)) {
     state.xp -= xpNeed(state.level);
     state.level += 1;
+    leveledUp = true; // Flag that we grew a level!
     const u = applyLevelUnlock(state.level);
     levelQueue.push({
       level: state.level,
@@ -143,10 +147,27 @@ function addXp(n) {
       chest: state.level % 5 === 0,
     });
   }
+
+  // --- NEW: Update the Header Display instantly ---
+  const levelText = document.getElementById("levelText");
+  if (levelText) levelText.textContent = `Level ${state.level}`;
+
+  // --- NEW: Unlock the Auto Merge Button dynamically ---
+  if (leveledUp && state.level >= 5) {
+    const autoBtn = document.getElementById("autoMergeBtn");
+    if (autoBtn) {
+      autoBtn.textContent = "Auto Merge";
+      autoBtn.disabled = false; // Ensure it can be clicked
+      // Remove whatever locked class you used, and add your standard button styling
+      autoBtn.classList.remove("locked-btn"); 
+      autoBtn.classList.add("standard-btn"); 
+    }
+  }
+
   if (!levelShowing) showLevelEvent();
 }
 
-function showLevelEvent() {
+  function showLevelEvent() {
   const ev = levelQueue.shift();
   if (!ev) { levelShowing = false; return; }
   levelShowing = true;
@@ -652,15 +673,13 @@ function mergeInto(fromI, toI) {
     discover(next);
     let landed = toI;
     if (total > 0) {
-      cells[toI] = { level: a.level, count: total, shiny: a.shiny };
-      const free = emptyOpen();
-      if (free.length) {
-        landed = free[0];
-        cells[landed] = { level: next, count: produced, shiny: isShiny };
-      } else {
-        cells[toI] = { level: next, count: produced, shiny: isShiny };
-      }
+      // 1. Lock the newly upgraded Dragon directly under the player's mouse
+      cells[toI] = { level: next, count: produced, shiny: isShiny };
+      
+      // 2. Safely bounce the leftover un-merged eggs back to the tile they were dragged from!
+      cells[fromI] = { level: a.level, count: total, shiny: a.shiny };
     } else {
+      // Perfect 5-merge with no leftovers
       cells[toI] = { level: next, count: produced, shiny: isShiny };
     }
     if (state.mode === "stage") {
@@ -2335,4 +2354,53 @@ function updateCarouselDots() {
       dot.classList.toggle("active", i === scrollIndex);
     });
   };
+}
+
+// --- AUTO MERGE LOGIC ---
+function triggerAutoMerge() {
+  // 1. Safety Check: Ensure they are actually Level 5
+  if ((state.level || 1) < 5) {
+    toast("Auto Merge unlocks at Level 5!");
+    return;
+  }
+
+  let mergedSomething = false;
+  const cells = board();
+  let keepChecking = true;
+
+  // 2. The Sweeper: Loops over the board compressing everything it can
+  while (keepChecking) {
+    keepChecking = false;
+
+    for (let i = 0; i < cells.length; i++) {
+      if (!cells[i]) continue; // Skip empty tiles
+      
+      for (let j = i + 1; j < cells.length; j++) {
+        if (!cells[j]) continue; 
+
+        // If it finds two matching dragons or eggs, it smashes them together!
+        if (cells[i].level === cells[j].level) {
+          
+          // By calling your existing mergeInto function, it perfectly triggers
+          // all of your custom particle effects, coin payouts, and XP gains!
+          const success = mergeInto(i, j);
+          
+          if (success) {
+            mergedSomething = true;
+            keepChecking = true; // The board changed, so restart the scan to catch chain reactions!
+            break; // Break the inner loop
+          }
+        }
+      }
+      if (keepChecking) break; // Break the outer loop to restart the sweep
+    }
+  }
+
+  // 3. Finalize the Board
+  if (mergedSomething) {
+    save(); 
+    render();
+  } else {
+    toast("The nest is completely tidy.");
+  }
 }

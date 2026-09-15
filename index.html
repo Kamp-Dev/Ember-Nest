@@ -37,6 +37,11 @@
   <button id="bookBtn" class="icon-btn" title="Dragon Book">📖</button>
   <div class="stat-pill"><span class="coin-icon" aria-hidden="true">🪙</span> <span id="coinCount">0</span></div>
   <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
+  <!-- Add this near your coins/energy stats -->
+<div id="playerLevelDisplay" style="display: flex; align-items: center; gap: 5px; font-family: 'Playfair Display', serif; color: #f7d273; font-weight: bold;">
+  <span style="font-size: 1.2rem;">⭐</span>
+  <span id="levelText">Lvl. 1</span>
+</div>
 </div>
     </header>
 
@@ -66,9 +71,10 @@
           <!-- <--- NEW -->
           <div id="board"></div>
         <!-- Replace "your-image.jpg" with the name/path of your image file. -->
-        <div class="action-buttons">
+       <div class="action-buttons" style="display: flex; justify-content: space-between; gap: 8px; width: 100%; margin-top: 15px; box-sizing: border-box;">
           <button id="gather">Gather egg 🥚</button>
-          <button id="buyEgg">Buy egg</button>
+          <button id="buyEgg">Buy Egg</button>
+          <button id="autoMergeBtn" onclick="triggerAutoMerge()" class="locked-btn">Auto Merge (Lv. 5)</button>
         </div>
       </div>
 
