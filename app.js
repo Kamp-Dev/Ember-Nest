@@ -1049,16 +1049,14 @@ function enterStage() {
     state.mode = "home";
     resetTrail();
     toast("Returned to the nest");
-    // <--- NEW: Automatically switch back to the Trials view when leaving
+    
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.querySelector('[data-tab="view-trials"]')?.classList.add("active");
     document.getElementById("view-trials")?.classList.add("active");
-    // <--- NEW
-    // <--- NEW: Hide the button on the board when leaving
+    
     const exitBtn = document.getElementById("exitTrialBtn");
     if (exitBtn) exitBtn.style.display = "none";
-    // <--- NEW
     
   } else {
     state.mode = "stage";
@@ -1071,13 +1069,15 @@ function enterStage() {
     document.querySelector('[data-tab="view-board"]')?.classList.add("active");
     document.getElementById("view-board")?.classList.add("active");
     
-    // <--- NEW: Show the exit button on the board when entering
+    // --- FORCE LOCK EXPLICITLY ON STAGE ENTRY ---
+    document.documentElement.classList.add("lock-scroll");
+    document.body.classList.add("lock-scroll");
+    
     const exitBtn = document.getElementById("exitTrialBtn");
     if (exitBtn) {
       exitBtn.style.display = "block";
-      exitBtn.onclick = enterStage; // Clicking it runs this exact function to leave!
+      exitBtn.onclick = enterStage; 
     }
-    // <--- NEW
   }
   save(); 
   render();

@@ -1381,3 +1381,23 @@ html.lock-scroll, body.lock-scroll {
   max-height: 100vh;
   overflow: hidden;
 }
+/* --- Tighten spacing on mobile layout --- */
+#view-board {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 75px; /* Leaves room for the bottom nav bar */
+}
+
+/* Ensure the action buttons container is compact and visible */
+.action-buttons {
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
+  flex-shrink: 0;
+}
+
+/* Shrink the quest/sleepy card height slightly on mobile */
+.quest-card {
+  padding: 8px 12px !important;
+  min-height: unset !important;
+}
