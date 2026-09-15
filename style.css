@@ -175,15 +175,14 @@ body {
 #board {
   display: grid !important;
   box-sizing: border-box !important;
-  /* Option A: Fixed column sizing based on your max-width (e.g., 5 columns + 4 gaps of 10px = 420px max) */
-  grid-template-columns: repeat(5, minmax(70px, 1fr)) !important; 
+  grid-template-columns: repeat(5, minmax(78px, 1fr)) !important; 
   gap: 10px !important;
   width: 100% !important;
-  max-width: 420px !important;
+  max-width: 450px !important; 
   padding: 0 !important;
-  margin: 0 auto 30px auto !important;
-  justify-content: start !important; /* Prevents shifting when tracks recalculate */
-  align-content: start !important;
+  margin: 0 auto 30px auto !important; /* Centers the entire container on the screen */
+  justify-content: center !important; /* Centers the tiles perfectly inside the container */
+  align-content: center !important;
   touch-action: none;
 }
 
@@ -265,7 +264,7 @@ body {
   align-items: stretch;
   gap: 10px;
   width: 100%;
-  max-width: 420px; /* Matches your board width */
+  max-width: 450px !important; /* Increased to match the new 450px board */
   margin: 0 auto 15px auto;
   box-sizing: border-box;
 }
@@ -1367,17 +1366,20 @@ html.lock-scroll, body.lock-scroll {
   touch-action: auto !important;
 }
 
-/* 4. Mobile Viewport Fit (Screens Under 800px Height) */
+/* Mobile Viewport Fit (Screens Under 800px Height) */
 @media (max-height: 800px) {
   #board {
     margin-bottom: 8px !important;
     gap: 6px !important;
-    max-width: 350px !important;
+    /* Increased from 350px to 385px */
+    max-width: 385px !important; 
   }
 
   .cell {
     border-radius: 10px !important;
   }
+  
+  /* ... rest of your mobile media query stays the same ... */
 
   .action-buttons {
     margin-top: 0 !important;
@@ -1410,4 +1412,8 @@ html.lock-scroll, body.lock-scroll {
   .game-header h1 {
     font-size: 0.85rem !important;
   }
+}
+/* --- FORCE HIDE ELEMENTS (For Debugging or Conditional Display) --- */
+.force-hidden {
+  display: none !important;
 }

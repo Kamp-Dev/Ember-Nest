@@ -1651,29 +1651,37 @@ function render() {
   if (buy) {
     buy.innerHTML = "Buy egg • " + eggPrice() + ' <span class="spinning-coin">🪙</span>';
     
-    // Hides the button entirely during stage mode, shows normally at home
-    buy.style.display = (state.mode === "stage") ? "none" : "inline-flex";
-    buy.disabled = state.mode === "stage";
-    buy.style.opacity = state.mode === "stage" ? ".45" : "1";
+    if (state.mode === "stage") {
+      buy.style.setProperty("display", "none", "important"); // Forces through the CSS lock
+      buy.disabled = true;
+      buy.style.opacity = ".45";
+    } else {
+      buy.style.setProperty("display", "inline-flex", "important");
+      buy.disabled = false;
+      buy.style.opacity = "1";
+    }
   }
   
-  // --- Auto Merge Button Visibility (Make sure this is right nearby) ---
+  // --- Dynamic Auto Merge Button State Check ---
   autoBtn = document.getElementById("autoMergeBtn");
   if (autoBtn) {
-    // Hides the button entirely during stage mode
-    autoBtn.style.display = (state.mode === "stage") ? "none" : "inline-flex";
-    
-    if ((state.level || 1) >= 5) {
-      autoBtn.textContent = "Auto Merge";
-      autoBtn.disabled = false;
-      autoBtn.classList.remove("locked-btn");
-      autoBtn.style.opacity = "1";
-      autoBtn.style.cursor = "pointer";
-      autoBtn.style.pointerEvents = "auto";
+    if (state.mode === "stage") {
+      autoBtn.style.setProperty("display", "none", "important"); // Forces through the CSS lock
     } else {
-      autoBtn.textContent = "Auto Merge (Lv. 5)";
-      autoBtn.disabled = true;
-      autoBtn.classList.add("locked-btn");
+      autoBtn.style.setProperty("display", "inline-flex", "important");
+      
+      if ((state.level || 1) >= 5) {
+        autoBtn.textContent = "Auto Merge";
+        autoBtn.disabled = false;
+        autoBtn.classList.remove("locked-btn");
+        autoBtn.style.opacity = "1";
+        autoBtn.style.cursor = "pointer";
+        autoBtn.style.pointerEvents = "auto";
+      } else {
+        autoBtn.textContent = "Auto Merge (Lv. 5)";
+        autoBtn.disabled = true;
+        autoBtn.classList.add("locked-btn");
+      }
     }
   }
 
