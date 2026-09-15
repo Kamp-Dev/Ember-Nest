@@ -1657,11 +1657,18 @@ const mt = document.getElementById("mountain");
                 </div>`;
       }
       
-      // Occupied state (Shows the Dragon SVG)
+      // Occupied state (Bigger dragon, clean absolute-positioned label)
       if (p) {
         return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">
-                  ${dragonSvg(p.level, 26, 1, p.shiny)}
-                  <span>${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}</span>
+                  <!-- The Dragon: Sized up to 38px and shifted slightly up to center nicely -->
+                  <div style="transform: translateY(-5px); z-index: 1;">
+                    ${dragonSvg(p.level, 38, 1, p.shiny)}
+                  </div>
+                  
+                  <!-- The Label: A tiny, elegant glass pill at the bottom -->
+                  <div style="position: absolute; bottom: 4px; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.5px; background: rgba(10, 5, 3, 0.8); border: 1px solid ${p.shiny ? '#ffcf40' : 'rgba(222, 183, 129, 0.3)'}; color: ${p.shiny ? '#ffea75' : '#e0e1dd'}; padding: 2px 6px; border-radius: 6px; white-space: nowrap; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">
+                    ${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}
+                  </div>
                 </div>`;
       }
       
