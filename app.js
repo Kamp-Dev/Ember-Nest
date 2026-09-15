@@ -854,35 +854,96 @@ window.switchBookTab = (tabIndex) => {
   renderBook();
 };
 
+// --- DRAGON BOOK PAGINATION LOGIC ---
+let currentBookPage = 0; // Starts at Tier 0 (Egg)
+
+// Arrow Click Handlers (Using the "gather" sfx as a nice paper-flip sound!)
+document.getElementById("prevPageBtn")?.addEventListener("click", () => {
+  if (currentBookPage > 0) {
+    currentBookPage--;
+    renderBook();
+    sfx("gather"); 
+  }
+});
+
+document.getElementById("nextPageBtn")?.addEventListener("click", () => {
+  if (currentBookPage < CHAIN.length - 1) {
+    currentBookPage++;
+    renderBook();
+    sfx("gather"); 
+  }
+});
+
 function renderBook() {
-  const grid = document.getElementById("bookGrid");
-  if (!grid) return;
+  const spread = document.getElementById("bookSpread");
+  if (!spread) return;
   
-  if (currentBookTab === 0) {
-    state.book = state.book || { 0: true };
-    grid.innerHTML = CHAIN.map((spec, i) => {
-      const known = !!state.book[i];
-      return `<div class="card ${known ? "" : "locked"}">
-        <div>${known ? dragonSvg(i, 32) : "❓"}</div>
-        <div class="nm">${known ? spec.name : "Unknown"}</div>
-        <div class="bl">${known ? LORE[i] : "Not yet hatched."}</div>
-      </div>`;
-    }).join("");
+  state.book = state.book || { 0: true };
+  state.rareBook = state.rareBook || {};
+  
+  const isRare = currentBookTab === 1;
+  const known = isRare ? !!state.rareBook[currentBookPage] : !!state.book[currentBookPage];
+  const spec = CHAIN[currentBookPage];
+  
+  // 1. Update Arrow States (Disable if at start or end of the book)
+  const prevBtn = document.getElementById("prevPageBtn");
+  const nextBtn = document.getElementById("nextPageBtn");
+  if (prevBtn) prevBtn.disabled = currentBookPage === 0;
+  if (nextBtn) nextBtn.disabled = currentBookPage === CHAIN.length - 1;
+
+  // 2. Build the Two-Page Spread
+  let artHtml = "";
+  let textHtml = "";
+
+  if (known) {
+    artHtml = dragonSvg(currentBookPage, 75, 1, isRare); // Big dragon!
+    textHtml = `
+      <h3 style="color: #2b1d14; margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 1.1rem; border-bottom: 1px solid rgba(43,29,20,0.3); padding-bottom: 4px;">
+        ${isRare ? '✨ ' : ''}${spec.name}
+      </h3>
+      <p style="color: #4a2c17; font-size: 0.75rem; font-family: 'Montserrat', sans-serif; margin: 0; line-height: 1.4;">
+        ${isRare ? '<strong>Perch Bonus:</strong> 2.5x coin rate.<br><br>' : ''}${LORE[currentBookPage]}
+      </p>
+    `;
   } else {
-    state.rareBook = state.rareBook || {};
-    grid.innerHTML = CHAIN.map((spec, i) => {
-      const known = !!state.rareBook[i];
-      return `<div class="card shiny ${known ? "" : "locked"}">
-        <div>${known ? dragonSvg(i, 32, 1, true) : "✨ ❓"}</div>
-        <div class="nm" style="color:var(--gold);">${known ? "Shiny " + spec.name : "Unknown Shiny"}</div>
-        <div class="bl">${known ? "Perch bonus 2.5x income. " + LORE[i] : "Find a shiny variant."}</div>
-      </div>`;
-    }).join("");
+    // Locked Page Template
+    artHtml = `<div style="font-size: 3rem; opacity: 0.4; filter: grayscale(100%);">❓</div>`;
+    textHtml = `
+      <h3 style="color: #2b1d14; margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 1.1rem; border-bottom: 1px solid rgba(43,29,20,0.3); padding-bottom: 4px; opacity: 0.5;">
+        Unknown
+      </h3>
+      <p style="color: #4a2c17; font-size: 0.75rem; font-family: 'Montserrat', sans-serif; margin: 0; opacity: 0.6; font-style: italic;">
+        ${isRare ? 'Find a shiny variant in the mountain.' : 'Not yet hatched.'}
+      </p>
+    `;
   }
 
-  const n = document.getElementById("bookCount");
-  if (n) n.textContent = currentBookTab === 0 ? bookKnown() : rareBookKnown();
+  // 3. Inject into the DOM
+  spread.innerHTML = `
+    <div class="page-left">
+      ${artHtml}
+    </div>
+    <div class="page-right">
+      ${textHtml}
+    </div>
+  `;
+
+// 4. Update the tracker numbers for BOTH tabs simultaneously
+  const countMain = document.getElementById("countMain");
+  const countRare = document.getElementById("countRare");
+  
+  if (countMain) countMain.textContent = bookKnown();
+  if (countRare) countRare.textContent = rareBookKnown();
 }
+
+// Reset page to 0 when swapping between Main and Rare tabs
+window.switchBookTab = (tabIndex) => {
+  currentBookTab = tabIndex;
+  currentBookPage = 0; 
+  document.getElementById("tabMain").classList.toggle("active", tabIndex === 0);
+  document.getElementById("tabRare").classList.toggle("active", tabIndex === 1);
+  renderBook();
+};
 
 function canFiveMerge() {
   const tally = {};
@@ -1950,7 +2011,14 @@ document.getElementById("bookBtn")?.addEventListener("click", () => {
 
 document.getElementById("bookClose")?.addEventListener("click", () => {
   document.getElementById("book").classList.remove("open");
-  
+  switchBookTab(0); // Resets to Main tab and Page 0
+});
+
+document.getElementById("book")?.addEventListener("click", (e) => {
+  if (e.target.id === "book") {
+    document.getElementById("book").classList.remove("open");
+    switchBookTab(0); // Resets to Main tab and Page 0
+  }
 });
 
 document.getElementById("resetBookBtn")?.addEventListener("click", () => {

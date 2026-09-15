@@ -554,6 +554,52 @@ button:disabled {
   transform: scale(1.1);
 }
 
+/* --- FANTASY BOOK TABS (Main & Rare) --- */
+.tab-btn-sub {
+  background: linear-gradient(to bottom, #3a3f47, #1e2226); 
+  border: 2px solid #8e959c; 
+  color: #e0e1dd;
+  font-family: 'Playfair Display', serif; 
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 8px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tab-btn-sub:hover {
+  background: linear-gradient(to bottom, #4b515a, #2a2f35);
+  transform: translateY(-2px);
+}
+
+.tab-btn-sub.active {
+  background: linear-gradient(to bottom, #5a1e22, #300c0f); 
+  border-color: #d64550; 
+  color: #f7d273; 
+  box-shadow: 0 4px 10px rgba(214, 69, 80, 0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+}
+
+/* Reset Game Data Button */
+#resetBookGameBtn {
+  background: transparent;
+  border: none;
+  color: rgba(222, 183, 129, 0.5); /* Faded parchment color */
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: color 0.2s ease;
+}
+
+#resetBookGameBtn:hover {
+  color: #a12b2b; /* Flares red only when hovered */
+}
+
 /* --- 10. MODALS, TOASTS & OVERLAYS --- */
 .modal {
   display: none;
@@ -999,4 +1045,87 @@ html, body {
 .trial-content, .quest-details-container {
   height: auto !important;
   max-height: 260px !important;
+}
+
+/* --- CUSTOM DRAGON BOOK MODAL --- */
+.custom-book-bg {
+  /* Replace with your open book image file! */
+  background: url('book.png') no-repeat center center;
+  background-size: 100% 100%; 
+  
+  /* Overrides the default modal box styling to make the image the actual box */
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  
+  width: 95vw;
+  max-width: 500px;
+  height: 320px; /* Adjust this height depending on your image's aspect ratio */
+  position: relative;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-spread {
+  display: flex;
+  width: 80%; /* Limits content to stay inside the "pages" and off the book edges */
+  height: 65%;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Left Page (Art) and Right Page (Lore) */
+.page-left, .page-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px;
+}
+
+/* --- ARMORED ARROW CSS --- */
+.page-arrow {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 90px !important;  
+  height: 90px !important; 
+  background-color: rgba(255, 0, 0, 0) !important; /* Keeping it red just to prove they exist! */
+  border: none !important;
+  cursor: pointer !important;
+  z-index: 999 !important; /* Forces them above the book and modal */
+  display: block !important; /* Prevents flexbox from collapsing them */
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.page-arrow:active {
+  transform: translateY(-50%) scale(0.85) !important; 
+}
+
+.page-arrow:disabled { 
+  display: none !important;
+  opacity: 0.3 !important; 
+  cursor: not-allowed !important; 
+  pointer-events: none !important;
+}
+
+.left-arrow { 
+  left: -85px !important; 
+  background-image: url('right-arrow.png') !important; 
+}
+
+.right-arrow { 
+  right: -85px !important; 
+  background-image: url('left-arrow.png') !important; 
+}
+/* --- PREVENT ANIMATION CLIPPING --- */
+/* Allows breathing and floating animations to expand safely beyond the SVG boundaries */
+.book-spread svg, .cell svg, .perch svg, .item svg {
+  overflow: visible !important;
 }

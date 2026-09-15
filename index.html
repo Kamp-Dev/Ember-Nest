@@ -177,30 +177,32 @@
     </div>
   </div>
 
+  <!-- === THE DRAGON BOOK (Custom Image Spread) === -->
   <div id="book" class="modal">
-    <div class="modal-content book-content">
-      <div class="book-header">
-        <h2>Dragon Book</h2>
-        <button id="bookClose" class="close-btn">✕</button>
+    <!-- The container that holds your custom background image -->
+    <div class="modal-content custom-book-bg">
+      <button id="bookClose" class="close-btn" style="position: absolute; top: 10px; right: 15px; z-index: 10; color: #ea02ff; background: transparent; border: none; font-size: 1.5rem; font-weight: bold;">✕</button>
+
+      <!-- Page Navigation Arrows (Text removed) -->
+      <button id="prevPageBtn" class="page-arrow left-arrow"></button>
+      <button id="nextPageBtn" class="page-arrow right-arrow"></button>
+
+      <!-- The Inner Pages (Left: Art, Right: Text) -->
+      <div id="bookSpread" class="book-spread">
+        <!-- JS will inject the active dragon here -->
       </div>
-      <div class="book-tabs">
-        <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="bookCount">0</span>)</button>
-        <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare / Shiny</button>
-      </div>
-      <div id="bookGrid" class="book-grid"></div>
-      <div style="margin-top: 15px; text-align: center; border-top: 1px solid var(--border); padding-top: 12px;">
-        <button id="resetBookGameBtn" class="danger-btn">Reset All Game Data</button>
+
+      <!-- Book Tabs & Reset (Positioned just below the book) -->
+      <div class="book-controls" style="position: absolute; bottom: -120px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: center; gap: 10px;">
+          <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="countMain">0</span>)</button>
+          <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare (<span id="countRare">0</span>)</button>
+        </div>
+        <button id="resetBookGameBtn" style="background: transparent; border: none; color: #a12b2b; text-decoration: underline; font-size: 0.75rem; cursor: pointer;">Reset All Game Data</button>
       </div>
     </div>
   </div>
-  <!-- Sleepy Dragon Guide Modal -->
-  <div id="sleepyGuide" class="modal-overlay">
-    <div class="modal-content">
-      <h3>Sleepy Dragon Guide</h3>
-      <p>Wake the sleepy dragon by contributing a Young dragon when its streak is ready!</p>
-      <button onclick="document.getElementById('sleepyGuide').classList.remove('open')">Close</button>
-    </div>
-  </div>
+
   <!-- === WIPE CONFIRMATION MODAL (Required for Reset) === -->
   <div id="wipe" class="modal">
     <div class="modal-content">
