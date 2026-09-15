@@ -1055,13 +1055,11 @@ function enterStage() {
     resetTrail();
     toast("Returned to the nest");
     
+    // FIX: Send the player back to the Home Board instead of the Trials menu!
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    document.querySelector('[data-tab="view-trials"]')?.classList.add("active");
-    document.getElementById("view-trials")?.classList.add("active");
-    
-    const exitBtn = document.getElementById("exitTrialBtn");
-    if (exitBtn) exitBtn.style.display = "none";
+    document.querySelector('[data-tab="view-board"]')?.classList.add("active");
+    document.getElementById("view-board")?.classList.add("active");
     
   } else {
     state.mode = "stage";
@@ -1069,6 +1067,7 @@ function enterStage() {
     toast("Ash Trail • burn " + ASH_GOAL + " ash to finish");
     if (!state.seenGuide) showGuide();
     
+    // Go to BOARD tab to play
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.querySelector('[data-tab="view-board"]')?.classList.add("active");
@@ -1077,17 +1076,11 @@ function enterStage() {
     // --- FORCE LOCK EXPLICITLY ON STAGE ENTRY ---
     document.documentElement.classList.add("lock-scroll");
     document.body.classList.add("lock-scroll");
-    
-    const exitBtn = document.getElementById("exitTrialBtn");
-    if (exitBtn) {
-      exitBtn.style.display = "block";
-      exitBtn.onclick = enterStage; 
-    }
   }
+  
   save(); 
   render();
 }
-
 function highestOwned() {
   let high = 0;
   Object.keys(state.book || {}).forEach(k => {
@@ -1595,12 +1588,16 @@ function render() {
     perchRow.style.display = (state.mode === "stage") ? "none" : "";
   }
   
-  // Automatically hide or show the Buy Egg button based on the game mode
-  const buyEggBtn = document.getElementById("buyEgg");
-  if (buyEggBtn) {
-    buyEggBtn.style.display = (state.mode === "stage") ? "none" : "inline-flex";
+  // --- Bulletproof "Leave Trial" Button Toggle ---
+  const exitBtn = document.getElementById("exitTrialBtn");
+  if (exitBtn) {
+    if (state.mode === "stage") {
+      exitBtn.style.setProperty("display", "block", "important");
+      exitBtn.onclick = enterStage; // Bind the click directly
+    } else {
+      exitBtn.style.setProperty("display", "none", "important"); // Force hide everywhere else
+    }
   }
-
   // --- Dynamic Auto Merge Button State Check ---
   autoBtn = document.getElementById("autoMergeBtn");
   if (autoBtn) {
@@ -2434,24 +2431,47 @@ function triggerAutoMerge() {
     for (let i = 0; i < cells.length; i++) {
       if (!cells[i]) continue; // Skip empty tiles
       
+      let shinyMatchIdx = -1;
+      let standardMatchIdx = -1;
+
+      // Look ahead to find a matching partner
       for (let j = i + 1; j < cells.length; j++) {
         if (!cells[j]) continue; 
 
-        // If it finds two matching dragons or eggs, it smashes them together!
         if (cells[i].level === cells[j].level) {
-          
-          // By calling your existing mergeInto function, it perfectly triggers
-          // all of your custom particle effects, coin payouts, and XP gains!
-          const success = mergeInto(i, j);
-          
-          if (success) {
-            mergedSomething = true;
-            keepChecking = true; // The board changed, so restart the scan to catch chain reactions!
-            break; // Break the inner loop
+          // If we found a shiny match (or if 'i' is already shiny and this is a match), lock it!
+          if (cells[i].shiny || cells[j].shiny) {
+            shinyMatchIdx = j;
+            break; // Stop looking, we found the perfect shiny pair!
+          } else if (standardMatchIdx === -1) {
+            standardMatchIdx = j; // Keep track of the first standard match just in case
           }
         }
       }
-      if (keepChecking) break; // Break the outer loop to restart the sweep
+
+      // Prioritize the shiny match if we found one, otherwise fall back to standard
+      const mergeIdx = shinyMatchIdx !== -1 ? shinyMatchIdx : standardMatchIdx;
+
+      if (mergeIdx !== -1) {
+        let fromI = i;
+        let toI = mergeIdx;
+
+        // CRITICAL FIX: If the target (j) is shiny but (i) is normal, we swap the direction!
+        // This guarantees the shiny status survives even if they just stack (e.g., 2 + 2 = 4)
+        // instead of fully leveling up and triggering the normal shiny inherit logic.
+        if (cells[mergeIdx].shiny && !cells[i].shiny) {
+          fromI = mergeIdx;
+          toI = i;
+        }
+
+        const success = mergeInto(fromI, toI);
+        
+        if (success) {
+          mergedSomething = true;
+          keepChecking = true; // Restart the sweep to catch chain reactions!
+          break; // Break the outer for-loop
+        }
+      }
     }
   }
 
