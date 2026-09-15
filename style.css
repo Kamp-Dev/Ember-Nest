@@ -1408,3 +1408,29 @@ html.lock-scroll, body.lock-scroll {
   -webkit-overflow-scrolling: touch !important;
   touch-action: auto !important;
 }
+/* --- MOBILE VIEWPORT & BOARD FIT FIX --- */
+@media (max-height: 800px) {
+  /* Tighten the board's bottom margin so it leaves room for buttons */
+  #board {
+    margin-bottom: 12px !important;
+    gap: 6px !important; /* Slightly tighter gaps between tiles */
+    max-width: 360px !important; /* Scales the grid down slightly for smaller screens */
+  }
+
+  /* Compact the cells so they take up less vertical height */
+  .cell {
+    border-radius: 10px !important;
+  }
+
+  /* Make sure the action buttons stay compact and anchored */
+  .action-buttons {
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+    gap: 8px !important;
+  }
+  
+  #gather, #buyEgg, #autoMergeBtn {
+    height: 40px !important;
+    font-size: 0.75rem !important;
+  }
+}

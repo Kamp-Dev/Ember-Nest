@@ -1597,7 +1597,7 @@ function render() {
   }
 
   // --- Dynamic Auto Merge Button State Check ---
-  const autoBtn = document.getElementById("autoMergeBtn");
+  autoBtn = document.getElementById("autoMergeBtn");
   if (autoBtn) {
     if ((state.level || 1) >= 5) {
       autoBtn.textContent = "Auto Merge";
@@ -1641,12 +1641,37 @@ function render() {
 
   renderBook();
   
+// --- Buy Egg Button Visibility ---
   const buy = document.getElementById("buyEgg");
   if (buy) {
     buy.innerHTML = "Buy egg • " + eggPrice() + ' <span class="spinning-coin">🪙</span>';
+    
+    // Hides the button entirely during stage mode, shows normally at home
+    buy.style.display = (state.mode === "stage") ? "none" : "inline-flex";
     buy.disabled = state.mode === "stage";
     buy.style.opacity = state.mode === "stage" ? ".45" : "1";
   }
+  
+  // --- Auto Merge Button Visibility (Make sure this is right nearby) ---
+  autoBtn = document.getElementById("autoMergeBtn");
+  if (autoBtn) {
+    // Hides the button entirely during stage mode
+    autoBtn.style.display = (state.mode === "stage") ? "none" : "inline-flex";
+    
+    if ((state.level || 1) >= 5) {
+      autoBtn.textContent = "Auto Merge";
+      autoBtn.disabled = false;
+      autoBtn.classList.remove("locked-btn");
+      autoBtn.style.opacity = "1";
+      autoBtn.style.cursor = "pointer";
+      autoBtn.style.pointerEvents = "auto";
+    } else {
+      autoBtn.textContent = "Auto Merge (Lv. 5)";
+      autoBtn.disabled = true;
+      autoBtn.classList.add("locked-btn");
+    }
+  }
+
   renderQuest();
   
   setSafeText("tributeBtn", `Mountain Tribute: ${tributeCost()} 🪙 (+1 Bonus)`);
