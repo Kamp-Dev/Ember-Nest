@@ -1389,3 +1389,24 @@ html.lock-scroll, body.lock-scroll {
     font-size: 0.7rem !important;
   }
 }
+/* --- COMPACT MOBILE HEADER OVERFLOW FIX --- */
+@media (max-width: 480px) {
+  .game-header {
+    padding: 6px 6px !important;
+    gap: 4px !important;
+  }
+
+  .header-right {
+    gap: 3px !important;
+  }
+
+  /* Shave off a tiny bit of padding so all pills and buttons fit comfortably */
+  .stat-pill {
+    padding: 2px 5px !important;
+    font-size: 0.65rem !important;
+  }
+
+  .game-header h1 {
+    font-size: 0.85rem !important;
+  }
+}
