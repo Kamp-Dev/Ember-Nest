@@ -1129,3 +1129,47 @@ html, body {
 .book-spread svg, .cell svg, .perch svg, .item svg {
   overflow: visible !important;
 }
+/* --- MOBILE RESPONSIVE RULES FOR THE BOOK --- */
+@media (max-width: 600px) {
+  .custom-book-bg {
+    /* Shrink the book to 80% of the screen so the arrows have space to exist */
+    width: 80vw !important; 
+    /* Slightly reduce height to keep the book from looking stretched */
+    height: 280px !important; 
+  }
+
+  .page-arrow {
+    /* Scale the arrows down for smaller screens */
+    width: 55px !important;
+    height: 55px !important;
+  }
+
+  .left-arrow {
+    /* Pull the left arrow in closer */
+    left: -25px !important;
+  }
+
+  .right-arrow {
+    /* Pull the right arrow in closer */
+    right: -25px !important;
+  }
+
+  /* Shrink the lore text slightly so it doesn't overflow the smaller pages */
+  .page-right h3 {
+    font-size: 0.9rem !important;
+  }
+  .page-right p {
+    font-size: 0.65rem !important;
+  }
+}
+/* --- BOARD TILE STABILIZER --- */
+.cell {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  line-height: 0 !important; /* Kills the phantom text spacing */
+}
+
+.cell svg {
+  display: block !important; /* Forces the SVG to act like an image, not a letter */
+}

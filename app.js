@@ -1421,6 +1421,11 @@ function renderQuest() {
     box.style.display = "block";
     topBox.style.display = "block"; 
     
+    // --- NEW: Enable scrolling when 2 cards exist ---
+    if (box.parentElement) {
+      box.parentElement.style.overflowX = "auto";
+    }
+    
     const haveSleepy = findLevel(3) >= 0; 
     box.innerHTML = `
       <div style="display:flex; align-items:center; gap:12px; width:100%;">
@@ -1457,6 +1462,12 @@ function renderQuest() {
     topBox.innerHTML = "";
     
     box.innerHTML = normalQuestHTML;
+    
+    // --- NEW: Lock the scroll and snap back! ---
+    if (box.parentElement) {
+      box.parentElement.style.overflowX = "hidden"; // Disables scrolling entirely
+      box.parentElement.scrollLeft = 0;             // Snaps back to the start
+    }
     
     // Attach Click Handlers
     const btnNormal = document.getElementById("giveBtnNormal");
