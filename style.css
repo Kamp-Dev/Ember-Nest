@@ -709,7 +709,7 @@ button:disabled {
 }
 /* --- PARTICLE SPARK EFFECTS --- */
 .particle {
-  position: absolute;
+  position: fixed; /* Locked to the viewport, immune to zoom scaling */
   width: 6px;
   height: 6px;
   border-radius: 50%; /* Turns them into glowing round dots */
@@ -729,9 +729,10 @@ button:disabled {
     opacity: 0; 
   }
 }
+
 /* --- FLOATING TEXT PARTICLE --- */
 .floating-text {
-  position: absolute;
+  position: fixed; /* Locked to the viewport, immune to zoom scaling */
   transform: translate(-50%, -50%);
   color: var(--gold);
   font-weight: bold;
