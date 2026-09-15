@@ -29,45 +29,17 @@
     <!-- Top Stats Header -->
     <!-- --- UNIFIED GAME HEADER --- -->
 <header class="game-header">
-  <!-- Left Side: Identity -->
   <div class="header-left">
     <h1 id="title">Ember <span>Nest</span></h1>
-    <div id="nameLine" class="player-name">Keeper • tap to name</div>
+    <span id="nameLine" class="player-name">Keeper</span>
   </div>
-
-  <!-- Right Side: Stat Pills -->
+  
   <div class="header-right">
-    
-    <!-- Dragon Book (Clickable) -->
-    <!-- Note: If your JS uses a different ID to open the book (like id="openBook"), change it here! -->
-    <div class="stat-pill book-pill" id="bookBtn" onclick="toggleBook()"> 
-      <span class="stat-icon">📖</span>
-      <span>Book</span>
-    </div>
-
-    <!-- Sound Toggle (Clickable) -->
-  <!-- Sound Toggle -->
-    <div class="stat-pill sound-pill" id="muteBtn">🔊</div>
-
-    <!-- Coins -->
-    <div class="stat-pill coin-pill">
-      <span class="stat-icon">🪙</span>
-      <span id="coinCount">0</span>
-    </div>
-
-    <!-- Energy & Regen -->
-    <div class="stat-pill energy-pill">
-      <span class="stat-icon">⚡</span>
-      <span id="energyCount">5/5</span>
-      <span id="regen" class="regen-text"></span>
-    </div>
-
-    <!-- Level & XP -->
-    <div class="stat-pill level-pill">
-      <span class="stat-icon">⭐</span>
-      <span id="lvlChip">Lv 1</span>
-    </div>
-
+    <div class="stat-pill coin-pill"><span id="coinCount">0</span> 🪙</div>
+    <div class="stat-pill energy-pill">⚡<span id="energyCount">5/5</span></div>
+    <div class="stat-pill level-pill"><span id="lvlChip">Lv 1</span></div>
+    <button id="bookBtn" class="stat-pill book-pill" title="Dragon Book">📖</button>
+    <button id="muteBtn" class="stat-pill sound-pill" title="Toggle Sound">🔊</button>
   </div>
 </header>
 
