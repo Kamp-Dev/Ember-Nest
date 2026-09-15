@@ -1644,13 +1644,39 @@ const mt = document.getElementById("mountain");
 }
   if (pr || prNest) {
     state.perch = state.perch || [null, null, null];
+    
+    // 1. ADD YOUR PERCH IMAGES HERE (Map exactly to slots 0, 1, and 2)
+    const perchImages = ['perch-one.jpg', 'perch-two.jpg', 'perch-three.jpg'];
+
     const perchHTML = [0, 1, 2].map(i => {
       const open = perchOpen(i);
       const p = state.perch[i];
       const armed = perchArmed === i;
-      if (!open) return `<div class="perch lock" data-perch="${i}">locked</div>`;
-      if (p) return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">${dragonSvg(p.level, 26, 1, p.shiny)}<span>${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}</span></div>`;
-      return `<div class="perch ${armed ? "armed" : ""}" data-perch="${i}">empty perch</div>`;
+      
+      // Grabs the specific image for this perch
+      const uniqueImg = perchImages[i]; 
+
+      // Locked state: Shows a darkened version of the perch image
+      if (!open) {
+        return `<div class="perch lock" data-perch="${i}">
+                  <img src="${uniqueImg}" class="perch-icon" style="opacity: 0.3;" />
+                  <span>locked</span>
+                </div>`;
+      }
+      
+      // Occupied state: Replaces the perch image with the Dragon SVG
+      if (p) {
+        return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">
+                  ${dragonSvg(p.level, 26, 1, p.shiny)}
+                  <span>${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}</span>
+                </div>`;
+      }
+      
+      // Empty state: Shows the unique perch image
+      return `<div class="perch ${armed ? "armed" : ""}" data-perch="${i}">
+                <img src="${uniqueImg}" class="perch-icon" />
+                <span style="font-size: 0.6rem;">Empty Perch</span>
+              </div>`;
     }).join("");
 
     if (pr) pr.innerHTML = perchHTML;

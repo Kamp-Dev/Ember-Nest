@@ -331,6 +331,50 @@ body {
   border-color: #1a100a;
 }
 
+/* --- PERCH BACKGROUND IMAGES --- */
+
+/* 1. Force all perches to crop the images cleanly inside the rounded borders */
+.perch {
+  overflow: hidden;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* 2. Slot 1 (Empty & Occupied States) */
+.perch:nth-child(1) {
+  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('perch-one.png');
+}
+.perch.on:nth-child(1) {
+  /* Swaps the dark gradient for a glowing ember gradient, keeping the image! */
+  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('perch-one.png');
+}
+
+/* 3. Slot 2 (Empty & Occupied States) */
+.perch:nth-child(2) {
+  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('perch-two.png');
+}
+.perch.on:nth-child(2) {
+  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('perch-two.png');
+}
+
+/* 4. Slot 3 (Empty & Occupied States) */
+.perch:nth-child(3) {
+  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('perch-three.png');
+}
+.perch.on:nth-child(3) {
+  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('perch-three.png');
+}
+
+/* 5. Make sure the text pops against the backgrounds */
+.perch > span,
+.perch > svg,
+.perch > div {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
 /* --- 7. TRIALS & QUESTS VIEWS --- */
 #view-trials.active {
   display: flex;
