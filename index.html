@@ -27,23 +27,49 @@
 
   <div id="app">
     <!-- Top Stats Header -->
-    <header id="topBarStats">
-      
-      <div class="header-left">
-        <h1 id="title">Ember <span>Nest</span></h1>
-        <div id="nameLine" title="Tap to rename">Keeper</div>
-      </div>
-      <div class="header-right">
-  <button id="bookBtn" class="icon-btn" title="Dragon Book">📖</button>
-  <div class="stat-pill"><span class="coin-icon" aria-hidden="true">🪙</span> <span id="coinCount">0</span></div>
-  <div class="stat-pill">⚡ <span id="energyCount">5/5</span> <small id="regen"></small></div>
-  <!-- Add this near your coins/energy stats -->
-<div id="playerLevelDisplay" style="display: flex; align-items: center; gap: 5px; font-family: 'Playfair Display', serif; color: #f7d273; font-weight: bold;">
-  <span style="font-size: 1.2rem;">⭐</span>
-  <span id="levelText">Lvl. 1</span>
-</div>
-</div>
-    </header>
+    <!-- --- UNIFIED GAME HEADER --- -->
+<header class="game-header">
+  <!-- Left Side: Identity -->
+  <div class="header-left">
+    <h1 id="title">Ember <span>Nest</span></h1>
+    <div id="nameLine" class="player-name">Keeper • tap to name</div>
+  </div>
+
+  <!-- Right Side: Stat Pills -->
+  <div class="header-right">
+    
+    <!-- Dragon Book (Clickable) -->
+    <!-- Note: If your JS uses a different ID to open the book (like id="openBook"), change it here! -->
+    <div class="stat-pill book-pill" id="bookBtn" onclick="toggleBook()"> 
+      <span class="stat-icon">📖</span>
+      <span>Book</span>
+    </div>
+
+    <!-- Sound Toggle (Clickable) -->
+  <!-- Sound Toggle -->
+    <div class="stat-pill sound-pill" id="muteBtn">🔊</div>
+
+    <!-- Coins -->
+    <div class="stat-pill coin-pill">
+      <span class="stat-icon">🪙</span>
+      <span id="coinCount">0</span>
+    </div>
+
+    <!-- Energy & Regen -->
+    <div class="stat-pill energy-pill">
+      <span class="stat-icon">⚡</span>
+      <span id="energyCount">5/5</span>
+      <span id="regen" class="regen-text"></span>
+    </div>
+
+    <!-- Level & XP -->
+    <div class="stat-pill level-pill">
+      <span class="stat-icon">⭐</span>
+      <span id="lvlChip">Lv 1</span>
+    </div>
+
+  </div>
+</header>
 
     <!-- === SCROLLABLE VIEWS CONTAINER === -->
     <div class="view-container">

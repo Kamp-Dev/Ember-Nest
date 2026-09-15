@@ -82,7 +82,8 @@ function beep(freq, dur, type, vol) {
 }
 
 function sfx(kind) {
-  if (state.muted) return;
+  if (state.muted) return; // Your master mute switch is already built in!
+  
   if (kind === "merge") { beep(320, 0.07, "triangle", 0.05); setTimeout(() => beep(480, 0.1, "triangle", 0.06), 50); }
   else if (kind === "ash") beep(140, 0.16, "sawtooth", 0.03);
   else if (kind === "win") { beep(440, 0.12, "sine", 0.06); setTimeout(() => beep(660, 0.18, "sine", 0.06), 90); }
@@ -91,6 +92,7 @@ function sfx(kind) {
   else if (kind === "buy") { beep(500, 0.08, "sine", 0.05); setTimeout(() => beep(700, 0.12, "sine", 0.05), 70); }
   else if (kind === "room") { beep(360, 0.1, "triangle", 0.05); setTimeout(() => beep(540, 0.16, "triangle", 0.05), 80); }
   else if (kind === "shiny") { beep(600, 0.1, "sine", 0.08); setTimeout(() => beep(900, 0.2, "triangle", 0.1), 80); }
+  else if (kind === "click") { beep(800, 0.03, "square", 0.02); } // NEW: A short, snappy click for the Book!
 }
 
 function spawnParticles(x, y, count = 8, color = '#ffcf40') {
@@ -149,21 +151,6 @@ function addXp(n) {
   }
 
   // --- NEW: Update the Header Display instantly ---
-  const levelText = document.getElementById("levelText");
-  if (levelText) levelText.textContent = `Level ${state.level}`;
-
-  // --- NEW: Unlock the Auto Merge Button dynamically ---
-  if (leveledUp && state.level >= 5) {
-    const autoBtn = document.getElementById("autoMergeBtn");
-    if (autoBtn) {
-      autoBtn.textContent = "Auto Merge";
-      autoBtn.disabled = false; // Ensure it can be clicked
-      // Remove whatever locked class you used, and add your standard button styling
-      autoBtn.classList.remove("locked-btn"); 
-      autoBtn.classList.add("standard-btn"); 
-    }
-  }
-
   if (!levelShowing) showLevelEvent();
 }
 
@@ -1238,10 +1225,11 @@ function gather() {
   if (!spawn(0, 1)) return;
   state.energy -= 1;
   
+  // --- Bulletproof Gather Particles ---
   const gBtn = document.getElementById("gather");
   if (gBtn) {
     const rect = gBtn.getBoundingClientRect();
-    spawnParticles(rect.left + rect.width / 2, rect.top, 8, '#ff8033');
+    spawnParticles(rect.left + (rect.width / 2), rect.top + (rect.height / 2), 8, '#ff8033');
   }
 
   sfx("gather");
@@ -1595,17 +1583,37 @@ function render() {
   setSafeText("hint", state.mode === "stage" ? "Leave trail" : trailWaitLabel());
   setSafeText("muteBtn", state.muted ? "🔇" : "🔊");
   setSafeText("lvlChip", "Lv " + (state.level || 1) + " • " + (state.xp || 0) + "/" + xpNeed(state.level || 1));
-  // <--- NEW: Hide perchRow in trials, show it on the home board
+  
+  // Hide perchRow in trials, show it on the home board
   const perchRow = document.getElementById("perchRow");
   if (perchRow) {
     perchRow.style.display = (state.mode === "stage") ? "none" : "";
   }
-  // <--- NEW
+  
   // Automatically hide or show the Buy Egg button based on the game mode
-const buyEggBtn = document.getElementById("buyEgg");
-if (buyEggBtn) {
-  buyEggBtn.style.display = (state.mode === "stage") ? "none" : "inline-flex";
-}
+  const buyEggBtn = document.getElementById("buyEgg");
+  if (buyEggBtn) {
+    buyEggBtn.style.display = (state.mode === "stage") ? "none" : "inline-flex";
+  }
+
+  // --- Dynamic Auto Merge Button State Check ---
+  const autoBtn = document.getElementById("autoMergeBtn");
+  if (autoBtn) {
+    if ((state.level || 1) >= 5) {
+      autoBtn.textContent = "Auto Merge";
+      autoBtn.disabled = false;
+      autoBtn.classList.remove("locked-btn");
+      autoBtn.style.opacity = "1";
+      autoBtn.style.cursor = "pointer";
+      autoBtn.style.pointerEvents = "auto";
+    } else {
+      autoBtn.textContent = "Auto Merge (Lv. 5)";
+      autoBtn.disabled = true;
+      autoBtn.classList.add("locked-btn");
+    }
+  }
+
+  // ... rest of your render function code ...
   // 1. Update the New App UI Header Stats
   setSafeText("coinCount", state.coins);
   setSafeText("energyCount", state.energy + "/" + (state.maxEnergy || MAX_ENERGY));
@@ -2035,6 +2043,7 @@ document.getElementById("muteBtn")?.addEventListener("click", () => {
 });
 
 document.getElementById("bookBtn")?.addEventListener("click", () => {
+  sfx("click"); // Play click sound when opening the Dragon Book
   renderBook();
   document.getElementById("book")?.classList.add("open");
 });
