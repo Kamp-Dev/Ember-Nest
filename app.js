@@ -764,7 +764,12 @@ function generateTrail() {
   state._flash = [];
 
   let bagIndex = 0;
-  for (let i = 0; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
+  
+  // --- GUARANTEED EXTRA STARTING EGG ---
+  // Drops an extra Level 0 egg into the very first cell to prevent early-game stalls
+  state.stageCells[0] = { level: 0, count: 1, shiny: false };
+
+  for (let i = 1; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
     if (i % 7 !== 0) { 
       const isShiny = Math.random() < 0.05;
       state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1, shiny: isShiny };
