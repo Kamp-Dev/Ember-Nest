@@ -165,16 +165,17 @@
       <p id="chestSub"></p>
       <button id="chestBox" class="chest-box">🎁</button>
       <div id="chestLoot"></div>
-      <button id="chestOk">Continue</button>
+      <button id="chestOk" onclick="document.getElementById('chest').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Continue</button>
     </div>
   </div>
   <!-- === LOOT REVEAL MODAL (Appears after Chest Opens) === -->
+  <!-- === LOOT REVEAL MODAL === -->
   <div id="lootModal" class="modal">
     <div class="modal-content">
       <h2 style="color: #ffea75;">Mountain Bounty</h2>
-      <div id="chestLoot"></div>
+      <div id="rewardList"></div> <!-- <--- CHANGE THIS ID -->
       <div class="modal-buttons">
-        <button id="lootOk">Take to Nest</button>
+        <button id="lootOk" onclick="document.getElementById('lootModal').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Take to Nest</button>
       </div>
     </div>
   </div>

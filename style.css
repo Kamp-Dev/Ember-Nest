@@ -635,7 +635,7 @@ button:disabled {
   height: 6px;
   border-radius: 50%; /* Turns them into glowing round dots */
   pointer-events: none;
-  z-index: 1000;
+  z-index: 3000;
   box-shadow: 0 0 8px currentColor;
   animation: particle-fly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
@@ -1441,22 +1441,27 @@ html.lock-scroll, body.lock-scroll {
 }
 
 /* Keep the Level Up Gift Box huge and transparent! */
-/* Update the chest box to use images instead of text emoji */
+/* The Bulletproof Chest Box */
 .chest-box {
-  width: 120px; 
-  height: 120px;
+  /* display: block !important;  <-- DELETED so JS can hide it! */
+  width: 260px !important;         
+  height: 260px !important;        
+  min-height: 260px !important;    
   margin: 10px auto !important;
-  background-size: contain !important;
+  
+  background-size: contain !important; 
   background-position: center !important;
   background-repeat: no-repeat !important;
+  
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
   cursor: pointer;
-  color: transparent !important; /* Hides the emoji text permanently */
+  color: transparent !important; 
 }
+
 .chest-box:hover:not(:disabled) {
-  transform: scale(1.1) !important;
+  transform: scale(1.05) !important; 
 }
 
 /* Toast Notifications */
@@ -1487,6 +1492,12 @@ html.lock-scroll, body.lock-scroll {
    LEVEL UP MODAL: ANIMATED GLOWING BORDER
    ========================================================================== */
 /* 1. Prep the container and remove the static border */
+/* Prevents the glowing background plates from eating your button clicks! */
+#chest .modal-content::before,
+#chest .modal-content::after {
+  pointer-events: none !important;
+}
+
 #chest .modal-content {
   border: none !important; /* Removes the gold border so the light can shine */
   padding: 26px !important; /* Adds a bit of padding to compensate */

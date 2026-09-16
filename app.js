@@ -169,7 +169,7 @@ function showLevelEvent() {
   if (s) s.textContent = ev.unlock || "The ember burns brighter.";
   
   // Clean out the old text loot container just in case
-  const loot = document.getElementById("chestLoot");
+  const loot = document.getElementById("rewardList");
   if (loot) loot.innerHTML = "";
   
   if (box) {
@@ -194,51 +194,62 @@ function showLevelEvent() {
 // --- 2. FIREWORKS & THE REVEAL ---
 function revealChest() {
   const box = document.getElementById("chestBox");
-  const lv = box && box.dataset.level ? +box.dataset.level : 0;
-  if (!lv) return;
+  const lv = box && box.dataset.level ? +box.dataset.level : 1;
   
-  // 1. Swap image to the OPEN chest
+  // 1. Swap image to OPEN chest
   if (box) {
      box.style.backgroundImage = "url('chest-open.png')";
      box.disabled = true;
   }
   
-  // 2. Fireworks Burst! (Fires multiple waves of particles)
-  const rect = box.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
+  // 2. Safe Visuals & Audio (Will not crash if functions are missing)
+  try {
+    const rect = box.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    
+    if (typeof spawnParticles === "function") {
+      spawnParticles(cx, cy, 20, '#ffea75'); 
+      setTimeout(() => spawnParticles(cx, cy, 25, '#ffcf40'), 150);
+      setTimeout(() => spawnParticles(cx, cy, 15, '#d45817'), 300);
+    }
+    if (typeof sfx === "function") sfx("win");
+  } catch (err) { console.log("Visuals skipped safely"); }
   
-  spawnParticles(cx, cy, 20, '#ffea75'); // Initial bright flash
-  setTimeout(() => spawnParticles(cx, cy, 25, '#ffcf40'), 150); // Gold follow-up
-  setTimeout(() => spawnParticles(cx, cy, 15, '#d45817'), 300); // Ember finish
-  sfx("win");
-  
-  // 3. Calculate Loot Behind the Scenes
+  // 3. Loot Math
   const tier = Math.max(1, Math.floor(lv / 5));
   const coins = 3000 * tier;
   const eggs = Math.min(8, 2 + tier * 2);
-  state.coins += coins;
   
+  if (typeof state !== "undefined") state.coins = (state.coins || 0) + coins;
   const lines = ["🪙 " + coins + " ember coins", eggs + " eggs ➔ nest"];
-  for (let i = 0; i < eggs; i++) spawn(0, 1);
-  if (tier >= 2) { spawn(1, 1); spawn(1, 1); lines.push("2 hatchlings ➔ nest"); }
-  if (tier >= 3) { spawn(2, 1); lines.push("1 wyrmling ➔ nest"); }
-  if (tier >= 5) { spawn(3, 1); lines.push("1 Young ➔ nest"); }
   
-  // 4. Wait a beat, then transition to the Second Modal
+  // 4. Safe Spawning (This is what likely crashed it!)
+  try {
+    if (typeof spawn === "function") {
+      for (let i = 0; i < eggs; i++) spawn(0, 1);
+      if (tier >= 2) { spawn(1, 1); spawn(1, 1); lines.push("2 hatchlings ➔ nest"); }
+      if (tier >= 3) { spawn(2, 1); lines.push("1 wyrmling ➔ nest"); }
+      if (tier >= 5) { spawn(3, 1); lines.push("1 Young ➔ nest"); }
+    }
+  } catch (err) { console.log("Spawning skipped safely"); }
+  
+  // 5. Trigger the Second Modal (This is guaranteed to run now!)
   setTimeout(() => {
     document.getElementById("chest").classList.remove("open");
     
-    const loot = document.getElementById("chestLoot");
+    const loot = document.getElementById("rewardList");
     if (loot) {
-      // Style the loot text neatly
       loot.innerHTML = lines.map(x => "<div style='padding:8px 0; font-size:0.95rem; border-bottom: 1px solid rgba(222, 183, 129, 0.2);'>" + x + "</div>").join("");
     }
     
     document.getElementById("lootModal")?.classList.add("open");
-  }, 900); // Waits almost a full second so the player can admire the fireworks
+  }, 900);
   
-  save(); render();
+  try {
+    if (typeof save === "function") save(); 
+    if (typeof render === "function") render();
+  } catch (err) {}
 }
 
 function applyLevelUnlock(lv) {
@@ -2051,17 +2062,17 @@ document.getElementById("dragonBank")?.addEventListener("click", () => {
   }
 });
 
-// Closes the level up modal IF there was no chest to open
+// --- 1. Closes the level up modal IF there was no chest to open ---
 document.getElementById("chestOk")?.addEventListener("click", () => {
   document.getElementById("chest").classList.remove("open");
   levelShowing = false;
-  showLevelEvent();
+  showLevelEvent(); // If you tapped the cheat button 5 times, this pulls up the next one!
 });
 
-// Triggers the fireworks and open animation
+// --- 2. Triggers the fireworks and open animation ---
 document.getElementById("chestBox")?.addEventListener("click", revealChest);
 
-// Closes the new second loot screen (This is the brand new one!)
+// --- 3. Closes the second loot screen ---
 document.getElementById("lootOk")?.addEventListener("click", () => {
   document.getElementById("lootModal").classList.remove("open");
   levelShowing = false;
