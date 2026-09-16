@@ -154,51 +154,90 @@ function addXp(n) {
   if (!levelShowing) showLevelEvent();
 }
 
-  function showLevelEvent() {
+  // --- 1. SET UP THE FIRST MODAL ---
+function showLevelEvent() {
   const ev = levelQueue.shift();
   if (!ev) { levelShowing = false; return; }
   levelShowing = true;
+  
   const t = document.getElementById("chestTitle");
   const s = document.getElementById("chestSub");
   const box = document.getElementById("chestBox");
-  const loot = document.getElementById("chestLoot");
-  const ok = document.getElementById("chestOk");
+  const okBtn = document.getElementById("chestOk");
+  
   if (t) t.textContent = "Level " + ev.level;
-  if (s) s.textContent = ev.unlock || "You climbed the mountain.";
-  if (loot) { loot.style.display = "none"; loot.innerHTML = ""; }
+  if (s) s.textContent = ev.unlock || "The ember burns brighter.";
+  
+  // Clean out the old text loot container just in case
+  const loot = document.getElementById("chestLoot");
+  if (loot) loot.innerHTML = "";
+  
   if (box) {
     box.style.display = ev.chest ? "block" : "none";
-    box.textContent = "🎁";
+    
+    // Set the CLOSED chest image
+    box.style.backgroundImage = "url('chest-closed.png')"; 
     box.dataset.level = ev.chest ? String(ev.level) : "";
     box.disabled = false;
   }
-  if (ok) ok.textContent = "Continue";
+  
+  if (okBtn) {
+    // If there is a chest, hide the continue button so they HAVE to click the chest!
+    okBtn.style.display = ev.chest ? "none" : "block";
+    okBtn.textContent = "Continue";
+  }
+  
   document.getElementById("chest")?.classList.add("open");
   sfx("room");
 }
 
+// --- 2. FIREWORKS & THE REVEAL ---
 function revealChest() {
   const box = document.getElementById("chestBox");
   const lv = box && box.dataset.level ? +box.dataset.level : 0;
   if (!lv) return;
+  
+  // 1. Swap image to the OPEN chest
+  if (box) {
+     box.style.backgroundImage = "url('chest-open.png')";
+     box.disabled = true;
+  }
+  
+  // 2. Fireworks Burst! (Fires multiple waves of particles)
+  const rect = box.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  
+  spawnParticles(cx, cy, 20, '#ffea75'); // Initial bright flash
+  setTimeout(() => spawnParticles(cx, cy, 25, '#ffcf40'), 150); // Gold follow-up
+  setTimeout(() => spawnParticles(cx, cy, 15, '#d45817'), 300); // Ember finish
+  sfx("win");
+  
+  // 3. Calculate Loot Behind the Scenes
   const tier = Math.max(1, Math.floor(lv / 5));
   const coins = 3000 * tier;
   const eggs = Math.min(8, 2 + tier * 2);
   state.coins += coins;
+  
   const lines = ["🪙 " + coins + " ember coins", eggs + " eggs ➔ nest"];
   for (let i = 0; i < eggs; i++) spawn(0, 1);
   if (tier >= 2) { spawn(1, 1); spawn(1, 1); lines.push("2 hatchlings ➔ nest"); }
   if (tier >= 3) { spawn(2, 1); lines.push("1 wyrmling ➔ nest"); }
   if (tier >= 5) { spawn(3, 1); lines.push("1 Young ➔ nest"); }
-  const loot = document.getElementById("chestLoot");
-  if (loot) {
-    loot.style.display = "block";
-    loot.innerHTML = lines.map(x => "<div style='padding:5px 0'>" + x + "</div>").join("");
-  }
-  if (box) { box.textContent = "✨"; box.disabled = true; }
-  const ok = document.getElementById("chestOk");
-  if (ok) ok.textContent = "Take";
-  sfx("win");
+  
+  // 4. Wait a beat, then transition to the Second Modal
+  setTimeout(() => {
+    document.getElementById("chest").classList.remove("open");
+    
+    const loot = document.getElementById("chestLoot");
+    if (loot) {
+      // Style the loot text neatly
+      loot.innerHTML = lines.map(x => "<div style='padding:8px 0; font-size:0.95rem; border-bottom: 1px solid rgba(222, 183, 129, 0.2);'>" + x + "</div>").join("");
+    }
+    
+    document.getElementById("lootModal")?.classList.add("open");
+  }, 900); // Waits almost a full second so the player can admire the fireworks
+  
   save(); render();
 }
 
@@ -208,7 +247,7 @@ function applyLevelUnlock(lv) {
   if (lv === 4) { openFogFree(3); return "3 land opened"; }
   if (lv === 6) { state.maxEnergy = Math.max(state.maxEnergy || 5, 6); return "max energy 6"; }
   if (lv === 8) { state.pouchBonus = (state.pouchBonus || 0) + 3; return "trail pouch +3"; }
-  return "climbed the mountain";
+  return "Your legacy ascends.";
 }
 
 function completeHearthGoal() {
@@ -2011,16 +2050,23 @@ document.getElementById("dragonBank")?.addEventListener("click", () => {
     toast("The perches are still gathering coins...");
   }
 });
-document.getElementById("buyEgg")?.addEventListener("click", buyEgg);
+
+// Closes the level up modal IF there was no chest to open
 document.getElementById("chestOk")?.addEventListener("click", () => {
-  const box = document.getElementById("chestBox");
-  const needsOpen = box && box.style.display !== "none" && !box.disabled;
-  if (needsOpen) { toast("Tap the chest to open it"); return; }
   document.getElementById("chest").classList.remove("open");
   levelShowing = false;
   showLevelEvent();
 });
+
+// Triggers the fireworks and open animation
 document.getElementById("chestBox")?.addEventListener("click", revealChest);
+
+// Closes the new second loot screen (This is the brand new one!)
+document.getElementById("lootOk")?.addEventListener("click", () => {
+  document.getElementById("lootModal").classList.remove("open");
+  levelShowing = false;
+  showLevelEvent(); 
+});
 
 document.getElementById("hint")?.addEventListener("click", enterStage);
 
@@ -2483,3 +2529,8 @@ function triggerAutoMerge() {
     toast("The nest is completely tidy.");
   }
 }
+// --- DEV CHEAT: Tap the Level Pill to instantly Level Up! ---
+document.querySelector(".level-pill")?.addEventListener("click", () => {
+  // Gives you exactly the amount of XP needed to hit the next level
+  addXp(xpNeed(state.level || 1)); 
+});

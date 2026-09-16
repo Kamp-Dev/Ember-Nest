@@ -168,6 +168,16 @@
       <button id="chestOk">Continue</button>
     </div>
   </div>
+  <!-- === LOOT REVEAL MODAL (Appears after Chest Opens) === -->
+  <div id="lootModal" class="modal">
+    <div class="modal-content">
+      <h2 style="color: #ffea75;">Mountain Bounty</h2>
+      <div id="chestLoot"></div>
+      <div class="modal-buttons">
+        <button id="lootOk">Take to Nest</button>
+      </div>
+    </div>
+  </div>
 
   <div id="nameBox" class="modal">
     <div class="modal-content">
@@ -228,6 +238,25 @@
       <div class="modal-buttons">
         <button id="winHome">Return to Nest</button>
         <button id="winAgain">Run Again</button>
+      </div>
+    </div>
+  </div>
+
+<!-- === SLEEPY DRAGON INFO MODAL === -->
+  <div id="sleepyGuide" class="modal">
+    <div class="modal-content">
+      <h2 style="color: #a9d6e5; margin-bottom: 5px;">Sleepy Dragon</h2>
+      <p style="font-size: 0.85rem; color: #e0e1dd; line-height: 1.5; margin-bottom: 15px;">
+        The Sleepy Dragon is a special daily visitor that needs a <b>Young</b> dragon to continue its slumber.
+        <br><br>
+        Fulfilling this quest grants:<br>
+        <b style="color: #ffcf40;">+3000 🪙</b><br>
+        <b style="color: #778da9;">+10 Energy & +5 Trail Pouch</b>
+        <br><br>
+        <span style="color: #d45817; font-weight: bold;">Keep the streak alive! Every 7 days you fulfill this quest, your Max Energy permanently increases by +1!</span>
+      </p>
+      <div class="modal-buttons">
+        <button id="sleepyGuideClose" style="width: 100%;">Understood</button>
       </div>
     </div>
   </div>

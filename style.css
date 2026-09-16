@@ -600,85 +600,6 @@ button:disabled {
   color: #a12b2b; /* Flares red only when hovered */
 }
 
-/* --- 10. MODALS, TOASTS & OVERLAYS --- */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal.open {
-  display: flex;
-}
-
-.modal-content {
-  background: var(--panel);
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  padding: 25px;
-  width: 90%;
-  max-width: 320px;
-  text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.modal-content h2 {
-  color: var(--gold);
-  font-size: 1.3rem;
-  font-family: 'Playfair Display', serif;
-}
-
-.modal-content input {
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 1rem;
-  width: 100%;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-#toast {
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: rgba(30, 21, 17, 0.95);
-  border: 1px solid var(--ember);
-  color: var(--text-main);
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  pointer-events: none;
-  opacity: 0;
-  transition: all 0.3s ease;
-  z-index: 2000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  white-space: nowrap;
-}
-
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
 /* --- 11. ANIMATIONS --- */
 @keyframes breathe {
   0%, 100% { transform: scale(1); }
@@ -925,33 +846,6 @@ button:disabled {
   display: flex !important;
 }
 
-/* Modal styling matching your game theme */
-.modal-content {
-  background: #1b263b;
-  border: 1px solid #778da9;
-  border-radius: 8px;
-  padding: 20px;
-  width: 80%;
-  max-width: 300px;
-  color: #e0e1dd;
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-}
-
-.modal-content h3 {
-  margin-top: 0;
-  color: #a9d6e5;
-}
-
-.modal-content button {
-  margin-top: 15px;
-  background: #415a77;
-  border: 1px solid #778da9;
-  color: #e0e1dd;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-}
 /* Target your main game wrapper class or ID */
 .game-wrapper, #app, body {
   width: 100%;
@@ -1416,4 +1310,237 @@ html.lock-scroll, body.lock-scroll {
 /* --- FORCE HIDE ELEMENTS (For Debugging or Conditional Display) --- */
 .force-hidden {
   display: none !important;
+}
+/* ==========================================================================
+   10. FANTASY TOME MODALS & TOASTS
+   ========================================================================== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(4, 5, 8, 0.85); /* Deep dark overlay */
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Ensures it sits above EVERYTHING */
+}
+
+.modal.open {
+  display: flex !important;
+}
+
+/* The "Leather Book Cover" Box (Shielding the Dragon Book!) */
+.modal-content:not(.custom-book-bg) {
+  background: 
+    radial-gradient(circle at top, rgba(43, 29, 20, 0.95), rgba(20, 11, 6, 0.98)),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  border: 2px solid #deb781;
+  border-top: 2px solid #ffcf40;
+  border-bottom: 4px solid #8a5a30;
+  border-radius: 12px;
+  padding: 24px;
+  width: 85%;
+  max-width: 320px;
+  color: #f8ece4;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+}
+
+/* Modal Headers */
+.modal-content:not(.custom-book-bg) h2, 
+.modal-content:not(.custom-book-bg) h3 {
+  font-family: 'Playfair Display', serif;
+  color: #ffcf40;
+  font-size: 1.4rem;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+  border-bottom: 1px solid rgba(222, 183, 129, 0.3);
+  padding-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* Standard Text inside Modals */
+.modal-content:not(.custom-book-bg) p {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem !important;
+  line-height: 1.5;
+  color: #e0e1dd;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Input Fields (Name, Wipe) */
+.modal-content:not(.custom-book-bg) input {
+  background: rgba(10, 5, 3, 0.8) !important;
+  border: 1px solid #deb781 !important;
+  color: #ffea75 !important;
+  padding: 12px !important;
+  border-radius: 6px !important;
+  text-align: center;
+  font-size: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.8) !important;
+}
+
+.modal-content:not(.custom-book-bg) input:focus {
+  outline: none;
+  border-color: #ffcf40 !important;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 0 8px rgba(255, 207, 64, 0.4) !important;
+}
+
+/* Modal Buttons Container */
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 5px;
+}
+
+/* Fantasy Buttons for Modals */
+.modal-content:not(.custom-book-bg) button {
+  flex: 1;
+  background: linear-gradient(135deg, #a35a28, #4a1f10);
+  border: 1px solid #deb781;
+  color: #f8ece4;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.modal-content:not(.custom-book-bg) button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c45c24, #7a341d);
+  border-color: #ffcf40;
+  color: #ffcf40;
+  transform: translateY(-2px);
+}
+
+.modal-content:not(.custom-book-bg) button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.modal-content:not(.custom-book-bg) button:disabled {
+  background: #1a120e;
+  border-color: #3d2618;
+  color: #8a6b52;
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Keep the Level Up Gift Box huge and transparent! */
+/* Update the chest box to use images instead of text emoji */
+.chest-box {
+  width: 120px; 
+  height: 120px;
+  margin: 10px auto !important;
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  color: transparent !important; /* Hides the emoji text permanently */
+}
+.chest-box:hover:not(:disabled) {
+  transform: scale(1.1) !important;
+}
+
+/* Toast Notifications */
+#toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(30, 21, 17, 0.95);
+  border: 1px solid var(--ember);
+  color: var(--text-main);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+/* ==========================================================================
+   LEVEL UP MODAL: ANIMATED GLOWING BORDER
+   ========================================================================== */
+/* 1. Prep the container and remove the static border */
+#chest .modal-content {
+  border: none !important; /* Removes the gold border so the light can shine */
+  padding: 26px !important; /* Adds a bit of padding to compensate */
+  overflow: hidden; /* Clips the spinning beam to the rounded corners */
+  background: #090504; /* Dark fallback behind the beam */
+}
+
+/* 2. The continuous spinning magical border */
+#chest .modal-content::before {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  
+  /* A full 360-degree loop of glowing ember and gold */
+  background: conic-gradient(
+    from 0deg,
+    #ffcf40 0%,
+    #d45817 25%,
+    #ffea75 50%,
+    #d45817 75%,
+    #ffcf40 100%
+  );
+  
+  /* Slightly slowed down from 2.5s to 3s for a smoother, pulsing glow */
+  animation: spin-light 3s linear infinite; 
+  z-index: 0;
+}
+
+/* 3. The solid inner plate to hide the center of the beam */
+#chest .modal-content::after {
+  content: "";
+  position: absolute;
+  inset: 3px; /* Leaves a 3px glowing gap for the border */
+  border-radius: 10px; /* Curves slightly tighter to match the outer radius */
+  
+  /* Solidified leather background to block the light from shining through the middle */
+  background: 
+    radial-gradient(circle at top, #2b1d14, #140b06),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  
+  /* Restores the inner drop shadow */
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  z-index: 1;
+}
+
+/* 4. Pop the text and buttons above the new inner plate */
+#chest .modal-content > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* 5. The spinning animation engine */
+@keyframes spin-light {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
