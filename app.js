@@ -1962,57 +1962,66 @@ boardEl?.addEventListener("pointermove", (e) => {
 });
 
 function endDrag(e) {
-  if (!drag) return;
-  const from = drag.from;
-  if (ghost) ghost.remove();
-  ghost = null;
-  document.querySelectorAll(".cell.valid").forEach(c => c.classList.remove("valid"));
-  document.querySelectorAll(".perch.valid").forEach(c => c.classList.remove("valid"));
-  
-  const el = document.elementFromPoint(e.clientX, e.clientY);
-  const cellEl = el ? el.closest(".cell") : null;
-  const perchEl = el ? el.closest("[data-perch]") : null;
+    if (!drag) return;
+    const from = drag.from;
+    if (ghost) ghost.remove();
+    ghost = null;
+    document.querySelectorAll(".cell.valid").forEach(c => c.classList.remove("valid"));
+    document.querySelectorAll(".perch.valid").forEach(c => c.classList.remove("valid"));
+    
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cellEl = el ? el.closest(".cell") : null;
+    const perchEl = el ? el.closest("[data-perch]") : null;
 
-  const cells = board();
+    const cells = board();
 
-  if (perchEl && state.mode !== "stage") {
-    const slot = +perchEl.dataset.perch;
-    if (perchOpen(slot) && cells[from]) {
-      const draggedItem = cells[from];
-      const existingPerch = state.perch[slot];
-      // Calculate income and spawn floating pop-up
-      const curve = [5, 15, 30, 60, 120, 240];
-      const incomeValue = Math.floor((curve[draggedItem.level] || 5) * (draggedItem.shiny ? 2.5 : 1));
-      const rect = perchEl.getBoundingClientRect();
-      spawnFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${incomeValue}`);
-      
-      if (draggedItem.count > 1) {
-        if (existingPerch) {
-           toast("Perch must be empty to split stack.");
-        } else {
-           state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
-           draggedItem.count -= 1;
-           sfx("buy");
+    if (perchEl && state.mode !== "stage") {
+        const slot = +perchEl.dataset.perch;
+        if (perchOpen(slot) && cells[from]) {
+            const draggedItem = cells[from];
+            const existingPerch = state.perch[slot];
+            const curve = [5, 15, 30, 60, 120, 240];
+            const incomeValue = Math.floor((curve[draggedItem.level] || 5) * (draggedItem.shiny ? 2.5 : 1));
+            const rect = perchEl.getBoundingClientRect();
+            spawnFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${incomeValue}`);
+            
+            if (draggedItem.count > 1) {
+                if (existingPerch) {
+                   toast("Perch must be empty to split stack.");
+                } else {
+                   state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+                   draggedItem.count -= 1;
+                   sfx("buy");
+                }
+            } else {
+                state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+                cells[from] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny } : null;
+                sfx("buy");
+            }
         }
-      } else {
-        state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
-        cells[from] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny } : null;
-        sfx("buy");
-      }
+    } else if (cellEl) {
+        const over = +cellEl.dataset.i;
+        if (over != null && over !== from && cells[from] && !isLocked(over) && !isAsh(over)) {
+            if (cells[over] && cells[over].level === cells[from].level) {
+                // Same tier: Trigger your powerful mergeInto logic!
+                mergeInto(from, over);
+            } else if (!cells[over]) {
+                // Empty tile: Move item cleanly
+                cells[over] = cells[from];
+                cells[from] = null;
+                sfx("click");
+            } else {
+                // Occupied by a different tier: Swap positions
+                const temp = cells[over];
+                cells[over] = cells[from];
+                cells[from] = temp;
+                sfx("click");
+            }
+        }
     }
-  } else if (cellEl) {
-    const over = +cellEl.dataset.i;
-    if (over != null && over !== from && cells[from] && !isLocked(over) && !isAsh(over)) {
-      if (cells[over] && cells[over].level === cells[from].level) {
-        mergeInto(from, over);
-      } else if (!cells[over]) {
-        cells[over] = cells[from];
-        cells[from] = null;
-      }
-    }
-  }
-  drag = null;
-  save(); render();
+    drag = null;
+    save(); 
+    render();
 }
 
 boardEl?.addEventListener("pointerup", endDrag);

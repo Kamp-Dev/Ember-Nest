@@ -1555,3 +1555,25 @@ html.lock-scroll, body.lock-scroll {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+/* Add to your CSS */
+.grid-item {
+    touch-action: none; /* Prevents default browser scrolling while dragging on mobile */
+    user-select: none;
+    cursor: grab;
+    transition: transform 0.1s ease;
+}
+
+.grid-item:active {
+    cursor: grabbing;
+}
+
+.grid-cell {
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+/* Visual cue when hovering a dragged item over a valid cell */
+.grid-cell.drag-over {
+    background-color: rgba(255, 215, 0, 0.2);
+    border: 2px dashed #ffd700;
+}
