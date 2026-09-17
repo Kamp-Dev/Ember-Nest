@@ -649,12 +649,21 @@ function spawn(level, count = 1, at, forceShiny = false) {
     else toast("Board full • merge what you have");
     return false;
   }
+  
+  // Calculate exactly where the dragon goes
   const i = at != null && !cells[at] && !isLocked(at) ? at : free[Math.floor(Math.random() * free.length)];
   
+  // Calculate if it is shiny
   const shiny = forceShiny || (Math.random() < 0.05);
   if (shiny) discoverRare(level);
 
-  cells[i] = { level, count, shiny };
+  // Pick a random element for the new spawn
+  const CORE_ELEMENTS = ["fire", "water", "nature"];
+  const randomElement = CORE_ELEMENTS[Math.floor(Math.random() * CORE_ELEMENTS.length)];
+
+  // Save everything (including the element) to the exact cell
+  cells[i] = { level, count, shiny, element: randomElement };
+  
   return true;
 }
 
@@ -680,6 +689,9 @@ function mergeInto(fromI, toI) {
   if (a.level >= CHAIN.length - 1) { toast("Elders keep watch • no further merge"); return false; }
   
   const isShiny = a.shiny || b.shiny || (Math.random() < 0.08);
+
+  // --- Grab the element from the dragged item (fallback to fire if missing) ---
+  const carriedElement = a.element || "fire";
 
   let total = a.count + b.count;
   cells[fromI] = null;
@@ -710,14 +722,14 @@ function mergeInto(fromI, toI) {
     discover(next);
     let landed = toI;
     if (total > 0) {
-      // 1. Lock the newly upgraded Dragon directly under the player's mouse
-      cells[toI] = { level: next, count: produced, shiny: isShiny };
+      // 1. Lock the newly upgraded Dragon (with carriedElement) directly under the player's mouse
+      cells[toI] = { level: next, count: produced, shiny: isShiny, element: carriedElement };
       
-      // 2. Safely bounce the leftover un-merged eggs back to the tile they were dragged from!
-      cells[fromI] = { level: a.level, count: total, shiny: a.shiny };
+      // 2. Safely bounce the leftover un-merged items back (retaining their element too)
+      cells[fromI] = { level: a.level, count: total, shiny: a.shiny, element: carriedElement };
     } else {
-      // Perfect 5-merge with no leftovers
-      cells[toI] = { level: next, count: produced, shiny: isShiny };
+      // Perfect 5-merge with no leftovers (carrying element forward)
+      cells[toI] = { level: next, count: produced, shiny: isShiny, element: carriedElement };
     }
     if (state.mode === "stage") {
       applyWarmth(landed, next);
@@ -736,7 +748,8 @@ function mergeInto(fromI, toI) {
       }
     }
   } else {
-    cells[toI] = { level: a.level, count: total, shiny: a.shiny };
+    // Just stacking items together without hitting 5
+    cells[toI] = { level: a.level, count: total, shiny: a.shiny, element: carriedElement };
   }
   return true;
 }
@@ -1367,7 +1380,32 @@ function itemHtml(item) {
   const tierBorders = ["#4a2c17", "#6b4a32", "#d45817", "#ff6a20", "#ffcf40", "#ffe08a"];
   const borderColor = tierBorders[item.level] || "#4a2c17";
 
+// --- Elemental Badge Setup ---
+  let elementIcon = "";
+  if (item.element === "fire") elementIcon = "ember.png";
+  else if (item.element === "water") elementIcon = "water.png";
+  else if (item.element === "nature") elementIcon = "leaf.png";
+
+  const badgeHTML = elementIcon ? `
+    <img src="${elementIcon}" alt="${item.element}" style="
+      position: absolute; 
+      top: 2px; 
+      right: 2px; 
+      width: 18px; 
+      height: 18px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">` : "";
+
   return `<div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    ${badgeHTML}
+
     ${dragonSvg(item.level, 42, item.count, item.shiny)}
     
     <!-- Floating Name Pill with Tier Border -->
@@ -1384,16 +1422,17 @@ function itemHtml(item) {
       border-radius: 8px;
       white-space: nowrap;
       box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
     ">
       ${item.shiny ? '✨ ' : ''}${spec.name}
     </div>
 
     ${item.count > 1 ? `
-      <!-- Stack Count Badge in Top-Right Corner -->
+      <!-- Stack Count Badge (Moved to Top-Left so it doesn't collide with the element icon) -->
       <div style="
         position: absolute; 
         top: 2px; 
-        right: 4px; 
+        left: 4px; 
         background: var(--ember); 
         color: white; 
         font-size: 0.6rem; 
@@ -1402,6 +1441,7 @@ function itemHtml(item) {
         border-radius: 6px; 
         border: 1px solid #ffcf40;
         box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
       ">
         ×${item.count}
       </div>
@@ -1604,7 +1644,7 @@ function renderTrialBanner() {
       </div>
       
       <div style="flex: 1; margin-left: 10px;">
-        <p style="margin: 0; font-size: 0.9rem; color: #ffffff;">Ash Trail • Mountain Embers <b> </b><br>
+        <p style="margin: 0; font-size: 0.9rem; color: #ffffff;">Ash Trial • Mountain Embers <b> </b><br>
         <span style="font-size: 0.75rem; color: #deb781;">${state.ashBurned || 0}/${ASH_GOAL} cleared • Limits: ${ashCount()}/${ASH_FAIL}</span></p>
       </div>
       
@@ -1618,17 +1658,207 @@ function renderTrialBanner() {
   if (tBtn) tBtn.onclick = enterStage;
 }
 
+// --- ROOST & DRAGON PICKER LOGIC ---
+let roostTargetSlot = -1;
+
+function renderRoost() {
+  const container = document.getElementById("roostPerchContainer");
+  if (!container) return;
+  
+  state.perch = state.perch || [null, null, null];
+  const slotNames = ["Hatchery Hearth", "Moss Alcove", "Lamp Walk"];
+  
+  // Custom aesthetic themes for each room/slot
+  const themes = [
+    { border: "#d45817", bg: "rgba(40, 15, 5, 0.5)", glow: "rgba(212, 88, 23, 0.25)", synergyText: "Loves Young Dragons (Lv 1-2)" }, 
+    { border: "#76c893", bg: "rgba(10, 35, 20, 0.5)", glow: "rgba(118, 200, 147, 0.2)", synergyText: "Loves Mid Dragons (Lv 3-4)" }, 
+    { border: "#ffcf40", bg: "rgba(30, 25, 10, 0.5)", glow: "rgba(255, 207, 64, 0.2)", synergyText: "Loves Elder Dragons (Lv 5+)" }  
+  ];
+  
+  container.innerHTML = [0, 1, 2].map(i => {
+    const open = perchOpen(i);
+    const p = state.perch[i];
+    const t = themes[i];
+    
+    // --- 1. LOCKED SLOT ---
+    if (!open) {
+      return `<div style="background: rgba(15, 23, 42, 0.8); border: 1px dashed #415a77; padding: 24px; border-radius: 16px; text-align: center; opacity: 0.6; box-shadow: inset 0 4px 15px rgba(0,0,0,0.6);">
+        <span style="font-size: 1.8rem; filter: grayscale(100%); opacity: 0.5;">🔒</span>
+        <h4 style="margin: 10px 0 0; color: #778da9; font-family: 'Playfair Display', serif;">${slotNames[i]}</h4>
+        <span style="font-size: 0.7rem; color: #415a77; text-transform: uppercase; letter-spacing: 1px;">Sealed</span>
+      </div>`;
+    }
+    
+    // --- 2. OCCUPIED ALCOVE ---
+    if (p) {
+      const curve = [5, 15, 30, 60, 120, 240];
+      
+      // Calculate Base Income
+      let incomePerMinute = Math.floor((curve[p.level] || 5) * (p.shiny ? 2.5 : 1)) * 3;
+      
+      // Determine Synergy
+      let hasSynergy = false;
+      if (i === 0 && p.level <= 2) hasSynergy = true;
+      if (i === 1 && (p.level === 3 || p.level === 4)) hasSynergy = true;
+      if (i === 2 && p.level >= 5) hasSynergy = true;
+      
+      // Apply Synergy Bonus (50% increase)
+      if (hasSynergy) {
+        incomePerMinute = Math.floor(incomePerMinute * 1.5);
+      }
+      
+      return `<div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid ${hasSynergy ? t.border : (p.shiny ? '#ffea75' : '#415a77')}; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px ${hasSynergy ? t.glow : 'rgba(0,0,0,0)'};">
+        
+        <!-- Recessed Dragon Stage -->
+        <div style="background: radial-gradient(circle, ${hasSynergy ? t.glow : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
+          ${dragonSvg(p.level, 56, 1, p.shiny)}
+        </div>
+        
+        <!-- Dragon Info -->
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h4 style="margin: 0; font-family: 'Playfair Display', serif; color: ${p.shiny ? '#ffea75' : '#e0e1dd'}; font-size: 1.2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);">
+              ${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}
+            </h4>
+            ${hasSynergy ? `<span style="font-size: 0.6rem; background: ${t.border}; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: bold; letter-spacing: 0.5px; box-shadow: 0 0 8px ${t.border};">SYNERGY</span>` : ''}
+          </div>
+          
+          <p style="margin: 4px 0 0; font-size: 0.7rem; color: ${hasSynergy ? t.border : '#778da9'}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${slotNames[i]}</p>
+          
+          <div style="margin-top: 8px; display: inline-block; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; border: 1px solid ${hasSynergy ? t.border : 'rgba(255, 207, 64, 0.2)'};">
+            <span style="font-size: 0.8rem; font-weight: 800; color: ${hasSynergy ? t.border : '#ffcf40'};">+${incomePerMinute} 🪙 / m</span>
+          </div>
+        </div>
+        
+        <!-- Return Button -->
+        <button onclick="emptyPerch(${i})" style="background: linear-gradient(to bottom, #a12b2b, #5c1414); border: 1px solid #ff4d4d; color: #f8ece4; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5);">Return</button>
+      </div>`;
+    }
+    
+    // --- 3. EMPTY ALCOVE ---
+    return `<div style="background: ${t.bg}; border: 2px dashed ${t.border}; padding: 24px; border-radius: 16px; text-align: center; cursor: pointer; box-shadow: inset 0 4px 20px rgba(0,0,0,0.6);" onclick="openPickerModal(${i})">
+      
+      <div style="width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 50%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; border: 1px solid ${t.border}; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+        <span style="font-size: 1.8rem; color: ${t.border}; font-weight: bold;">+</span>
+      </div>
+      
+      <h4 style="margin: 0; color: ${t.border}; font-family: 'Playfair Display', serif; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Send to ${slotNames[i]}</h4>
+      <span style="font-size: 0.75rem; color: rgba(224, 225, 221, 0.8); display: block; margin-top: 4px;">${t.synergyText}</span>
+    </div>`;
+    
+  }).join("");
+}
+
+function openPickerModal(slotId) {
+  if (state.mode === "stage") {
+    toast("Return to the nest first!");
+    return;
+  }
+  roostTargetSlot = slotId;
+  const grid = document.getElementById("roostPickerGrid");
+  const modal = document.getElementById("roostPickerModal");
+  if (!grid || !modal) return;
+  
+  grid.innerHTML = "";
+  
+  // 1. Gather all eligible dragons and remember their original board index
+  const cells = board();
+  let eligibleDragons = cells.map((cell, index) => ({ cell, index }))
+    .filter(item => item.cell && !isLocked(item.index) && !isAsh(item.index));
+    
+  // 2. Sort them from Highest Level to Lowest (and put Shiny dragons first in ties)
+  eligibleDragons.sort((a, b) => {
+    if (b.cell.level !== a.cell.level) {
+      return b.cell.level - a.cell.level; // Highest level first
+    }
+    return (b.cell.shiny ? 1 : 0) - (a.cell.shiny ? 1 : 0); // Shiny first if same level
+  });
+  
+  // 3. Render the sorted list
+  if (eligibleDragons.length === 0) {
+    grid.innerHTML = `<div style="grid-column: span 3; color: #deb781; font-size: 0.85rem; padding: 20px;">No dragons available on the board. Gather some eggs!</div>`;
+  } else {
+    eligibleDragons.forEach(item => {
+      const cell = item.cell;
+      const originalIndex = item.index; // We need this so it pulls the correct dragon from the board!
+      
+      const card = document.createElement("div");
+      card.style.background = "linear-gradient(to bottom, #1b263b, #0d1b2a)";
+      card.style.border = `1px solid ${cell.shiny ? '#ffcf40' : '#415a77'}`;
+      card.style.borderRadius = "8px";
+      card.style.padding = "10px 4px";
+      card.style.cursor = "pointer";
+      card.style.display = "flex";
+      card.style.flexDirection = "column";
+      card.style.alignItems = "center";
+      
+      card.innerHTML = `
+        ${dragonSvg(cell.level, 42, 1, cell.shiny)}
+        <span style="font-size: 0.65rem; font-weight: 700; color: ${cell.shiny ? '#ffcf40' : '#e0e1dd'}; margin-top: 6px; text-align: center;">
+          ${cell.shiny ? '✨ ' : ''}${CHAIN[cell.level].name}
+        </span>
+        ${cell.count > 1 ? `<span style="font-size: 0.6rem; color: #ff8033; font-weight: 700; margin-top: 2px;">(x${cell.count})</span>` : ''}
+      `;
+      
+      // Pass the original board index to the click handler
+      card.onclick = () => selectDragonForRoost(originalIndex);
+      grid.appendChild(card);
+    });
+  }
+  
+  modal.style.display = "flex";
+}
+
+function selectDragonForRoost(boardIndex) {
+  if (roostTargetSlot < 0 || roostTargetSlot > 2) return;
+  
+  const cells = board();
+  const draggedItem = cells[boardIndex];
+  if (!draggedItem) return;
+  
+  if (draggedItem.count > 1) {
+    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+    draggedItem.count -= 1;
+  } else {
+    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+    cells[boardIndex] = null; 
+  }
+  
+  sfx("buy");
+  toast(`Sent ${CHAIN[draggedItem.level].name} to the Roost!`);
+  closePickerModal();
+  save(); 
+  render();
+}
+
+function closePickerModal() {
+  roostTargetSlot = -1;
+  document.getElementById("roostPickerModal").style.display = "none";
+}
+
+// Attach listener to the close button
+document.getElementById("closePickerBtn")?.addEventListener("click", closePickerModal);
+
 function render() {
   rollDaily();
-  
+// --- Safe temporary patch to assign elements to existing board items ---
+  const activeCells = board();
+  if (Array.isArray(activeCells)) {
+    activeCells.forEach(cell => {
+      if (cell && !cell.element) {
+        const CORE_ELEMENTS = ["fire", "water", "nature"];
+        cell.element = CORE_ELEMENTS[Math.floor(Math.random() * CORE_ELEMENTS.length)];
+      }
+    });
+  }
   // Update texts safely without crashing
-  setSafeHTML("title", state.mode === "stage" ? "Ash <span>Trail</span>" : "Ember <span>Nest</span>");
+  setSafeHTML("title", state.mode === "stage" ? "Ash <span>Trial</span>" : "Ember <span>Nest</span>");
 
   // Render Quests and Trials live on the screen
   renderQuest();
   renderTrialBanner();
 
-  setSafeText("hint", state.mode === "stage" ? "Leave trail" : trailWaitLabel());
+  setSafeText("hint", state.mode === "stage" ? "Leave trial" : trailWaitLabel());
   setSafeText("muteBtn", state.muted ? "🔇" : "🔊");
   setSafeText("lvlChip", "Lv " + (state.level || 1) + " • " + (state.xp || 0) + "/" + xpNeed(state.level || 1));
   
@@ -1733,6 +1963,7 @@ function render() {
   }
 
   renderQuest();
+  renderRoost();
   
   setSafeText("tributeBtn", `Mountain Tribute: ${tributeCost()} 🪙 (+1 Bonus)`);
 
@@ -2415,7 +2646,7 @@ setInterval(() => {
     }
   }
   
-  setSafeText("bankRate", currentInc > 0 ? "+" + currentInc + "/s" : "");
+  setSafeText("bankRate", currentInc > 0 ? "+" + currentInc + "/m" : "");
   
   if (state.perchAt && (state.perch || []).some(Boolean)) {
     const elapsed = Date.now() - state.perchAt;

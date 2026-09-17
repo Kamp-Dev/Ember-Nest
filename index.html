@@ -10,281 +10,303 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ember Nest</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=2"></head>
-<style>
-  .coin-icon {
-    display: inline-block;
-    animation: coin-spin 1.5s linear infinite;
-    transform-style: preserve-3d;
-  }
-
-  @keyframes coin-spin {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(360deg); }
-  }
-</style>
-<body>
-
-  <div id="app">
-    <!-- Top Stats Header -->
-    <!-- --- UNIFIED GAME HEADER --- -->
-<header class="game-header">
-  <div class="header-left">
-    <h1 id="title">Ember <span>Nest</span></h1>
-    <span id="nameLine" class="player-name">Keeper</span>
-  </div>
+  <link rel="stylesheet" href="style.css?v=2">
   
-  <div class="header-right">
-    <div class="stat-pill coin-pill"><span id="coinCount">0</span> 🪙</div>
-    <div class="stat-pill energy-pill">⚡<span id="energyCount">5/5</span></div>
-    <div class="stat-pill level-pill"><span id="lvlChip">Lv 1</span></div>
-    <button id="bookBtn" class="stat-pill book-pill" title="Dragon Book">📖</button>
-    <button id="muteBtn" class="stat-pill sound-pill" title="Toggle Sound">🔊</button>
-  </div>
-</header>
+  <style>
+    .coin-icon {
+      display: inline-block;
+      animation: coin-spin 1.5s linear infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes coin-spin {
+      from { transform: rotateY(0deg); }
+      to { transform: rotateY(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    
+    <!-- === UNIFIED GAME HEADER === -->
+    <header class="game-header">
+      <div class="header-left">
+        <h1 id="title">Ember <span>Nest</span></h1>
+        <span id="nameLine" class="player-name">Keeper</span>
+      </div>
+      
+      <div class="header-right">
+        <div class="stat-pill coin-pill"><span id="coinCount">0</span> 🪙</div>
+        <div class="stat-pill energy-pill">⚡<span id="energyCount">5/5</span></div>
+        <div class="stat-pill level-pill"><span id="lvlChip">Lv 1</span></div>
+        <button id="bookBtn" class="stat-pill book-pill" title="Dragon Book">📖</button>
+        <button id="muteBtn" class="stat-pill sound-pill" title="Toggle Sound">🔊</button>
+      </div>
+    </header>
 
     <!-- === SCROLLABLE VIEWS CONTAINER === -->
     <div class="view-container">
+      
       <!-- === VIEW 1: THE BOARD === -->
       <div id="view-board" class="view active">
-
-<!-- === QUEST CAROUSEL === -->
-<div id="quest-carousel-container" style="margin-bottom: 12px;">
-  
-  <!-- This wrapper forces them side-by-side -->
-  <div id="quest-carousel" class="quest-carousel">
-    <div id="questBox" class="quest-card"></div>
-    <div id="topQuestBox" class="quest-card"></div>
-  </div>
-  
-  <!-- Pagination Dots -->
-  <div id="quest-dots" class="quest-dots"></div>
-</div>
-        <!-- ======================= -->
-          <div id="perchRow"></div>
-          <!-- NEW: Updated styling to match the Enter button -->
-            <button id="exitTrialBtn" style="display: none; font-size: 10px; background: linear-gradient(to bottom, #415a77, #1b263b); border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 10px 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 0 #0d1b2a; width: 100%; max-width: 100px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">
-              Leave Trial
-            </button>
-          <!-- <--- NEW -->
-          <div id="board"></div>
-        <!-- Replace "your-image.jpg" with the name/path of your image file. -->
-       <div class="action-buttons" style="display: flex; justify-content: space-between; gap: 8px; width: 100%; margin-top: 15px; box-sizing: border-box;">
+        <!-- QUEST CAROUSEL -->
+        <div id="quest-carousel-container" style="margin-bottom: 12px;">
+          <div id="quest-carousel" class="quest-carousel">
+            <div id="questBox" class="quest-card"></div>
+            <div id="topQuestBox" class="quest-card"></div>
+          </div>
+          <div id="quest-dots" class="quest-dots"></div>
+        </div>
+        
+        <!-- BOARD PERCHES -->
+        <div id="perchRow"></div>
+        
+        <!-- LEAVE TRIAL BUTTON -->
+        <button id="exitTrialBtn" style="display: none; font-size: 10px; background: linear-gradient(to bottom, #415a77, #1b263b); border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 10px 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 0 #0d1b2a; width: 100%; max-width: 100px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">
+          Leave Trial
+        </button>
+        
+        <!-- GRID -->
+        <div id="board"></div>
+        
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons" style="display: flex; justify-content: space-between; gap: 8px; width: 100%; margin-top: 15px; box-sizing: border-box;">
           <button id="gather">Gather egg 🥚</button>
-<button id="buyEgg" onclick="buyEgg()">Buy Egg</button>          <button id="autoMergeBtn" onclick="triggerAutoMerge()">Auto Merge (Lv. 5)</button>
+          <button id="buyEgg" onclick="buyEgg()">Buy Egg</button>          
+          <button id="autoMergeBtn" onclick="triggerAutoMerge()">Auto Merge (Lv. 5)</button>
         </div>
       </div>
 
-<!-- === VIEW 2: TRIALS (Formerly Quests) === -->
-      <div id="view-trials" class="view">
-  <div class="section-title">Trials of the Mountain</div>
-  <div id="trialBox" style="margin-bottom: 16px;"></div>
-</div>
+      <!-- === VIEW 2: THE ROOST === -->
+      <div id="view-roost" class="view" style="padding: 20px 16px; box-sizing: border-box; overflow-y: auto; background: radial-gradient(circle at top center, rgba(30, 40, 60, 0.3) 0%, rgba(10, 15, 25, 0.9) 100%); min-height: 100%;">
+        <div style="max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; width: 100%; align-items: center; box-sizing: border-box;">
+            
+          <!-- Header / Dragon Bank Vault -->
+          <div class="quest-card" style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box; position: relative; background: linear-gradient(rgba(10, 15, 20, 0.75), rgba(10, 15, 20, 0.95)), url('Mountains%20View.jpg'); background-size: cover; background-position: center; border: 2px solid #4a2c17; padding: 24px 20px; border-radius: 16px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.8), inset 0 0 40px rgba(212, 88, 23, 0.1);">
+            
+            <!-- Decorative stone corner brackets -->
+            <div style="position: absolute; top: 12px; left: 12px; width: 16px; height: 16px; border-top: 2px solid #deb781; border-left: 2px solid #deb781; opacity: 0.6;"></div>
+            <div style="position: absolute; top: 12px; right: 12px; width: 16px; height: 16px; border-top: 2px solid #deb781; border-right: 2px solid #deb781; opacity: 0.6;"></div>
+            
+            <h2 style="margin: 0; font-family: 'Playfair Display', serif; color: #ffcf40; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">The High Roost</h2>
+            <p style="margin: 0 0 8px 0; font-size: 0.8rem; color: #deb781; font-style: italic;">Where ancient wings rest and wealth gathers.</p>
+            
+            <!-- Dragon Bank Widget -->
+            <div id="dragonBank" class="dragon-bank-btn" style="position: relative; overflow: hidden; background: linear-gradient(to bottom, rgba(20, 30, 45, 0.9), rgba(10, 15, 25, 1)); border: 1px solid #778da9; border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 4px 10px rgba(0,0,0,0.3); width: 100%; box-sizing: border-box;">
+              <div style="text-align: left; display: flex; align-items: center; gap: 12px;">
+                <div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 50%; border: 1px solid rgba(255, 207, 64, 0.3);">
+                  <img src="hearth-1.png" alt="Guard" style="width: 36px; height: 36px; filter: drop-shadow(0 0 6px rgba(255, 207, 64, 0.4));">
+                </div>
+                <div>
+                  <div style="font-size: 0.7rem; color: #a9d6e5; text-transform: uppercase; letter-spacing: 0.5px;">Bank Vault</div>
+                  <div id="bankCount" style="font-size: 1.4rem; font-weight: 800; color: #ffcf40; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">0 <span class="spinning-coin">🪙</span></div>
+                </div>
+              </div>
+              <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                <div style="background: rgba(118, 200, 147, 0.15); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(118, 200, 147, 0.3);">
+                  <div id="bankRate" style="font-size: 0.75rem; font-weight: 700; color: #76c893;">+0/m</div>
+                </div>
+                <div id="bankTimer" style="font-size: 0.65rem; color: #deb781; opacity: 0.8;">Next: --</div>
+              </div>
+              <!-- Max Overlay for Bank -->
+              <div class="max-overlay">MAX</div>
+            </div>
+          </div>
 
-<!-- === VIEW 3: THE NEST === -->
-<div id="view-nest" class="view">
-  <div class="section-title">Mountain Rooms & Decor</div>
-
-  <!-- Sub-Tabs Navigation -->
-  <div class="nest-sub-tabs" style="display: flex; gap: 8px; margin-bottom: 16px; justify-content: center;">
-    <button class="nest-tab-btn active" data-subtab="sub-rooms" style="background: #415a77; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600;">Rooms</button>
-    <button class="nest-tab-btn" data-subtab="sub-decor" style="background: #1b263b; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600;">Decor</button>
-  </div>
-
-  <!-- Sub-Tab Content: Rooms -->
-  <div id="sub-rooms" class="nest-sub-view" style="display: block;">
-    <div id="perchRowNest" style="margin-bottom: 12px;"></div>
-    
-<button id="dragonBank" class="dragon-bank-btn" style="position: relative; overflow: hidden; margin-bottom: 16px; background: linear-gradient(rgba(11, 22, 51, 0.142), rgba(11, 22, 51, 0.9)), url('Dragon%20Bank.jpg'); background-size: cover; background-position: center bottom; border: 1px solid #778da9; display: flex; width: 100%; padding: 0;"> 
-  
-  <!-- Content Wrapper: Allows us to grayscale the inner elements easily -->
-  <div class="bank-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 8px 12px;">
-    
-    <div class="bank-left" style="display: flex; align-items: center; gap: 8px;">
-      <!-- Real dragon sprite image replacing the emoji -->
-      <img src="hearth-1.png" alt="Dragon Bank Guard" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));" />
-      <div style="display: flex; flex-direction: column; align-items: flex-start;">
-        <!-- Horizontal row for title and rate -->
-        <div style="display: flex; align-items: baseline; gap: 6px;">
-          <span>Dragon Bank</span> 
-          <small id="bankRate" style="font-size:0.65rem; color:#ffcf40;">+0</small>
-        </div>
-        <small id="bankTimer" class="bank-timer">Next: 60s</small>
-      </div>
-    </div>
-    
-    <div style="display:flex; flex-direction:column-reverse; align-items:flex-end;">
-      <span id="bankCount" style="font-size: 1.3rem;">0 🪙</span>
-    </div>
-    
-  </div>
-
-  <!-- The MAX Overlay -->
-  <div class="max-overlay">MAX</div>
-  
-</button>
-
-    <div id="mountain"></div>
-  </div>
-
-  <!-- Sub-Tab Content: Decor (House the #nest element here!) -->
-  <div id="sub-decor" class="nest-sub-view" style="display: none;">
-    <div id="nest"></div>
-  </div>
-</div>
-
-  <!-- Sub-Tab Content: Decor (Dedicated space for future decor options) -->
-  <div id="sub-decor" class="nest-sub-view" style="display: none; padding: 20px; text-align: center; background: rgba(27, 38, 59, 0.4); border-radius: 8px; border: 1px dashed #778da9;">
-    <p style="color: #e0e1dd; font-size: 0.9rem; margin: 0;">Decor and customization items coming soon.</p>
-  </div>
-</div>
-
-<!-- === BOTTOM TAB BAR === -->
-      <nav id="tabBar">
-        <button data-tab="view-board" class="tab-btn active">
-          <span class="tab-icon">🐉</span>
-          <span class="tab-label">Board</span>
-        </button>
-        <button data-tab="view-trials" class="tab-btn">
-          <span class="tab-icon">🔥</span>
-          <span class="tab-label">Trials</span>
-        </button>
-        <button data-tab="view-nest" class="tab-btn">
-          <span class="tab-icon">🏕️</span>
-          <span class="tab-label">Nest</span>
-        </button>
-      </nav>
-
-  <!-- === MODALS & OVERLAYS (REQUIRED FOR JS) === -->
-  <div id="toast"></div>
-
-  <div id="chest" class="modal">
-    <div class="modal-content">
-      <h2 id="chestTitle">Level Up</h2>
-      <p id="chestSub"></p>
-      <button id="chestBox" class="chest-box">🎁</button>
-      <div id="chestLoot"></div>
-      <button id="chestOk" onclick="document.getElementById('chest').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Continue</button>
-    </div>
-  </div>
-  <!-- === LOOT REVEAL MODAL (Appears after Chest Opens) === -->
-  <!-- === LOOT REVEAL MODAL === -->
-  <div id="lootModal" class="modal">
-    <div class="modal-content">
-      <h2 style="color: #ffea75;">Mountain Bounty</h2>
-      <div id="rewardList"></div> <!-- <--- CHANGE THIS ID -->
-      <div class="modal-buttons">
-        <button id="lootOk" onclick="document.getElementById('lootModal').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Take to Nest</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="nameBox" class="modal">
-    <div class="modal-content">
-      <h2>Name Your Nest</h2>
-      <p id="nameHint">First change is free.</p>
-      <input type="text" id="nameInput" maxlength="16" placeholder="Keeper">
-      <div class="modal-buttons">
-        <button id="nameNo">Cancel</button>
-        <button id="nameGo">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- === THE DRAGON BOOK (Custom Image Spread) === -->
-  <div id="book" class="modal">
-    <!-- The container that holds your custom background image -->
-    <div class="modal-content custom-book-bg">
-      <button id="bookClose" class="close-btn" style="position: absolute; top: 10px; right: 15px; z-index: 10; color: #ea02ff; background: transparent; border: none; font-size: 1.5rem; font-weight: bold;">✕</button>
-
-      <!-- Page Navigation Arrows (Text removed) -->
-      <button id="prevPageBtn" class="page-arrow left-arrow"></button>
-      <button id="nextPageBtn" class="page-arrow right-arrow"></button>
-
-      <!-- The Inner Pages (Left: Art, Right: Text) -->
-      <div id="bookSpread" class="book-spread">
-        <!-- JS will inject the active dragon here -->
-      </div>
-
-      <!-- Book Tabs & Reset (Positioned just below the book) -->
-      <div class="book-controls" style="position: absolute; bottom: -120px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; display: flex; flex-direction: column; gap: 8px;">
-        <div style="display: flex; justify-content: center; gap: 10px;">
-          <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="countMain">0</span>)</button>
-          <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare (<span id="countRare">0</span>)</button>
-        </div>
-        <button id="resetBookGameBtn" style="background: transparent; border: none; color: #a12b2b; text-decoration: underline; font-size: 0.75rem; cursor: pointer;">Reset All Game Data</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- === WIPE CONFIRMATION MODAL (Required for Reset) === -->
-  <div id="wipe" class="modal">
-    <div class="modal-content">
-      <h2>Reset All Game Data?</h2>
-      <p style="font-size: 0.85rem; color: #deb781; margin: 8px 0;">Type <b>Delete</b> below to confirm wiping your save completely:</p>
-      <input type="text" id="wipeInput" placeholder="Type Delete" style="width: 100%; padding: 8px; box-sizing: border-box; background: #140b06; border: 1px solid #4a2c17; color: #fff; border-radius: 6px; margin-bottom: 12px;">
-      <div class="modal-buttons">
-        <button id="wipeNo">Cancel</button>
-        <button id="wipeGo" disabled style="opacity: 0.5;">Confirm</button>
-      </div>
-    </div>
-  </div>
-  
-  <div id="trailWin" class="modal">
-    <div class="modal-content">
-      <h2>Trail Cleared!</h2>
-      <p id="winSub"></p>
-      <div id="winLoot"></div>
-      <div class="modal-buttons">
-        <button id="winHome">Return to Nest</button>
-        <button id="winAgain">Run Again</button>
-      </div>
-    </div>
-  </div>
-
-<!-- === SLEEPY DRAGON INFO MODAL === -->
-  <div id="sleepyGuide" class="modal">
-    <div class="modal-content">
-      <h2 style="color: #a9d6e5; margin-bottom: 5px;">Sleepy Dragon</h2>
-      <p style="font-size: 0.85rem; color: #e0e1dd; line-height: 1.5; margin-bottom: 15px;">
-        The Sleepy Dragon is a special daily visitor that needs a <b>Young</b> dragon to continue its slumber.
-        <br><br>
-        Fulfilling this quest grants:<br>
-        <b style="color: #ffcf40;">+3000 🪙</b><br>
-        <b style="color: #778da9;">+10 Energy & +5 Trail Pouch</b>
-        <br><br>
-        <span style="color: #d45817; font-weight: bold;">Keep the streak alive! Every 7 days you fulfill this quest, your Max Energy permanently increases by +1!</span>
-      </p>
-      <div class="modal-buttons">
-        <button id="sleepyGuideClose" style="width: 100%;">Understood</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="trailFail" class="modal">
-    <div class="modal-content">
-      <h2>Ash Overwhelmed</h2>
-      <p id="failWhy"></p>
-      <div class="modal-buttons">
-        <button id="homeTrail">Back to Nest</button>
-        <button id="restartTrail">Try Again</button>
-      </div>
-    </div>
-  </div>
-
-<!-- FORFEIT MODAL (Placed INSIDE #app, immune to [id*="trial"]) -->
-      <div id="forfeitModal" style="display: none; position: absolute; inset: 0; width: 100%; height: 100%; background: rgba(4, 5, 8, 0.85); z-index: 99999;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(to bottom, #1b263b, #0d1b2a); border: 2px solid #778da9; border-radius: 10px; padding: 24px; text-align: center; width: 85%; max-width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-          <h3 style="color: #ff2600; margin-top: 0; font-family: 'Playfair Display', serif;">Forfeit Trial?</h3>
-          <p style="color: #e0e1dd; font-size: 0.9rem; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">Leaving the board will forfeit your current trial. Are you sure?</p>
-          <div style="display: flex; gap: 10px; justify-content: center;">
-            <button id="cancelWarningBtn" style="flex: 1; background: #415a77; border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Cancel</button>
-            <button id="confirmWarningBtn" style="flex: 1; background: #a12b2b; border: 1px solid #ff4d4d; color: #ffffff; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Leave</button>
+          <!-- Active Perch Slots Container -->
+          <div id="roostPerchContainer" style="display: flex; flex-direction: column; gap: 16px; width: 100%; box-sizing: border-box; margin-top: 16px;">
+            <!-- JS will inject the roost specific slots here -->
           </div>
         </div>
       </div>
+
+      <!-- === VIEW 3: TRIALS === -->
+      <div id="view-trials" class="view">
+        <div class="section-title">Trials of the Mountain</div>
+        <div id="trialBox" style="margin-bottom: 16px;"></div>
+      </div>
+
+      <!-- === VIEW 4: THE NEST === -->
+      <div id="view-nest" class="view">
+        <div class="section-title">Mountain Rooms & Decor</div>
+
+        <!-- Sub-Tabs Navigation -->
+        <div class="nest-sub-tabs" style="display: flex; gap: 8px; margin-bottom: 16px; justify-content: center;">
+          <button class="nest-tab-btn active" data-subtab="sub-rooms" style="background: #415a77; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600;">Rooms</button>
+          <button class="nest-tab-btn" data-subtab="sub-decor" style="background: #1b263b; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600;">Decor</button>
+        </div>
+
+        <!-- Sub-Tab Content: Rooms -->
+        <div id="sub-rooms" class="nest-sub-view" style="display: block;">
+          <div id="mountain"></div>
+        </div>
+
+        <!-- Sub-Tab Content: Decor -->
+        <div id="sub-decor" class="nest-sub-view" style="display: none; padding: 20px; text-align: center; background: rgba(27, 38, 59, 0.4); border-radius: 8px; border: 1px dashed #778da9;">
+          <div id="nest"></div>
+          <p style="color: #e0e1dd; font-size: 0.9rem; margin-top: 16px;">More decor and customization items coming soon.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- === BOTTOM TAB BAR === -->
+    <nav id="tabBar">
+      <button data-tab="view-board" class="tab-btn active">
+        <span class="tab-icon">🐉</span>
+        <span class="tab-label">Board</span>
+      </button>
+      <button data-tab="view-roost" class="tab-btn">
+        <span class="tab-icon">🪙</span>
+        <span class="tab-label">Roost</span>
+      </button>
+      <button data-tab="view-trials" class="tab-btn">
+        <span class="tab-icon">🔥</span>
+        <span class="tab-label">Trials</span>
+      </button>
+      <button data-tab="view-nest" class="tab-btn">
+        <span class="tab-icon">🏕️</span>
+        <span class="tab-label">Nest</span>
+      </button>
+    </nav>
+
+    <!-- === MODALS & OVERLAYS === -->
+    <div id="toast"></div>
+
+    <div id="chest" class="modal">
+      <div class="modal-content">
+        <h2 id="chestTitle">Level Up</h2>
+        <p id="chestSub"></p>
+        <button id="chestBox" class="chest-box">🎁</button>
+        <div id="chestLoot"></div>
+        <button id="chestOk" onclick="document.getElementById('chest').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Continue</button>
+      </div>
+    </div>
+
+    <!-- LOOT REVEAL MODAL -->
+    <div id="lootModal" class="modal">
+      <div class="modal-content">
+        <h2 style="color: #ffea75;">Mountain Bounty</h2>
+        <div id="rewardList"></div>
+        <div class="modal-buttons">
+          <button id="lootOk" onclick="document.getElementById('lootModal').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Take to Nest</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RENAME MODAL -->
+    <div id="nameBox" class="modal">
+      <div class="modal-content">
+        <h2>Name Your Nest</h2>
+        <p id="nameHint">First change is free.</p>
+        <input type="text" id="nameInput" maxlength="16" placeholder="Keeper">
+        <div class="modal-buttons">
+          <button id="nameNo">Cancel</button>
+          <button id="nameGo">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- THE DRAGON BOOK -->
+    <div id="book" class="modal">
+      <div class="modal-content custom-book-bg">
+        <button id="bookClose" class="close-btn" style="position: absolute; top: 10px; right: 15px; z-index: 10; color: #ea02ff; background: transparent; border: none; font-size: 1.5rem; font-weight: bold;">✕</button>
+        <button id="prevPageBtn" class="page-arrow left-arrow"></button>
+        <button id="nextPageBtn" class="page-arrow right-arrow"></button>
+        <div id="bookSpread" class="book-spread"></div>
+        <div class="book-controls" style="position: absolute; bottom: -120px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: center; gap: 10px;">
+            <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="countMain">0</span>)</button>
+            <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare (<span id="countRare">0</span>)</button>
+          </div>
+          <button id="resetBookGameBtn" style="background: transparent; border: none; color: #a12b2b; text-decoration: underline; font-size: 0.75rem; cursor: pointer;">Reset All Game Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIPE CONFIRMATION MODAL -->
+    <div id="wipe" class="modal">
+      <div class="modal-content">
+        <h2>Reset All Game Data?</h2>
+        <p style="font-size: 0.85rem; color: #deb781; margin: 8px 0;">Type <b>Delete</b> below to confirm wiping your save completely:</p>
+        <input type="text" id="wipeInput" placeholder="Type Delete" style="width: 100%; padding: 8px; box-sizing: border-box; background: #140b06; border: 1px solid #4a2c17; color: #fff; border-radius: 6px; margin-bottom: 12px;">
+        <div class="modal-buttons">
+          <button id="wipeNo">Cancel</button>
+          <button id="wipeGo" disabled style="opacity: 0.5;">Confirm</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TRIAL WIN MODAL -->
+    <div id="trailWin" class="modal">
+      <div class="modal-content">
+        <h2>Trial Cleared!</h2> <!-- Changed from Trail to Trial -->
+        <p id="winSub"></p>
+        <div id="winLoot"></div>
+        <div class="modal-buttons">
+          <button id="winHome">Return to Nest</button>
+          <button id="winAgain">Run Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLEEPY DRAGON INFO MODAL -->
+    <div id="sleepyGuide" class="modal">
+      <div class="modal-content">
+        <h2 style="color: #a9d6e5; margin-bottom: 5px;">Sleepy Dragon</h2>
+        <p style="font-size: 0.85rem; color: #e0e1dd; line-height: 1.5; margin-bottom: 15px;">
+          The Sleepy Dragon is a special daily visitor that needs a <b>Young</b> dragon to continue its slumber.
+          <br><br>
+          Fulfilling this quest grants:<br>
+          <b style="color: #ffcf40;">+3000 🪙</b><br>
+          <b style="color: #778da9;">+10 Energy & +5 Trial Pouch</b>
+          <br><br>
+          <span style="color: #d45817; font-weight: bold;">Keep the streak alive! Every 7 days you fulfill this quest, your Max Energy permanently increases by +1!</span>
+        </p>
+        <div class="modal-buttons">
+          <button id="sleepyGuideClose" style="width: 100%;">Understood</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIAL FAIL MODAL -->
+    <div id="trailFail" class="modal">
+      <div class="modal-content">
+        <h2>Ash Overwhelmed</h2>
+        <p id="failWhy"></p>
+        <div class="modal-buttons">
+          <button id="homeTrail">Back to Nest</button>
+          <button id="restartTrail">Try Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOST PICKER MODAL (NEW) -->
+    <div id="roostPickerModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #1b263b; border: 2px solid #778da9; border-radius: 12px; max-width: 360px; width: 100%; padding: 20px; box-sizing: border-box; text-align: center;">
+            <h3 style="color: #ffcf40; margin-top: 0; font-family: 'Playfair Display', serif;">Select a Dragon</h3>
+            <p style="font-size: 0.8rem; color: #deb781; margin-bottom: 16px;">Choose a dragon from your nest grid to send to this roost slot.</p>
+            <div id="roostPickerGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 240px; overflow-y: auto; margin-bottom: 16px; padding: 4px;">
+                <!-- JS will populate eligible board dragons here -->
+            </div>
+            <button id="closePickerBtn" style="background: #415a77; border: 1px solid #778da9; color: #e0e1dd; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- FORFEIT MODAL -->
+    <div id="forfeitModal" style="display: none; position: absolute; inset: 0; width: 100%; height: 100%; background: rgba(4, 5, 8, 0.85); z-index: 99999;">
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(to bottom, #1b263b, #0d1b2a); border: 2px solid #778da9; border-radius: 10px; padding: 24px; text-align: center; width: 85%; max-width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+        <h3 style="color: #ff2600; margin-top: 0; font-family: 'Playfair Display', serif;">Forfeit Trial?</h3>
+        <p style="color: #e0e1dd; font-size: 0.9rem; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">Leaving the board will forfeit your current trial. Are you sure?</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="cancelWarningBtn" style="flex: 1; background: #415a77; border: 1px solid #778da9; color: #e0e1dd; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Cancel</button>
+          <button id="confirmWarningBtn" style="flex: 1; background: #a12b2b; border: 1px solid #ff4d4d; color: #ffffff; font-weight: 700; padding: 10px; border-radius: 6px; cursor: pointer;">Leave</button>
+        </div>
+      </div>
+    </div>
+    
   </div>
-<!-- <--- NEW -->
-<script src="app.js"></script>
+
+  <script src="app.js"></script>
 </body>
 </html>
