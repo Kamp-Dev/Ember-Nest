@@ -1156,30 +1156,14 @@ function buyEgg() {
     toast("Buy eggs at the nest");
     return;
   }
-  
   const cost = eggPrice();
-  
-  // Safety fallback just in case state.coins is somehow empty
-  if ((state.coins || 0) < cost) { 
-    toast("Need " + cost + " 🪙 for an egg"); 
-    return; 
-  }
-  
-  // NEW: Tells you if the board is full instead of just failing silently!
-  if (!spawn(0, 1)) {
-    toast("Your nest is full!");
-    return; 
-  }
-  
+  if (state.coins < cost) { toast("Need " + cost + " 🪙 for an egg"); return; }
+  if (!spawn(0, 1)) return;
   state.coins -= cost;
   state.eggsBought = (state.eggsBought || 0) + 1;
-  
-  // Safety wrapper around the sound just in case
-  if (typeof sfx === "function") sfx("buy"); 
-  
+  sfx("buy");
   toast("Egg bought for " + cost + " 🪙");
-  save(); 
-  render();
+  save(); render();
 }
 
 function hideTrailWin() {
