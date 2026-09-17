@@ -1,7 +1,7 @@
 const COLS = 5, ROWS = 5, MAX_ENERGY = 5;
 const SAVE = "ember-nest-save";
 const REGEN_MS = 8000;
-const PERCH_MS = 20000;
+const PERCH_MS = 60000;
 const OPEN_START = 20; // Leaves 5 tiles locked by default on a 25-tile grid
 const STAGE_GOAL = 3;
 const ASH_GRACE = 1;
@@ -12,7 +12,22 @@ const TRAIL_GATHERS = 4;
 const DAILY_PAYS = [1200, 800, 400];
 const DAILY_CLEARS = 3;
 const RENAME_COST = 2000;
+
 // --- UI SAFETY HELPERS ---
+function getPerchYield(p, i) {
+  if (!p) return { base: 0, bonus: 0, total: 0, hasSynergy: false };
+  const curve = [5, 15, 30, 60, 120, 240, 480, 960]; 
+  let baseIncome = Math.floor((curve[p.level] || 5) * (p.shiny ? 2.5 : 1)) * 3;
+  
+  const roomElements = ["fire", "nature", "water"]; 
+  const requiredElement = roomElements[i];
+  const hasSynergy = (p.element === requiredElement || p.element === "neutral");
+  
+  let bonusIncome = hasSynergy ? Math.floor(baseIncome * 0.5) : 0;
+  
+  return { base: baseIncome, bonus: bonusIncome, total: baseIncome + bonusIncome, hasSynergy };
+}
+
 function setSafeHTML(id, html) {
   const el = document.getElementById(id);
   if (el) el.innerHTML = html;
@@ -288,14 +303,18 @@ function applyTheme(id) {
   }
 
 let perchArmed = -1;
+
 function perchIncome() {
-  const curve = [5, 15, 30, 60, 120, 240];
-  return (state.perch || []).reduce((s, p) => {
-    if (!p) return s;
-    const base = curve[p.level];
-    const mult = p.shiny ? 2.5 : 1;
-    return s + Math.floor(base * mult);
-  }, 0);
+  let total = 0;
+  if (!state.perch) return total;
+  
+  for (let i = 0; i < 3; i++) {
+    if (state.perch[i]) {
+      const yieldData = getPerchYield(state.perch[i], i);
+      total += yieldData.total;
+    }
+  }
+  return total;
 }
 
 function tributeCost() {
@@ -333,12 +352,12 @@ function seatPerch(slot, boardI) {
       toast("Perch must be empty to split stack.");
       return;
     } else {
-      state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+      state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: draggedItem.element || "neutral" };
       draggedItem.count -= 1;
     }
   } else {
-    state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
-    cells[boardI] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny } : null;
+    state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: draggedItem.element || "neutral" };
+    cells[boardI] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny, element: existingPerch.element || "neutral" } : null;
   }
 
   // Trigger the floating text particle with the rotating coin
@@ -352,10 +371,27 @@ function seatPerch(slot, boardI) {
 function emptyPerch(slot) {
   const p = state.perch[slot];
   if (!p) return;
-  if (!spawn(p.level, p.count, null, p.shiny)) { toast("Board full"); return; }
+  
+  const free = emptyOpen();
+  if (!free.length) {
+    toast("Board full");
+    return;
+  }
+  
+  // Drop it onto a free cell while preserving its exact element and shiny status!
+  const spot = free[Math.floor(Math.random() * free.length)];
+  const cells = board();
+  cells[spot] = { 
+    level: p.level, 
+    count: p.count, 
+    shiny: p.shiny,  // <-- The comma was missing right here!
+    element: p.element || "neutral" 
+  };
+
   state.perch[slot] = null;
   perchArmed = -1;
-  save(); render();
+  save(); 
+  render();
 }
 
 function openFogFree(n) {
@@ -534,7 +570,10 @@ const defaultState = () => ({
   sleepyDone: false,
   sleepyStreak: 0,
   questTab: 0,
-  tributes: 0
+  tributes: 0,
+  bag: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  bagMax: { 0: 10, 1: 10, 2: 10, 3: 10, 4: 10, 5: 10 },
+  
 });
 
 let state = defaultState();
@@ -657,12 +696,17 @@ function spawn(level, count = 1, at, forceShiny = false) {
   const shiny = forceShiny || (Math.random() < 0.05);
   if (shiny) discoverRare(level);
 
-  // Pick a random element for the new spawn
-  const CORE_ELEMENTS = ["fire", "water", "nature"];
-  const randomElement = CORE_ELEMENTS[Math.floor(Math.random() * CORE_ELEMENTS.length)];
+// Pick an element only for Tier 2 and above. Eggs and Hatchlings stay neutral!
+  let assignedElement = null;
+  if (level >= 2) {
+    const CORE_ELEMENTS = ["fire", "water", "nature"];
+    assignedElement = CORE_ELEMENTS[Math.floor(Math.random() * CORE_ELEMENTS.length)];
+  } else {
+    assignedElement = "neutral";
+  }
 
-  // Save everything (including the element) to the exact cell
-  cells[i] = { level, count, shiny, element: randomElement };
+  // Save everything (including the neutral/assigned element) to the exact cell
+  cells[i] = { level, count, shiny, element: assignedElement };
   
   return true;
 }
@@ -690,8 +734,17 @@ function mergeInto(fromI, toI) {
   
   const isShiny = a.shiny || b.shiny || (Math.random() < 0.08);
 
-  // --- Grab the element from the dragged item (fallback to fire if missing) ---
-  const carriedElement = a.element || "fire";
+  // --- MAJORITY ELEMENT INHERITANCE LOGIC ---
+  // Compare stack counts to see whose element takes command!
+  let carriedElement = "neutral";
+  if (a.count > b.count) {
+    carriedElement = a.element || "neutral";
+  } else if (b.count > a.count) {
+    carriedElement = b.element || "neutral";
+  } else {
+    // If counts are equal, prioritize the dragged item, or fall back to whichever has an active element
+    carriedElement = a.element && a.element !== "neutral" ? a.element : (b.element || "neutral");
+  }
 
   let total = a.count + b.count;
   cells[fromI] = null;
@@ -702,6 +755,16 @@ function mergeInto(fromI, toI) {
   }
   if (produced) {
     const next = a.level + 1;
+    
+    // --- ELEMENTAL MUTATION LOGIC ---
+    // Carry the element forward, but if it's hitting Level 2+ and was neutral, awaken an element!
+    let finalElement = carriedElement;
+    if (next >= 2 && (!finalElement || finalElement === "neutral")) {
+      const CORE_ELEMENTS = ["fire", "water", "nature"];
+      finalElement = CORE_ELEMENTS[Math.floor(Math.random() * CORE_ELEMENTS.length)];
+    }
+    // --------------------------------
+
     const payout = state.mode === "stage" ? 0 : (80 + next * 45) * bonus() * (isShiny ? 2 : 1);
     if (payout) state.coins += payout;
     if (state.mode !== "stage" && next === 4) completeHearthGoal();
@@ -722,14 +785,14 @@ function mergeInto(fromI, toI) {
     discover(next);
     let landed = toI;
     if (total > 0) {
-      // 1. Lock the newly upgraded Dragon (with carriedElement) directly under the player's mouse
-      cells[toI] = { level: next, count: produced, shiny: isShiny, element: carriedElement };
+      // 1. Lock the newly upgraded Dragon (with finalElement) directly under the player's mouse
+      cells[toI] = { level: next, count: produced, shiny: isShiny, element: finalElement };
       
       // 2. Safely bounce the leftover un-merged items back (retaining their element too)
       cells[fromI] = { level: a.level, count: total, shiny: a.shiny, element: carriedElement };
     } else {
-      // Perfect 5-merge with no leftovers (carrying element forward)
-      cells[toI] = { level: next, count: produced, shiny: isShiny, element: carriedElement };
+      // Perfect 5-merge with no leftovers (carrying the awakened element forward)
+      cells[toI] = { level: next, count: produced, shiny: isShiny, element: finalElement };
     }
     if (state.mode === "stage") {
       applyWarmth(landed, next);
@@ -1380,7 +1443,7 @@ function itemHtml(item) {
   const tierBorders = ["#4a2c17", "#6b4a32", "#d45817", "#ff6a20", "#ffcf40", "#ffe08a"];
   const borderColor = tierBorders[item.level] || "#4a2c17";
 
-// --- Elemental Badge Setup ---
+// --- Elemental Badge Setup (Only show for Fire, Water, or Nature) ---
   let elementIcon = "";
   if (item.element === "fire") elementIcon = "ember.png";
   else if (item.element === "water") elementIcon = "water.png";
@@ -1668,12 +1731,14 @@ function renderRoost() {
   state.perch = state.perch || [null, null, null];
   const slotNames = ["Hatchery Hearth", "Moss Alcove", "Lamp Walk"];
   
-  // Custom aesthetic themes for each room/slot
   const themes = [
-    { border: "#d45817", bg: "rgba(40, 15, 5, 0.5)", glow: "rgba(212, 88, 23, 0.25)", synergyText: "Loves Young Dragons (Lv 1-2)" }, 
-    { border: "#76c893", bg: "rgba(10, 35, 20, 0.5)", glow: "rgba(118, 200, 147, 0.2)", synergyText: "Loves Mid Dragons (Lv 3-4)" }, 
-    { border: "#ffcf40", bg: "rgba(30, 25, 10, 0.5)", glow: "rgba(255, 207, 64, 0.2)", synergyText: "Loves Elder Dragons (Lv 5+)" }  
+    { border: "#d45817", bg: "rgba(40, 15, 5, 0.5)", glow: "rgba(212, 88, 23, 0.25)", synergyText: "Loves Fire Dragons" }, 
+    { border: "#76c893", bg: "rgba(10, 35, 20, 0.5)", glow: "rgba(118, 200, 147, 0.2)", synergyText: "Loves Nature Dragons" }, 
+    { border: "#ffcf40", bg: "rgba(30, 25, 10, 0.5)", glow: "rgba(255, 207, 64, 0.2)", synergyText: "Loves Water Dragons" }  
   ];
+  
+  // Track the sum of all active perches
+  let grandTotalIncome = 0;
   
   container.innerHTML = [0, 1, 2].map(i => {
     const open = perchOpen(i);
@@ -1689,32 +1754,31 @@ function renderRoost() {
       </div>`;
     }
     
-    // --- 2. OCCUPIED ALCOVE ---
+// --- 2. OCCUPIED ALCOVE ---
     if (p) {
-      const curve = [5, 15, 30, 60, 120, 240];
+      const yieldData = getPerchYield(p, i);
+      grandTotalIncome += yieldData.total; 
+      const hasSynergy = yieldData.hasSynergy;
       
-      // Calculate Base Income
-      let incomePerMinute = Math.floor((curve[p.level] || 5) * (p.shiny ? 2.5 : 1)) * 3;
+      let elementIcon = "";
+      if (p.element === "fire") elementIcon = "ember.png";
+      else if (p.element === "water") elementIcon = "water.png";
+      else if (p.element === "nature") elementIcon = "leaf.png";
       
-      // Determine Synergy
-      let hasSynergy = false;
-      if (i === 0 && p.level <= 2) hasSynergy = true;
-      if (i === 1 && (p.level === 3 || p.level === 4)) hasSynergy = true;
-      if (i === 2 && p.level >= 5) hasSynergy = true;
-      
-      // Apply Synergy Bonus (50% increase)
-      if (hasSynergy) {
-        incomePerMinute = Math.floor(incomePerMinute * 1.5);
-      }
+      const badgeHTML = elementIcon ? `
+        <img src="${elementIcon}" alt="${p.element}" style="
+          position: absolute; top: 0px; right: 0px; width: 22px; height: 22px; 
+          border-radius: 50%; aspect-ratio: 1; object-fit: cover;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9)); z-index: 10;
+        ">` : "";
       
       return `<div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid ${hasSynergy ? t.border : (p.shiny ? '#ffea75' : '#415a77')}; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px ${hasSynergy ? t.glow : 'rgba(0,0,0,0)'};">
         
-        <!-- Recessed Dragon Stage -->
-        <div style="background: radial-gradient(circle, ${hasSynergy ? t.glow : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
+        <div style="position: relative; background: radial-gradient(circle, ${hasSynergy ? t.glow : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
+          ${badgeHTML}
           ${dragonSvg(p.level, 56, 1, p.shiny)}
         </div>
         
-        <!-- Dragon Info -->
         <div style="flex: 1;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <h4 style="margin: 0; font-family: 'Playfair Display', serif; color: ${p.shiny ? '#ffea75' : '#e0e1dd'}; font-size: 1.2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);">
@@ -1726,27 +1790,32 @@ function renderRoost() {
           <p style="margin: 4px 0 0; font-size: 0.7rem; color: ${hasSynergy ? t.border : '#778da9'}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${slotNames[i]}</p>
           
           <div style="margin-top: 8px; display: inline-block; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; border: 1px solid ${hasSynergy ? t.border : 'rgba(255, 207, 64, 0.2)'};">
-            <span style="font-size: 0.8rem; font-weight: 800; color: ${hasSynergy ? t.border : '#ffcf40'};">+${incomePerMinute} 🪙 / m</span>
+            <span style="font-size: 0.8rem; font-weight: 800; color: ${hasSynergy ? t.border : '#ffcf40'};">
+              +${yieldData.base} 🪙/m ${hasSynergy ? `<span style="color: #ffea75; margin-left: 4px; text-shadow: 0 0 5px rgba(255, 234, 117, 0.5);">(+${yieldData.bonus} ✨)</span>` : ''}
+            </span>
           </div>
         </div>
         
-        <!-- Return Button -->
         <button onclick="emptyPerch(${i})" style="background: linear-gradient(to bottom, #a12b2b, #5c1414); border: 1px solid #ff4d4d; color: #f8ece4; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5);">Return</button>
       </div>`;
     }
     
     // --- 3. EMPTY ALCOVE ---
     return `<div style="background: ${t.bg}; border: 2px dashed ${t.border}; padding: 24px; border-radius: 16px; text-align: center; cursor: pointer; box-shadow: inset 0 4px 20px rgba(0,0,0,0.6);" onclick="openPickerModal(${i})">
-      
       <div style="width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 50%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; border: 1px solid ${t.border}; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
         <span style="font-size: 1.8rem; color: ${t.border}; font-weight: bold;">+</span>
       </div>
-      
       <h4 style="margin: 0; color: ${t.border}; font-family: 'Playfair Display', serif; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Send to ${slotNames[i]}</h4>
       <span style="font-size: 0.75rem; color: rgba(224, 225, 221, 0.8); display: block; margin-top: 4px;">${t.synergyText}</span>
     </div>`;
     
   }).join("");
+  
+  // Push the final calculated tally to the Bank Vault UI
+  const vaultIncomeEl = document.getElementById("bankRate");
+  if (vaultIncomeEl) {
+    vaultIncomeEl.innerText = `+${grandTotalIncome}/m`;
+  }
 }
 
 function openPickerModal(slotId) {
@@ -1816,11 +1885,14 @@ function selectDragonForRoost(boardIndex) {
   const draggedItem = cells[boardIndex];
   if (!draggedItem) return;
   
+  // Preserve the element when sending to the perch!
+  const itemElement = draggedItem.element || "neutral";
+
   if (draggedItem.count > 1) {
-    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: itemElement };
     draggedItem.count -= 1;
   } else {
-    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: itemElement };
     cells[boardIndex] = null; 
   }
   
@@ -1878,20 +1950,26 @@ function render() {
       exitBtn.style.setProperty("display", "none", "important"); // Force hide everywhere else
     }
   }
-  // --- Dynamic Auto Merge Button State Check ---
-  autoBtn = document.getElementById("autoMergeBtn");
+// --- Dynamic Auto Merge Button State Check ---
+  const autoBtn = document.getElementById("autoMergeBtn");
   if (autoBtn) {
-    if ((state.level || 1) >= 5) {
-      autoBtn.textContent = "Auto Merge";
-      autoBtn.disabled = false;
-      autoBtn.classList.remove("locked-btn");
-      autoBtn.style.opacity = "1";
-      autoBtn.style.cursor = "pointer";
-      autoBtn.style.pointerEvents = "auto";
+    if (state.mode === "stage") {
+      autoBtn.style.setProperty("display", "none", "important"); // Hide during Ash Trail
     } else {
-      autoBtn.textContent = "Auto Merge (Lv. 5)";
-      autoBtn.disabled = true;
-      autoBtn.classList.add("locked-btn");
+      autoBtn.style.setProperty("display", "inline-flex", "important");
+      
+      if ((state.level || 1) >= 5) {
+        autoBtn.textContent = "Auto Merge";
+        autoBtn.disabled = false;
+        autoBtn.classList.remove("locked-btn");
+        autoBtn.style.opacity = "1";
+        autoBtn.style.cursor = "pointer";
+        autoBtn.style.pointerEvents = "auto";
+      } else {
+        autoBtn.textContent = "Auto Merge (Lv. 5)";
+        autoBtn.disabled = true;
+        autoBtn.classList.add("locked-btn");
+      }
     }
   }
 
@@ -1939,29 +2017,6 @@ function render() {
     }
   }
   
-  // --- Dynamic Auto Merge Button State Check ---
-  autoBtn = document.getElementById("autoMergeBtn");
-  if (autoBtn) {
-    if (state.mode === "stage") {
-      autoBtn.style.setProperty("display", "none", "important"); // Forces through the CSS lock
-    } else {
-      autoBtn.style.setProperty("display", "inline-flex", "important");
-      
-      if ((state.level || 1) >= 5) {
-        autoBtn.textContent = "Auto Merge";
-        autoBtn.disabled = false;
-        autoBtn.classList.remove("locked-btn");
-        autoBtn.style.opacity = "1";
-        autoBtn.style.cursor = "pointer";
-        autoBtn.style.pointerEvents = "auto";
-      } else {
-        autoBtn.textContent = "Auto Merge (Lv. 5)";
-        autoBtn.disabled = true;
-        autoBtn.classList.add("locked-btn");
-      }
-    }
-  }
-
   renderQuest();
   renderRoost();
   
@@ -2164,7 +2219,11 @@ boardEl?.addEventListener("pointerdown", (e) => {
   ghost.style.top = e.clientY + "px";
   boardEl.setPointerCapture(e.pointerId);
 });
+// Tab Switching Logic
+let pendingTab = null;
+let pendingViewId = null;
 let drag = null, ghost = null;
+
 boardEl?.addEventListener("pointermove", (e) => {
   if (!drag || !ghost) return;
   ghost.style.left = e.clientX + "px";
@@ -2206,6 +2265,7 @@ function endDrag(e) {
 
     const cells = board();
 
+    // --- 1. DROPPING ONTO A PERCH ---
     if (perchEl && state.mode !== "stage") {
         const slot = +perchEl.dataset.perch;
         if (perchOpen(slot) && cells[from]) {
@@ -2216,293 +2276,272 @@ function endDrag(e) {
             const rect = perchEl.getBoundingClientRect();
             spawnFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${incomeValue}`);
             
+            // Capture the element so we don't lose it!
+            const itemElement = draggedItem.element || "neutral";
+            
             if (draggedItem.count > 1) {
                 if (existingPerch) {
                    toast("Perch must be empty to split stack.");
                 } else {
-                   state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
+                   state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: itemElement };
                    draggedItem.count -= 1;
                    sfx("buy");
                 }
             } else {
-                state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny };
-                cells[from] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny } : null;
+                state.perch[slot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: itemElement };
+                cells[from] = existingPerch ? { level: existingPerch.level, count: 1, shiny: existingPerch.shiny, element: existingPerch.element || "neutral" } : null;
                 sfx("buy");
             }
         }
-    } else if (cellEl) {
-        const over = +cellEl.dataset.i;
-        if (over != null && over !== from && cells[from] && !isLocked(over) && !isAsh(over)) {
-            if (cells[over] && cells[over].level === cells[from].level) {
-                // Same tier: Trigger your powerful mergeInto logic!
-                mergeInto(from, over);
-            } else if (!cells[over]) {
-                // Empty tile: Move item cleanly
-                cells[over] = cells[from];
+    } 
+    // --- 2. DROPPING ONTO THE BOARD ---
+    else if (cellEl) {
+        const to = parseInt(cellEl.dataset.i, 10);
+        if (from !== to && !isLocked(to)) {
+            if (!cells[to]) {
+                // Move to an empty tile
+                cells[to] = cells[from];
                 cells[from] = null;
-                sfx("click");
+            } else if (cells[from].level === cells[to].level) {
+                // Merge if levels match
+                mergeInto(from, to);
             } else {
-                // Occupied by a different tier: Swap positions
-                const temp = cells[over];
-                cells[over] = cells[from];
+                // Swap places if levels are different
+                const temp = cells[to];
+                cells[to] = cells[from];
                 cells[from] = temp;
-                sfx("click");
             }
         }
     }
+
     drag = null;
     save(); 
     render();
 }
 
-boardEl?.addEventListener("pointerup", endDrag);
-boardEl?.addEventListener("pointercancel", endDrag);
+function initGame() {
+  // --- DRAG & DROP LISTENERS ---
+  boardEl?.addEventListener("pointerup", endDrag);
+  boardEl?.addEventListener("pointercancel", endDrag);
 
-nestEl?.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-decor]");
-  if (el) buyDecor(el.dataset.decor);
-});
+  // --- MOUNTAIN & NEST LISTENERS ---
+  nestEl?.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-decor]");
+    if (el) buyDecor(el.dataset.decor);
+  });
 
-document.getElementById("mountain")?.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-room]");
-  if (!el) return;
-  const id = el.dataset.room;
-  const room = ROOMS.find(r => r.id === id);
-  if (!room) return;
-  if (room.need && !state.decor[room.need]) { toast("That room is still sealed"); return; }
-  applyTheme(id);
-  save(); render();
-});
-
-document.getElementById("perchRow")?.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-perch]");
-  if (!el) return;
-  const i = +el.dataset.perch;
-  if (!perchOpen(i) || state.mode === "stage") return;
-  if (state.perch[i] && perchArmed !== i) { emptyPerch(i); return; }
-  perchArmed = perchArmed === i ? -1 : i;
-  render();
-  if (perchArmed >= 0) toast("Tap a nest dragon to perch it");
-});
-
-gatherBtn?.addEventListener("click", gather);
-document.getElementById("dragonBank")?.addEventListener("click", () => {
-  const bankValue = state.perchBank || 0;
-  if (bankValue > 0) {
-    state.coins += bankValue;
-    toast("Collected " + bankValue + " 🪙 from the Dragon Bank!");
-    state.perchBank = 0;
-    sfx("gather");
-    // NEW: Instantly remove the MAX overlay so it doesn't wait for the next tick
-    document.getElementById("dragonBank").classList.remove("is-maxed");
-    save();
+  document.getElementById("mountain")?.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-room]");
+    if (!el) return;
+    const id = el.dataset.room;
+    const room = ROOMS.find(r => r.id === id);
+    if (!room) return;
+    if (room.need && !state.decor[room.need]) { toast("That room is still sealed"); return; }
+    applyTheme(id);
+    save(); 
     render();
-  } else {
-    toast("The perches are still gathering coins...");
-  }
-});
+  });
 
-// --- 1. Closes the level up modal IF there was no chest to open ---
-document.getElementById("chestOk")?.addEventListener("click", () => {
-  document.getElementById("chest").classList.remove("open");
-  levelShowing = false;
-  showLevelEvent(); // If you tapped the cheat button 5 times, this pulls up the next one!
-});
+  document.getElementById("perchRow")?.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-perch]");
+    if (!el) return;
+    const i = +el.dataset.perch;
+    if (!perchOpen(i) || state.mode === "stage") return;
+    if (state.perch[i] && perchArmed !== i) { emptyPerch(i); return; }
+    perchArmed = perchArmed === i ? -1 : i;
+    render();
+    if (perchArmed >= 0) toast("Tap a nest dragon to perch it");
+  });
 
-// --- 2. Triggers the fireworks and open animation ---
-document.getElementById("chestBox")?.addEventListener("click", revealChest);
-
-// --- 3. Closes the second loot screen ---
-document.getElementById("lootOk")?.addEventListener("click", () => {
-  document.getElementById("lootModal").classList.remove("open");
-  levelShowing = false;
-  showLevelEvent(); 
-});
-
-document.getElementById("hint")?.addEventListener("click", enterStage);
-
-document.getElementById("restartTrail")?.addEventListener("click", restartTrail);
-document.getElementById("winHome")?.addEventListener("click", hideTrailWin);
-document.getElementById("winAgain")?.addEventListener("click", () => {
-  hideTrailWin();
-  restartTrail();
-});
-document.getElementById("homeTrail")?.addEventListener("click", () => {
-  hideTrailFail();
-  state.mode = "home";
-  resetTrail();
-  toast("Returned to the nest");
-  save(); render();
-});
-
-document.getElementById("nameLine")?.addEventListener("click", () => {
-  const free = (state.nameChanges || 0) === 0;
-  document.getElementById("nameHint").textContent = free
-    ? "First change is free."
-    : "Rename costs " + RENAME_COST + " 🪙.";
-  document.getElementById("nameInput").value = state.playerName || "";
-  document.getElementById("nameBox")?.classList.add("open");
-});
-
-document.getElementById("nameNo")?.addEventListener("click", () => {
-  document.getElementById("nameBox").classList.remove("open");
-});
-
-document.getElementById("nameGo")?.addEventListener("click", () => {
-  const raw = (document.getElementById("nameInput").value || "").trim().replace(/\s+/g, " ");
-  if (raw.length < 2) { toast("Need at least 2 letters"); return; }
-  if (raw.length > 16) { toast("16 letters max"); return; }
-  if (raw === (state.playerName || "Keeper")) {
-    document.getElementById("nameBox").classList.remove("open");
-    return;
-  }
-  const free = (state.nameChanges || 0) === 0;
-  if (!free) {
-    if (state.coins < RENAME_COST) { toast("Need " + RENAME_COST + " 🪙"); return; }
-    state.coins -= RENAME_COST;
-  }
-  state.playerName = raw;
-  state.nameChanges = (state.nameChanges || 0) + 1;
-  document.getElementById("nameBox").classList.remove("open");
-  toast(free ? "Welcome, " + raw : "Renamed for " + RENAME_COST + " 🪙");
-  save(); render();
-});
-
-document.getElementById("muteBtn")?.addEventListener("click", () => {
-  state.muted = !state.muted;
-  save(); render();
-  toast(state.muted ? "Sound off" : "Sound on");
-});
-
-document.getElementById("bookBtn")?.addEventListener("click", () => {
-  sfx("click"); // Play click sound when opening the Dragon Book
-  renderBook();
-  document.getElementById("book")?.classList.add("open");
-});
-
-document.getElementById("bookClose")?.addEventListener("click", () => {
-  document.getElementById("book").classList.remove("open");
-  switchBookTab(0); // Resets to Main tab and Page 0
-});
-
-document.getElementById("book")?.addEventListener("click", (e) => {
-  if (e.target.id === "book") {
-    document.getElementById("book").classList.remove("open");
-    switchBookTab(0); // Resets to Main tab and Page 0
-  }
-});
-
-document.getElementById("resetBookBtn")?.addEventListener("click", () => {
-  if (confirm("Are you sure you want to reset your Dragon Book progress? This will lock discovered entries again.")) {
-    state.book = { 0: true };
-    state.rareBook = {};
-    save();
-    renderBook();
-    toast("Dragon Book reset.");
-  }
-});
-
-document.getElementById("resetBookGameBtn")?.addEventListener("click", () => {
-  // 1. Close the Dragon Book modal so it's out of the way
-  document.getElementById("book")?.classList.remove("open");
+  // --- CORE GAME BUTTONS ---
+  gatherBtn?.addEventListener("click", gather);
   
-  // 2. Open your custom in-app wipe confirmation modal
-  document.getElementById("wipe")?.classList.add("open");
-  const inp = document.getElementById("wipeInput");
-  if (inp) {
-    inp.value = "";
-    document.getElementById("wipeGo").disabled = true;
-    inp.focus();
-  }
-});
-
-document.getElementById("resetAll")?.addEventListener("click", () => {
-  document.getElementById("wipe")?.classList.add("open");
-  const inp = document.getElementById("wipeInput");
-  if (inp) {
-    inp.value = "";
-    document.getElementById("wipeGo").disabled = true;
-    inp.focus();
-  }
-});
-
-document.getElementById("wipeInput")?.addEventListener("input", (e) => {
-  document.getElementById("wipeGo").disabled = e.target.value.trim() !== "Delete";
-});
-
-document.getElementById("wipeGo")?.addEventListener("click", () => {
-  if (document.getElementById("wipeInput").value.trim() !== "Delete") return;
-  localStorage.removeItem(SAVE);
-  for (let v = 1; v <= 10; v++) localStorage.removeItem("ember-nest-v" + v);
-  location.reload();
-});
-
-document.getElementById("wipeNo")?.addEventListener("click", () => {
-  document.getElementById("wipe")?.classList.remove("open");
-});
-
-document.getElementById("overClose")?.addEventListener("click", () => {
-  document.getElementById("overflow").classList.remove("open");
-  overflowArm = null;
-});
-
-document.getElementById("overPerch")?.addEventListener("click", () => {
-  if (freePerchSlot() < 0) { toast("No open perch"); return; }
-  overflowArm = "perch";
-  document.getElementById("overflow").classList.remove("open");
-  toast("Tap a nest dragon to perch it");
-});
-
-document.getElementById("overDrop")?.addEventListener("click", () => {
-  overflowArm = "dismiss";
-  document.getElementById("overflow").classList.remove("open");
-  toast("Tap a nest dragon to dismiss it");
-});
-
-document.getElementById("guideBtn")?.addEventListener("click", showGuide);
-document.getElementById("guideClose")?.addEventListener("click", () => {
-  state.seenGuide = true;
-  document.getElementById("guide").classList.remove("open");
-  save();
-});
-
-document.getElementById("sleepyGuideClose")?.addEventListener("click", () => {
-  document.getElementById("sleepyGuide").classList.remove("open");
-});
-
-document.getElementById("book")?.addEventListener("click", (e) => {
-  if (e.target.id === "book") document.getElementById("book").classList.remove("open");
-});
-// Tab Switching Logic
-let pendingTab = null;
-let pendingViewId = null;
-// Nest Sub-Tab Switching Logic
-document.querySelectorAll(".nest-tab-btn").forEach(btn => {
-  btn?.addEventListener("click", (e) => {
-    // Remove active styles/classes from sub-tab buttons
-    document.querySelectorAll(".nest-tab-btn").forEach(b => {
-      b.classList.remove("active");
-      b.style.background = "#1b263b"; // Inactive color
-    });
-    
-    // Hide all sub-views
-    document.querySelectorAll(".nest-sub-view").forEach(v => {
-      v.style.display = "none";
-    });
-    
-    // Activate clicked sub-tab
-    const targetSubTab = e.currentTarget;
-    targetSubTab.classList.add("active");
-    targetSubTab.style.background = "#415a77"; // Active color highlight
-    
-    // Show target sub-view content
-    const subViewId = targetSubTab.dataset.subtab;
-    const activeSubView = document.getElementById(subViewId);
-    if (activeSubView) {
-      activeSubView.style.display = "block";
+  document.getElementById("dragonBank")?.addEventListener("click", () => {
+    const bankValue = state.perchBank || 0;
+    if (bankValue > 0) {
+      state.coins += bankValue;
+      toast("Collected " + bankValue + " 🪙 from the Dragon Bank!");
+      
+      state.perchBank = 0;
+      state.perchAt = Date.now(); // <-- THIS RESETS THE TIMER!
+      
+      sfx("gather");
+      document.getElementById("dragonBank").classList.remove("is-maxed");
+      save();
+      render();
+    } else {
+      toast("The perches are still gathering coins...");
     }
   });
-});
+
+  document.getElementById("hint")?.addEventListener("click", enterStage);
+  
+  document.getElementById("muteBtn")?.addEventListener("click", () => {
+    state.muted = !state.muted;
+    save(); 
+    render();
+    toast(state.muted ? "Sound off" : "Sound on");
+  });
+
+  // --- MODALS (CHESTS & LOOT) ---
+  document.getElementById("chestOk")?.addEventListener("click", () => {
+    document.getElementById("chest").classList.remove("open");
+    levelShowing = false;
+    showLevelEvent(); 
+  });
+  document.getElementById("chestBox")?.addEventListener("click", revealChest);
+  document.getElementById("lootOk")?.addEventListener("click", () => {
+    document.getElementById("lootModal").classList.remove("open");
+    levelShowing = false;
+    showLevelEvent(); 
+  });
+
+  // --- ASH TRAIL OVERLAYS ---
+  document.getElementById("restartTrail")?.addEventListener("click", restartTrail);
+  document.getElementById("winHome")?.addEventListener("click", hideTrailWin);
+  document.getElementById("winAgain")?.addEventListener("click", () => {
+    hideTrailWin();
+    restartTrail();
+  });
+  document.getElementById("homeTrail")?.addEventListener("click", () => {
+    hideTrailFail();
+    state.mode = "home";
+    resetTrail();
+    toast("Returned to the nest");
+    save(); 
+    render();
+  });
+
+  // --- RENAMING SYSTEM ---
+  document.getElementById("nameLine")?.addEventListener("click", () => {
+    const free = (state.nameChanges || 0) === 0;
+    document.getElementById("nameHint").textContent = free ? "First change is free." : "Rename costs " + RENAME_COST + " 🪙.";
+    document.getElementById("nameInput").value = state.playerName || "";
+    document.getElementById("nameBox")?.classList.add("open");
+  });
+  document.getElementById("nameNo")?.addEventListener("click", () => {
+    document.getElementById("nameBox").classList.remove("open");
+  });
+  document.getElementById("nameGo")?.addEventListener("click", () => {
+    const raw = (document.getElementById("nameInput").value || "").trim().replace(/\s+/g, " ");
+    if (raw.length < 2) { toast("Need at least 2 letters"); return; }
+    if (raw.length > 16) { toast("16 letters max"); return; }
+    if (raw === (state.playerName || "Keeper")) {
+      document.getElementById("nameBox").classList.remove("open");
+      return;
+    }
+    const free = (state.nameChanges || 0) === 0;
+    if (!free) {
+      if (state.coins < RENAME_COST) { toast("Need " + RENAME_COST + " 🪙"); return; }
+      state.coins -= RENAME_COST;
+    }
+    state.playerName = raw;
+    state.nameChanges = (state.nameChanges || 0) + 1;
+    document.getElementById("nameBox").classList.remove("open");
+    toast(free ? "Welcome, " + raw : "Renamed for " + RENAME_COST + " 🪙");
+    save(); 
+    render();
+  });
+
+  // --- DRAGON BOOK ---
+  document.getElementById("bookBtn")?.addEventListener("click", () => {
+    sfx("click"); 
+    renderBook();
+    document.getElementById("book")?.classList.add("open");
+  });
+  document.getElementById("bookClose")?.addEventListener("click", () => {
+    document.getElementById("book").classList.remove("open");
+    switchBookTab(0); 
+  });
+  document.getElementById("book")?.addEventListener("click", (e) => {
+    if (e.target.id === "book") {
+      document.getElementById("book").classList.remove("open");
+      switchBookTab(0); 
+    }
+  });
+  document.getElementById("resetBookBtn")?.addEventListener("click", () => {
+    if (confirm("Are you sure you want to reset your Dragon Book progress? This will lock discovered entries again.")) {
+      state.book = { 0: true };
+      state.rareBook = {};
+      save();
+      renderBook();
+      toast("Dragon Book reset.");
+    }
+  });
+
+  // --- HARD RESET / WIPE ---
+  document.getElementById("resetBookGameBtn")?.addEventListener("click", () => {
+    document.getElementById("book")?.classList.remove("open");
+    document.getElementById("wipe")?.classList.add("open");
+    const inp = document.getElementById("wipeInput");
+    if (inp) { inp.value = ""; document.getElementById("wipeGo").disabled = true; inp.focus(); }
+  });
+  document.getElementById("resetAll")?.addEventListener("click", () => {
+    document.getElementById("wipe")?.classList.add("open");
+    const inp = document.getElementById("wipeInput");
+    if (inp) { inp.value = ""; document.getElementById("wipeGo").disabled = true; inp.focus(); }
+  });
+  document.getElementById("wipeInput")?.addEventListener("input", (e) => {
+    document.getElementById("wipeGo").disabled = e.target.value.trim() !== "Delete";
+  });
+  document.getElementById("wipeGo")?.addEventListener("click", () => {
+    if (document.getElementById("wipeInput").value.trim() !== "Delete") return;
+    localStorage.removeItem(SAVE);
+    for (let v = 1; v <= 10; v++) localStorage.removeItem("ember-nest-v" + v);
+    location.reload();
+  });
+  document.getElementById("wipeNo")?.addEventListener("click", () => {
+    document.getElementById("wipe")?.classList.remove("open");
+  });
+
+  // --- OVERFLOW MODAL ---
+  document.getElementById("overClose")?.addEventListener("click", () => {
+    document.getElementById("overflow").classList.remove("open");
+    overflowArm = null;
+  });
+  document.getElementById("overPerch")?.addEventListener("click", () => {
+    if (freePerchSlot() < 0) { toast("No open perch"); return; }
+    overflowArm = "perch";
+    document.getElementById("overflow").classList.remove("open");
+    toast("Tap a nest dragon to perch it");
+  });
+  document.getElementById("overDrop")?.addEventListener("click", () => {
+    overflowArm = "dismiss";
+    document.getElementById("overflow").classList.remove("open");
+    toast("Tap a nest dragon to dismiss it");
+  });
+
+  // --- GUIDES ---
+  document.getElementById("guideBtn")?.addEventListener("click", showGuide);
+  document.getElementById("guideClose")?.addEventListener("click", () => {
+    state.seenGuide = true;
+    document.getElementById("guide").classList.remove("open");
+    save();
+  });
+  document.getElementById("sleepyGuideClose")?.addEventListener("click", () => {
+    document.getElementById("sleepyGuide").classList.remove("open");
+  });
+
+  // --- TAB SWITCHING (NEST) ---
+  document.querySelectorAll(".nest-tab-btn").forEach(btn => {
+    btn?.addEventListener("click", (e) => {
+      document.querySelectorAll(".nest-tab-btn").forEach(b => {
+        b.classList.remove("active");
+        b.style.background = "#1b263b"; 
+      });
+      document.querySelectorAll(".nest-sub-view").forEach(v => {
+        v.style.display = "none";
+      });
+      const targetSubTab = e.currentTarget;
+      targetSubTab.classList.add("active");
+      targetSubTab.style.background = "#415a77"; 
+      const subViewId = targetSubTab.dataset.subtab;
+      const activeSubView = document.getElementById(subViewId);
+      if (activeSubView) activeSubView.style.display = "block";
+    });
+  });
+}
+
 // The function that actually switches the screens
 function executeTabSwitch(targetTab, viewId) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -2593,7 +2632,7 @@ setInterval(() => {
       state.energy = Math.min(cap, state.energy + 1);
       state.nextEnergyAt = Date.now() + REGEN_MS;
       save();
-      render();
+      // 🔥 RENDER CALL REMOVED: Your dragging will never be interrupted again! 🔥
     }
   }
 
@@ -2604,8 +2643,11 @@ setInterval(() => {
     if (Date.now() >= state.perchAt + PERCH_MS) {
       const ticks = Math.floor((Date.now() - state.perchAt) / PERCH_MS);
       if (ticks > 0) {
+        // 1 tick = 1 minute, so you get the full perchIncome() amount!
         const inc = perchIncome() * ticks;
-        const maxBank = perchIncome() * 1440; // 8 hours worth (at 20s ticks)        
+        
+        // 8 hours of capacity = 480 minutes
+        const maxBank = perchIncome() * 480;        
         state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
         state.perchAt += ticks * PERCH_MS;
         save();
@@ -2614,10 +2656,10 @@ setInterval(() => {
   }
 
   // 3. Refresh UI Elements Live Every Second
-  tickEnergy();
+  tickEnergy(); 
   
   const currentInc = perchIncome();
-  const maxBankLimit = currentInc * 1440;
+  const maxBankLimit = currentInc * 480; // Matched to 8 hours!
 
   const bankCountEl = document.getElementById("bankCount");
   const dragonBankBtn = document.getElementById("dragonBank"); 
@@ -2656,20 +2698,6 @@ setInterval(() => {
     setSafeText("bankTimer", "Perch a dragon");
   }
 }, 1000);
-
-scanBook();
-
-if (!state.hearthDone && (state.cells || []).some(it => it && it.level >= 4)) {
-  completeHearthGoal();
-}
-
-if (!state.cells.some(Boolean)) {
-  [0, 0, 0, 0, 0].forEach(lv => spawn(lv, 1));
-  save();
-}
-
-render();
-
 
 function updateCarouselDots() {
   const carousel = document.getElementById("quest-carousel");
@@ -2785,3 +2813,20 @@ document.querySelector(".level-pill")?.addEventListener("click", () => {
   // Gives you exactly the amount of XP needed to hit the next level
   addXp(xpNeed(state.level || 1)); 
 });
+
+// --- BOOT SEQUENCE ---
+initGame();
+load();
+
+scanBook();
+
+if (!state.hearthDone && (state.cells || []).some(it => it && it.level >= 4)) {
+  completeHearthGoal();
+}
+
+if (!state.cells.some(Boolean)) {
+  [0, 0, 0, 0, 0].forEach(lv => spawn(lv, 1));
+  save();
+}
+
+render();

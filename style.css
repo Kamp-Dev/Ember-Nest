@@ -1580,3 +1580,169 @@ html.lock-scroll, body.lock-scroll {
     background-color: rgba(255, 215, 0, 0.2);
     border: 2px dashed #ffd700;
 }
+/* Base View Management */
+.view-panel {
+    display: none;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height */
+    padding-bottom: 70px; /* Offset for the fixed bottom nav */
+    box-sizing: border-box;
+    background-color: #1a1a24; /* Dark fantasy background */
+    color: #eaeaea;
+}
+
+.view-panel.active {
+    display: flex; /* Only the active view gets rendered */
+}
+
+/* Keeper Profile (Avatar Showcase) */
+.keeper-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem;
+    background: linear-gradient(to bottom, #2a2a35, #1a1a24);
+    border-bottom: 2px solid #333344;
+}
+
+.avatar-frame {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #d4af37; /* Thematic gold accent */
+    background-color: #0f0f15;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    margin-bottom: 1rem;
+}
+
+.avatar-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.keeper-name {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.keeper-title {
+    font-size: 0.85rem;
+    color: #a0a0b5;
+    margin-top: 0.4rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* The Stash (Inventory System) */
+.stash-container {
+    flex: 1; /* Takes up remaining vertical space */
+    padding: 1.5rem;
+    overflow-y: auto; /* Allows scrolling if stash gets large */
+}
+
+.stash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid #333344;
+    padding-bottom: 0.5rem;
+}
+
+.stash-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #d4af37;
+}
+
+.stash-filter {
+    font-size: 0.8rem;
+    color: #7a7a8c;
+}
+
+/* Grid layout strictly for consumables */
+.stash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 12px;
+}
+
+.stash-slot {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-color: #232330;
+    border: 2px dashed #444455;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.stash-slot.filled {
+    border: 2px solid #555566;
+    background-color: #2a2a35;
+    cursor: pointer;
+}
+
+.stash-slot.filled:hover {
+    border-color: #d4af37;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.15);
+}
+
+/* Bottom Navigation */
+#bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background-color: #121218;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 2px solid #333344;
+    z-index: 9999;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: #7a7a8c;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.nav-btn:hover {
+    color: #a0a0b5;
+}
+
+.nav-btn.active {
+    color: #d4af37;
+}
+
+.nav-icon {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+}
+
+.nav-label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
