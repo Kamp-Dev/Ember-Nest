@@ -192,6 +192,7 @@ body {
 
 .cell {
   /* --- THE PHYSICAL LOCKS --- */
+  contain: size layout !important;
   width: 100% !important;
   min-width: 0 !important;
   min-height: 0 !important;
@@ -258,8 +259,17 @@ body {
 
 /* --- 6. DRAGONS, ITEMS & PERCHES --- */
 .item {
-  width: 100%;
-  height: 100%;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  
+  /* Forces the item wrapper to perfectly match the locked tile */
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -268,8 +278,13 @@ body {
 }
 
 .item svg {
+  /* Forces the SVG to shrink down if the tile is smaller than 52px */
+  max-width: 90% !important; 
+  max-height: 90% !important; 
   width: 52px !important;
   height: 52px !important;
+  
+  object-fit: contain !important; /* Keeps the dragon proportions perfect */
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
   overflow: visible !important;
   transform-box: fill-box;
