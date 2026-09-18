@@ -454,7 +454,7 @@ function showLevelEvent() {
     box.style.display = ev.chest ? "block" : "none";
     
     // Set the CLOSED chest image
-    box.style.backgroundImage = "url('chest-closed.png')"; 
+    box.style.backgroundImage = "url('Images/chest-closed.png')"; 
     box.dataset.level = ev.chest ? String(ev.level) : "";
     box.disabled = false;
   }
@@ -601,7 +601,7 @@ function revealChest() {
   
   // 1. Swap image to OPEN chest
   if (box) {
-     box.style.backgroundImage = "url('chest-open.png')";
+     box.style.backgroundImage = "url('Images/chest-open.png')";
      box.disabled = true;
   }
   
@@ -1864,9 +1864,9 @@ function itemHtml(item) {
 
 // --- Elemental Badge Setup (Only show for Fire, Water, or Nature) ---
   let elementIcon = "";
-  if (item.element === "fire") elementIcon = "/images/ember.png";
-  else if (item.element === "water") elementIcon = "/images/water.png";
-  else if (item.element === "nature") elementIcon = "/images/leaf.png";
+  if (item.element === "fire") elementIcon = "/Images/ember.png";
+  else if (item.element === "water") elementIcon = "/Images/water.png";
+  else if (item.element === "nature") elementIcon = "/Images/leaf.png";
 
   const badgeHTML = elementIcon ? `
     <img src="${elementIcon}" alt="${item.element}" style="
@@ -1942,7 +1942,7 @@ function renderQuest() {
     const have = board().some(c => c && c.level >= STAGE_GOAL);
     box.className = "quest quest-card";
     box.style.display = "block"; // Ensure it's visible
-    box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.75), rgba(11, 22, 51, 0.9)), url('images/Mountains%20View.jpg')";
+    box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.75), rgba(11, 22, 51, 0.9)), url('Images/Mountains%20View.jpg')";
     box.style.backgroundSize = "cover";
     box.style.backgroundPosition = "center";
     box.style.border = "1px solid #778da9"; 
@@ -1960,7 +1960,7 @@ function renderQuest() {
   }
 
   // 2. HOME MODE (1 or 2 Quests)
-  const homeBg = "linear-gradient(rgba(11, 22, 51, 0.43), rgb(11, 22, 51)), url('images/Mountains%20View.jpg')";
+  const homeBg = "linear-gradient(rgba(11, 22, 51, 0.43), rgb(11, 22, 51)), url('Images/Mountains%20View.jpg')";
   
   // Apply base styles to both cards
   box.className = "quest sleepy quest-card";
@@ -2201,9 +2201,9 @@ function renderRoost() {
       const hasSynergy = yieldData.hasSynergy;
       
       let elementIcon = "";
-      if (p.element === "fire") elementIcon = "images/ember.png";
-      else if (p.element === "water") elementIcon = "images/water.png";
-      else if (p.element === "nature") elementIcon = "images/leaf.png";
+      if (p.element === "fire") elementIcon = "Images/ember.png";
+      else if (p.element === "water") elementIcon = "Images/water.png";
+      else if (p.element === "nature") elementIcon = "Images/leaf.png";
       
       const badgeHTML = elementIcon ? `
         <img src="${elementIcon}" alt="${p.element}" style="
@@ -2212,7 +2212,7 @@ function renderRoost() {
           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9)); z-index: 10;
         ">` : "";
       
-      return `<div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('images/Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid ${hasSynergy ? t.border : (p.shiny ? '#ffea75' : '#415a77')}; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px ${hasSynergy ? t.glow : 'rgba(0,0,0,0)'};">
+      return `<div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('Images/Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid ${hasSynergy ? t.border : (p.shiny ? '#ffea75' : '#415a77')}; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px ${hasSynergy ? t.glow : 'rgba(0,0,0,0)'};">
         
         <div style="position: relative; background: radial-gradient(circle, ${hasSynergy ? t.glow : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
           ${badgeHTML}
@@ -2505,11 +2505,11 @@ const mt = document.getElementById("mountain");
 
           // 1. ADD YOUR IMAGES HERE (Map the room's ID to its exact filename)
           const roomImages = {
-            "hatchery": "images/Hatchery.jpg",
-            "alcove": "images/moss alcove.jpg",
-            "lamp": "images/lamp walk.jpg",
-            "spring": "images/spring hall.jpg",
-            "vault": "images/tea vault.jpg",
+            "hatchery": "Images/Hatchery.jpg",
+            "alcove": "Images/moss alcove.jpg",
+            "lamp": "Images/lamp walk.jpg",
+            "spring": "Images/spring hall.jpg",
+            "vault": "Images/tea vault.jpg",
             // You can easily add more here later!
             // "spring": "Spring Hall.jpg",
           };
