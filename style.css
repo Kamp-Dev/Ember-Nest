@@ -175,13 +175,16 @@ body {
 #board {
   display: grid !important;
   box-sizing: border-box !important;
-  grid-template-columns: repeat(5, minmax(78px, 1fr)) !important; 
-  gap: 10px !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important; 
+  
+  /* Increase this number to make the spaces bigger */
+  gap: 15px !important; 
+  
   width: 100% !important;
   max-width: 450px !important; 
   padding: 0 !important;
-  margin: 0 auto 30px auto !important; /* Centers the entire container on the screen */
-  justify-content: center !important; /* Centers the tiles perfectly inside the container */
+  margin: 0 auto 30px auto !important; 
+  justify-content: center !important; 
   align-content: center !important;
   touch-action: none;
 }
@@ -1267,7 +1270,7 @@ html.lock-scroll, body.lock-scroll {
 @media (max-height: 800px) {
   #board {
     margin-bottom: 8px !important;
-    gap: 6px !important;
+    gap: 10px !important;
     /* Increased from 350px to 385px */
     max-width: 385px !important; 
   }
