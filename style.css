@@ -191,6 +191,14 @@ body {
 
 
 .cell {
+  /* --- THE PHYSICAL LOCKS --- */
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important; 
+  
+  /* --- YOUR ORIGINAL STYLES --- */
   aspect-ratio: 1;
   background: linear-gradient(145deg, #1f120a, #140b06);
   border: 2px solid #4a2c17;
@@ -200,14 +208,15 @@ body {
   justify-content: center;
   position: relative;
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s ease;
-  position: relative; /* Crucial so absolute badges anchor to the tile */
-  overflow: visible;  /* Ensures badges poking out at -2px don't get cut off */
+  
+  /* Changed 'all' to specific properties so the grid ignores accidental movement */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: visible; 
 }
 
 .cell:hover {
   border-color: var(--ember);
-  transform: translateY(-2px);
+  /* The 'transform: translateY(-2px);' line has been deleted so they stop jumping! */
 }
 
 .cell.locked {
@@ -216,6 +225,21 @@ body {
   color: var(--text-muted);
   font-size: 0.7rem;
   text-align: center;
+}
+
+/* Forces EVERYTHING injected into a cell to float perfectly centered without stretching it */
+.cell > * {
+  position: absolute !important;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Excludes your level badges from the center-lock so they stay at the bottom */
+.cell > .lvl {
+  top: auto;
+  bottom: -6px;
+  transform: translateX(-50%);
 }
 
 .cell.ash {
