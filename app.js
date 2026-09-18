@@ -525,7 +525,7 @@ function renderKeeperQuarters() {
   const bodyLayer = document.getElementById('layer-body');
   if (bodyLayer) {
   // 1. Grab the saved body, or use the default
-  let bodyFileName = eq.body || 'body_base.png';
+  let bodyFileName = eq.body || 'assets/avatar/body_base.png';
   
   // 2. Defensive check: If the old folder path is stuck in the save file, scrub it out
   bodyFileName = bodyFileName.replace('assets/avatar/', '');
