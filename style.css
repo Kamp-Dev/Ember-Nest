@@ -1308,10 +1308,12 @@ html.lock-scroll, body.lock-scroll {
 /* Mobile Viewport Fit (Screens Under 800px Height) */
 @media (max-height: 800px) {
   #board {
-    /* FIX: Increased from 8px to 25px to keep pushing the buttons down on mobile */
     margin-bottom: 25px !important; 
     gap: 10px !important;
-    max-width: 480px !important; 
+    
+    /* FIX: Forces the board to fill almost the whole phone screen safely */
+    width: 94% !important; 
+    max-width: 430px !important; 
   }
 
   .cell {
