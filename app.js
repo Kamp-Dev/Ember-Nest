@@ -1864,9 +1864,9 @@ function itemHtml(item) {
 
 // --- Elemental Badge Setup (Only show for Fire, Water, or Nature) ---
   let elementIcon = "";
-  if (item.element === "fire") elementIcon = "/Images/ember.png";
-  else if (item.element === "water") elementIcon = "/Images/water.png";
-  else if (item.element === "nature") elementIcon = "/Images/leaf.png";
+  if (item.element === "fire") elementIcon = "Images/ember.png";
+  else if (item.element === "water") elementIcon = "Images/water.png";
+  else if (item.element === "nature") elementIcon = "Images/leaf.png";
 
   const badgeHTML = elementIcon ? `
     <img src="${elementIcon}" alt="${item.element}" style="
@@ -2772,6 +2772,7 @@ function endDrag(e) {
     drag = null;
     save(); 
     render();
+    endDrag();
 }
 
 function initGame() {
