@@ -12,6 +12,7 @@ const TRAIL_GATHERS = 4;
 const DAILY_PAYS = [1200, 800, 400];
 const DAILY_CLEARS = 3;
 const RENAME_COST = 2000;
+const IMG_DIR = "Images/";
 
 // --- UI SAFETY HELPERS ---
 function getPerchYield(p, i) {
@@ -27,7 +28,128 @@ function getPerchYield(p, i) {
   
   return { base: baseIncome, bonus: bonusIncome, total: baseIncome + bonusIncome, hasSynergy };
 }
+// --- KEEPER'S CUSTOMIZER MIRROR FUNCTIONS ---
+let currentCustomizerSlot = 'torso';
 
+function openExpandedCustomizer() {
+  const modal = document.getElementById('expandedCustomizerModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    renderExpandedModalLayers();
+    renderExpandedItemGrid(currentCustomizerSlot);
+  }
+}
+
+function closeExpandedCustomizer() {
+  const modal = document.getElementById('expandedCustomizerModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderExpandedModalLayers() {
+  const eq = state.keeper?.equipment || {};
+  
+  const bodyL = document.getElementById('modal-layer-body');
+  const legsL = document.getElementById('modal-layer-legs');
+  const torsoL = document.getElementById('modal-layer-torso');
+  const headL = document.getElementById('modal-layer-head');
+
+  if (bodyL) bodyL.src = eq.body || 'assets/avatar/body_base.png';
+  
+  if (legsL) {
+    if (eq.legs) { legsL.src = eq.legs; legsL.style.display = 'block'; }
+    else { legsL.style.display = 'none'; }
+  }
+  
+  if (torsoL) {
+    if (eq.torso) { torsoL.src = eq.torso; torsoL.style.display = 'block'; }
+    else { torsoL.style.display = 'none'; }
+  }
+  
+  if (headL) {
+    if (eq.head) { headL.src = eq.head; headL.style.display = 'block'; }
+    else { headL.style.display = 'none'; }
+  }
+}
+
+function renderExpandedItemGrid(slotType) {
+  const grid = document.getElementById('expandedItemGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  
+  const stashData = state.stash || {};
+  let found = false;
+  
+  for (const [itemId, quantity] of Object.entries(stashData)) {
+    const itemDef = STASH_CATALOG[itemId];
+    if (itemDef && itemDef.type === 'cosmetic' && itemDef.slot === slotType) {
+      found = true;
+      const slotEl = document.createElement('div');
+      slotEl.className = 'stash-slot filled';
+      slotEl.style.cursor = 'pointer';
+      
+      const isEquipped = state.keeper?.equipment?.[slotType] === itemDef.img;
+      if (isEquipped) slotEl.style.borderColor = '#d4af37';
+      
+      slotEl.innerHTML = `
+        <div style="font-size: 1.8rem;">${itemDef.icon}</div>
+        <div style="position: absolute; bottom: 2px; font-size: 0.6rem; color: #fff; text-shadow: 0 1px 2px #000;">${itemDef.name}</div>
+      `;
+      
+      slotEl.onclick = () => {
+        state.keeper.equipment[slotType] = itemDef.img;
+        save();
+        renderKeeperQuarters();       
+        renderExpandedModalLayers();    
+        renderExpandedItemGrid(slotType); 
+        toast("Equipped " + itemDef.name);
+      };
+      grid.appendChild(slotEl);
+    }
+  }
+  
+  if (!found) {
+    grid.innerHTML = `<div style="grid-column: span 3; color: #7a7a8c; font-size: 0.75rem; padding: 15px; text-align: center;">No items found for this slot.</div>`;
+  }
+}
+
+// --- KEEPER'S CUSTOMIZER MIRROR LISTENERS ---
+
+// 1. Click the Avatar Frame to open the expanded modal
+document.getElementById('avatarFrameBtn')?.addEventListener('click', openExpandedCustomizer);
+
+// 2. Click the X or Done button to close it
+document.getElementById('closeExpandedModalBtn')?.addEventListener('click', closeExpandedCustomizer);
+document.getElementById('modalDoneBtn')?.addEventListener('click', closeExpandedCustomizer);
+
+// 3. Unequip Button logic
+document.getElementById('modalUnequipBtn')?.addEventListener('click', () => {
+  if (state.keeper?.equipment) {
+    state.keeper.equipment[currentCustomizerSlot] = null;
+    save();
+    renderKeeperQuarters();
+    renderExpandedModalLayers();
+    renderExpandedItemGrid(currentCustomizerSlot);
+    toast("Slot unequipped.");
+  }
+});
+
+// 4. Tab Switching logic (Torso, Legs, Head)
+document.querySelectorAll('.customizer-tab').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    // Remove active state from all tabs
+    document.querySelectorAll('.customizer-tab').forEach(b => {
+      b.classList.remove('active');
+      b.style.background = '#1b263b';
+    });
+    // Add active state to clicked tab
+    const target = e.currentTarget;
+    target.classList.add('active');
+    target.style.background = '#415a77';
+    
+    currentCustomizerSlot = target.dataset.slot;
+    renderExpandedItemGrid(currentCustomizerSlot);
+  });
+});
 function setSafeHTML(id, html) {
   const el = document.getElementById(id);
   if (el) el.innerHTML = html;
@@ -37,6 +159,147 @@ function setSafeText(id, text) {
   if (el) el.textContent = text;
 }
 const TRAIL_BAG = [2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+
+// --- KEEPER'S QUARTERS CATALOG ---
+const STASH_CATALOG = {
+  'rare_egg': { name: 'Rare Egg', icon: '🥚', type: 'consumable' },
+  'time_skip_1h': { name: '1h Time Skip', icon: '⏳', type: 'consumable' },
+  'breeder_tunic': { name: 'Breeder Tunic', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'torso_tunic.png' },
+  'leather_cap': { name: 'Leather Cap', icon: '🧢', type: 'cosmetic', slot: 'head', img: 'head_leather_cap.png' },
+  'rough_trousers': { name: 'Rough Trousers', icon: '👖', type: 'cosmetic', slot: 'legs', img: 'legs_trousers.png' }
+};
+
+// --- STASH & KEEPER LOGIC ---
+// Exposed to window so we can test it from the developer console
+window.addToStash = function(itemId, amount = 1) {
+  // Guardrail: No dragons in the stash!
+  if (STASH_CATALOG[itemId] && STASH_CATALOG[itemId].type === 'dragon') {
+    console.warn("Dragons cannot be stashed!");
+    return false; 
+  }
+
+  // Lazy initialize if not present
+  if (!state.stash) state.stash = {};
+  if (!state.stash[itemId]) state.stash[itemId] = 0;
+  
+  state.stash[itemId] += amount;
+  
+  save(); 
+  renderKeeperQuarters();
+  toast("Added " + amount + " " + (STASH_CATALOG[itemId]?.name || "Item") + " to Stash!");
+  return true;
+};
+
+window.useFromStash = function(itemId) {
+  if (state.stash && state.stash[itemId] && state.stash[itemId] > 0) {
+    
+    // Decrease count
+    state.stash[itemId]--;
+    
+    // Clean up empty data to keep save file lightweight
+    if (state.stash[itemId] === 0) {
+      delete state.stash[itemId];
+    }
+    
+    save();
+    renderKeeperQuarters();
+    toast("Used " + (STASH_CATALOG[itemId]?.name || "Item") + "!");
+  }
+};
+
+function renderKeeperQuarters() {
+  // 1. Initialize Keeper state if missing
+  if (!state.keeper) {
+    state.keeper = { 
+      title: "Novice Breeder", 
+      gender: "male", 
+      equipment: { 
+        body: "body_base.png",
+        torso: null,
+        head: null,
+        legs: null
+      } 
+    };
+  }
+  
+  // Update Profile Text
+  document.getElementById('keeper-name-display').innerText = state.playerName || "Keeper";
+  document.getElementById('keeper-title-display').innerText = state.keeper.title;
+
+  // Render Layered Paper-Doll Avatar Images
+  const eq = state.keeper.equipment || {};
+  
+  const bodyLayer = document.getElementById('layer-body');
+  if (bodyLayer) {
+    bodyLayer.src = `assets/avatar/${eq.body || 'body_base.png'}`;
+  }
+
+  const torsoLayer = document.getElementById('layer-torso');
+  if (torsoLayer) {
+    if (eq.torso) {
+      torsoLayer.src = `assets/avatar/${eq.torso}`;
+      torsoLayer.style.display = 'block';
+    } else {
+      torsoLayer.style.display = 'none';
+    }
+  }
+
+  const headLayer = document.getElementById('layer-head');
+  if (headLayer) {
+    if (eq.head) {
+      headLayer.src = `assets/avatar/${eq.head}`;
+      headLayer.style.display = 'block';
+    } else {
+      headLayer.style.display = 'none';
+    }
+  }
+
+  const legsLayer = document.getElementById('layer-legs');
+  if (legsLayer) {
+    if (eq.legs) {
+      legsLayer.src = `assets/avatar/${eq.legs}`;
+      legsLayer.style.display = 'block';
+    } else {
+      legsLayer.style.display = 'none';
+    }
+  }
+
+  // 2. Render Stash Grid
+  const stashGrid = document.getElementById('stash-grid');
+  if (!stashGrid) return;
+  
+  stashGrid.innerHTML = ''; 
+  const minSlots = 8;
+  let currentSlots = 0;
+  const stashData = state.stash || {};
+  
+  for (const [itemId, quantity] of Object.entries(stashData)) {
+    if (quantity <= 0) continue;
+    
+    const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓' };
+    const slot = document.createElement('div');
+    slot.className = 'stash-slot filled';
+    
+    // Add visual HTML to the slot
+    slot.innerHTML = `
+      <div style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${itemDef.icon}</div>
+      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000;">x${quantity}</div>
+    `;
+    
+    // Clicking the item uses it
+    slot.onclick = () => window.useFromStash(itemId);
+    stashGrid.appendChild(slot);
+    currentSlots++;
+  }
+  
+  // Fill remaining space with empty slot outlines
+  while (currentSlots < minSlots) {
+    const emptySlot = document.createElement('div');
+    emptySlot.className = 'stash-slot empty';
+    stashGrid.appendChild(emptySlot);
+    currentSlots++;
+  }
+}
 
 const CHAIN = [
   { id: "egg",   name: "Egg",       color: "#6b4a32" },
@@ -204,6 +467,131 @@ function showLevelEvent() {
   
   document.getElementById("chest")?.classList.add("open");
   sfx("room");
+}
+// --- STASH & KEEPER LOGIC ---
+window.addToStash = function(itemId, amount = 1) {
+  if (STASH_CATALOG[itemId] && STASH_CATALOG[itemId].type === 'dragon') {
+    console.warn("Dragons cannot be stashed!");
+    return false; 
+  }
+
+  if (!state.stash) state.stash = {};
+  if (!state.stash[itemId]) state.stash[itemId] = 0;
+  
+  state.stash[itemId] += amount;
+  
+  save(); 
+  renderKeeperQuarters();
+  toast("Added " + amount + " " + (STASH_CATALOG[itemId]?.name || "Item") + " to Stash!");
+  return true;
+};
+
+window.useFromStash = function(itemId) {
+  if (state.stash && state.stash[itemId] && state.stash[itemId] > 0) {
+    state.stash[itemId]--;
+    
+    if (state.stash[itemId] === 0) {
+      delete state.stash[itemId];
+    }
+    
+    save();
+    renderKeeperQuarters();
+    toast("Used " + (STASH_CATALOG[itemId]?.name || "Item") + "!");
+  }
+};
+
+function renderKeeperQuarters() {
+  // 1. Initialize Keeper state with equipment slots if missing
+  if (!state.keeper) {
+    state.keeper = {
+      title: "Novice Breeder",
+      gender: "male", // can toggle between male/female templates
+      equipment: {
+        body: "assets/avatar/body_base.png",
+        torso: null, // e.g., "breeder_tunic.png"
+        head: null,   // e.g., "leather_cap.png"
+        legs: null    // e.g., "breeder_pants.png"  
+      }
+    };
+  }
+  
+  // Update Profile Text
+  document.getElementById('keeper-name-display').innerText = state.playerName || "Keeper";
+  document.getElementById('keeper-title-display').innerText = state.keeper.title;
+
+  // Render Layered Paper-Doll Avatar Images
+  const eq = state.keeper.equipment || {};
+  
+  const bodyLayer = document.getElementById('layer-body');
+  if (bodyLayer) {
+    bodyLayer.src = `assets/avatar/${eq.body || 'body_base.png'}`;
+  }
+
+  const legsLayer = document.getElementById('layer-legs');
+  if (legsLayer) {
+    if (eq.legs) {
+      legsLayer.src = `assets/avatar/${eq.legs}`;
+      legsLayer.style.display = 'block';
+    } else {
+      legsLayer.style.display = 'none';
+    }
+  }
+
+  const torsoLayer = document.getElementById('layer-torso');
+  if (torsoLayer) {
+    if (eq.torso) {
+      torsoLayer.src = `assets/avatar/${eq.torso}`;
+      torsoLayer.style.display = 'block';
+    } else {
+      torsoLayer.style.display = 'none';
+    }
+  }
+
+  const headLayer = document.getElementById('layer-head');
+  if (headLayer) {
+    if (eq.head) {
+      headLayer.src = `assets/avatar/${eq.head}`;
+      headLayer.style.display = 'block';
+    } else {
+      headLayer.style.display = 'none';
+    }
+  }
+
+  // 2. Render Stash Grid
+  const stashGrid = document.getElementById('stash-grid');
+  if (!stashGrid) return;
+  
+  stashGrid.innerHTML = ''; 
+  const minSlots = 8;
+  let currentSlots = 0;
+  const stashData = state.stash || {};
+  
+  for (const [itemId, quantity] of Object.entries(stashData)) {
+    if (quantity <= 0) continue;
+    
+    const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓' };
+    const slot = document.createElement('div');
+    slot.className = 'stash-slot filled';
+    
+    // Add visual HTML to the slot
+    slot.innerHTML = `
+      <div style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${itemDef.icon}</div>
+      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000;">x${quantity}</div>
+    `;
+    
+    // Clicking the item uses it
+    slot.onclick = () => window.useFromStash(itemId);
+    stashGrid.appendChild(slot);
+    currentSlots++;
+  }
+  
+  // Fill remaining space with empty slot outlines
+  while (currentSlots < minSlots) {
+    const emptySlot = document.createElement('div');
+    emptySlot.className = 'stash-slot empty';
+    stashGrid.appendChild(emptySlot);
+    currentSlots++;
+  }
 }
 
 // --- 2. FIREWORKS & THE REVEAL ---
@@ -406,7 +794,7 @@ function oneSprite(level, hi, lo) {
     // Ceramic Lotus Egg using custom image asset (works perfectly with stackLayout)
     return `
       <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 16px;">
-        <image href="egg-art.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+        <image href="Images/egg-art.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
       </g>
     `;
   }
@@ -459,7 +847,7 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
   const n = Math.max(1, Math.min(4, count || 1));
 
   if (level === 1) {
-    const imgs = ["hatchling-1.png", "hatchling-2.png", "hatchling-3.png", "hatchling-4.png"];
+    const imgs = ["Images/hatchling-1.png", "Images/hatchling-2.png", "Images/hatchling-3.png", "Images/hatchling-4.png"];
     const currentImg = imgs[n - 1] || imgs[0];
     return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
       <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
@@ -469,7 +857,7 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
   }
 
   if (level === 2) {
-    const imgs = ["wyrmling-1.png", "wyrmling-2.png", "wyrmling-3.png", "wyrmling-4.png"];
+    const imgs = ["Images/wyrmling-1.png", "Images/wyrmling-2.png", "Images/wyrmling-3.png", "Images/wyrmling-4.png"];
     const currentImg = imgs[n - 1] || imgs[0];
     return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
       <g style="animation: breathe 1.5s infinite ease-in-out; transform-origin: 16px 16px;">
@@ -479,7 +867,7 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
   }
 
   if (level === 3) {
-    const imgs = ["young-1.png", "young-2.png", "young-3.png", "young-4.png"];
+    const imgs = ["Images/young-1.png", "Images/young-2.png", "Images/young-3.png", "Images/young-4.png"];
     const currentImg = imgs[n - 1] || imgs[0];
     return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
       <g style="animation: breathe 1.6s infinite ease-in-out; transform-origin: 16px 16px;">
@@ -489,7 +877,7 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
   }
 
   if (level === 4) {
-    const imgs = ["hearth-1.png", "hearth-2.png", "hearth-3.png", "hearth-4.png"];
+    const imgs = ["Images/hearth-1.png", "Images/hearth-2.png", "Images/hearth-3.png", "Images/hearth-4.png"];
     const currentImg = imgs[n - 1] || imgs[0];
     return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
       <g style="animation: breathe 2s infinite ease-in-out; transform-origin: 16px 16px;">
@@ -501,8 +889,8 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
   // Special handling for Level 5 Elder 
   if (level === 5) {
     // We only really need elder-1 since they don't merge, but this keeps the logic safe!
-    const elderImages = ["elder-1.png", "elder-1.png", "elder-1.png", "elder-1.png"]; 
-    const currentImg = elderImages[n - 1] || elderImages[0];
+    const elderImages = ["Images/elder-1.png", "Images/elder-1.png", "Images/elder-1.png", "Images/elder-1.png"]; 
+    const currentImg = IMG_DIR + elderImages[n - 1] || IMG_DIR + elderImages[0];
     return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
       <g style="animation: float 4s infinite ease-in-out; transform-origin: 16px 16px;">
         <image href="${currentImg}" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
@@ -571,9 +959,6 @@ const defaultState = () => ({
   sleepyStreak: 0,
   questTab: 0,
   tributes: 0,
-  bag: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-  bagMax: { 0: 10, 1: 10, 2: 10, 3: 10, 4: 10, 5: 10 },
-  
 });
 
 let state = defaultState();
@@ -590,7 +975,19 @@ function load() {
     if (!raw) return;
     const s = JSON.parse(raw);
     state = { ...defaultState(), ...s };
-    
+    // Add this inside your load() or initGame() function after fetching the save:
+    if (!gameState.keeper) {
+        gameState.keeper = {
+            name: "Keeper",
+            title: "Novice Breeder",
+            avatar: "Images/hearth-1.png"
+        };
+    }
+
+    // Initialize stash as a dictionary for stackable items
+    if (!gameState.stash) {
+        gameState.stash = {}; // Example: { 'time_skip_1h': 2, 'rare_egg': 1 }
+    }
     if (Array.isArray(state.cells) && state.cells.length !== COLS * ROWS) {
       state.cells = state.cells.length > COLS * ROWS ? state.cells.slice(0, COLS * ROWS) : defaultState().cells;
     }
@@ -1445,9 +1842,9 @@ function itemHtml(item) {
 
 // --- Elemental Badge Setup (Only show for Fire, Water, or Nature) ---
   let elementIcon = "";
-  if (item.element === "fire") elementIcon = "ember.png";
-  else if (item.element === "water") elementIcon = "water.png";
-  else if (item.element === "nature") elementIcon = "leaf.png";
+  if (item.element === "fire") elementIcon = "/images/ember.png";
+  else if (item.element === "water") elementIcon = "/images/water.png";
+  else if (item.element === "nature") elementIcon = "/images/leaf.png";
 
   const badgeHTML = elementIcon ? `
     <img src="${elementIcon}" alt="${item.element}" style="
@@ -1523,7 +1920,7 @@ function renderQuest() {
     const have = board().some(c => c && c.level >= STAGE_GOAL);
     box.className = "quest quest-card";
     box.style.display = "block"; // Ensure it's visible
-    box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.75), rgba(11, 22, 51, 0.9)), url('Mountains%20View.jpg')";
+    box.style.backgroundImage = "linear-gradient(rgba(11, 22, 51, 0.75), rgba(11, 22, 51, 0.9)), url('images/Mountains%20View.jpg')";
     box.style.backgroundSize = "cover";
     box.style.backgroundPosition = "center";
     box.style.border = "1px solid #778da9"; 
@@ -1541,7 +1938,7 @@ function renderQuest() {
   }
 
   // 2. HOME MODE (1 or 2 Quests)
-  const homeBg = "linear-gradient(rgba(11, 22, 51, 0.43), rgb(11, 22, 51)), url('Mountains%20View.jpg')";
+  const homeBg = "linear-gradient(rgba(11, 22, 51, 0.43), rgb(11, 22, 51)), url('images/Mountains%20View.jpg')";
   
   // Apply base styles to both cards
   box.className = "quest sleepy quest-card";
@@ -1761,9 +2158,9 @@ function renderRoost() {
       const hasSynergy = yieldData.hasSynergy;
       
       let elementIcon = "";
-      if (p.element === "fire") elementIcon = "ember.png";
-      else if (p.element === "water") elementIcon = "water.png";
-      else if (p.element === "nature") elementIcon = "leaf.png";
+      if (p.element === "fire") elementIcon = "images/ember.png";
+      else if (p.element === "water") elementIcon = "images/water.png";
+      else if (p.element === "nature") elementIcon = "images/leaf.png";
       
       const badgeHTML = elementIcon ? `
         <img src="${elementIcon}" alt="${p.element}" style="
@@ -1772,7 +2169,7 @@ function renderRoost() {
           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9)); z-index: 10;
         ">` : "";
       
-      return `<div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid ${hasSynergy ? t.border : (p.shiny ? '#ffea75' : '#415a77')}; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px ${hasSynergy ? t.glow : 'rgba(0,0,0,0)'};">
+      return `<div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('images/Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid ${hasSynergy ? t.border : (p.shiny ? '#ffea75' : '#415a77')}; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px ${hasSynergy ? t.glow : 'rgba(0,0,0,0)'};">
         
         <div style="position: relative; background: radial-gradient(circle, ${hasSynergy ? t.glow : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
           ${badgeHTML}
@@ -2051,11 +2448,11 @@ const mt = document.getElementById("mountain");
 
           // 1. ADD YOUR IMAGES HERE (Map the room's ID to its exact filename)
           const roomImages = {
-            "hatchery": "Hatchery.jpg",
-            "alcove": "moss%20alcove.jpg",
-            "lamp": "lamp%20walk.jpg",
-            "spring": "spring%20hall.jpg",
-            "vault": "tea%20vault.jpg",
+            "hatchery": "images/Hatchery.jpg",
+            "alcove": "images/moss alcove.jpg",
+            "lamp": "images/lamp walk.jpg",
+            "spring": "images/spring hall.jpg",
+            "vault": "images/tea vault.jpg",
             // You can easily add more here later!
             // "spring": "Spring Hall.jpg",
           };
@@ -2172,6 +2569,7 @@ const mt = document.getElementById("mountain");
     setTimeout(() => { state._flash = []; }, 280);
   }
 
+  renderKeeperQuarters();
   tickEnergy();
 }
 

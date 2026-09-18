@@ -344,26 +344,26 @@ body {
 
 /* 2. Slot 1 (Left Perch) */
 .perch:nth-child(1) {
-  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('perch-one.jpg') !important;
+  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('images/perch-one.jpg') !important;
 }
 .perch.on:nth-child(1) {
-  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('perch-one.jpg') !important;
+  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('images/perch-one.jpg') !important;
 }
 
 /* 3. Slot 2 (Middle Perch) */
 .perch:nth-child(2) {
-  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('perch-two.jpg') !important;
+  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('images/perch-two.jpg') !important;
 }
 .perch.on:nth-child(2) {
-  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('perch-two.jpg') !important;
+  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('images/perch-two.jpg') !important;
 }
 
 /* 4. Slot 3 (Right Perch) */
 .perch:nth-child(3) {
-  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('perch-three.jpg') !important;
+  background-image: linear-gradient(145deg, rgba(14,9,7,0.8), rgba(9,5,4,0.9)), url('images/perch-three.jpg') !important;
 }
 .perch.on:nth-child(3) {
-  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('perch-three.jpg') !important;
+  background-image: linear-gradient(145deg, rgba(212,88,23,0.35), rgba(20,11,8,0.8)), url('images/perch-three.jpg') !important;
 }
 
 /* 5. Make sure the text pops against the backgrounds */
@@ -395,7 +395,7 @@ body {
   border-radius: 10px;
   box-sizing: border-box;
   padding: 18px 24px;
-  background: linear-gradient(rgba(11, 22, 51, 0.85), rgba(11, 22, 51, 0.95)), url('Ash Trial.jpg');
+  background: linear-gradient(rgba(11, 22, 51, 0.85), rgba(11, 22, 51, 0.95)), url('images/Ash Trial.jpg');
   background-size: cover;
   background-position: center;
 }
@@ -685,7 +685,7 @@ button:disabled {
 
 /* 1. Hatchery */
 #app[data-theme="hatchery"] #view-board.active {
-  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("Hatchery.jpg") !important;
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("images/Hatchery.jpg") !important;
   background-size: cover !important;
   background-position: right center !important;
   background-color: transparent !important;
@@ -693,7 +693,7 @@ button:disabled {
 
 /* 2. Moss Alcove */
 #app[data-theme="alcove"] #view-board.active {
-  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("moss alcove.jpg") !important;
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("images/moss alcove.jpg") !important;
   background-size: cover !important;
   background-position: center !important;
   background-color: transparent !important;
@@ -701,7 +701,7 @@ button:disabled {
 
 /* 3. Lamp Walk */
 #app[data-theme="lamp"] #view-board.active {
-  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("lamp walk.jpg") !important;
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("images/lamp walk.jpg") !important;
   background-size: cover !important;
   background-position: center !important;
   background-color: transparent !important;
@@ -709,7 +709,7 @@ button:disabled {
 
 /* 4. Spring Hall */
 #app[data-theme="spring"] #view-board.active {
-  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("spring hall.jpg") !important;
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("images/spring hall.jpg") !important;
   background-size: cover !important;
   background-position: center !important;
   background-color: transparent !important;
@@ -717,7 +717,7 @@ button:disabled {
 
 /* 5. Tea Vault */
 #app[data-theme="vault"] #view-board.active {
-  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("tea vault.jpg") !important;
+  background-image: linear-gradient(rgba(18, 12, 10, 0.75), rgba(18, 12, 10, 0.9)), url("images/tea vault.jpg") !important;
   background-size: cover !important;
   background-position: center !important;
   background-color: transparent !important;
@@ -923,7 +923,7 @@ html, body {
 /* --- CUSTOM DRAGON BOOK MODAL --- */
 .custom-book-bg {
   /* Replace with your open book image file! */
-  background: url('book.png') no-repeat center center;
+  background: url('images/book.png') no-repeat center center;
   background-size: 100% 100%; 
   
   /* Overrides the default modal box styling to make the image the actual box */
@@ -990,12 +990,12 @@ html, body {
 
 .left-arrow { 
   left: -85px !important; 
-  background-image: url('right-arrow.png') !important; 
+  background-image: url('images/right-arrow.png') !important; 
 }
 
 .right-arrow { 
   right: -85px !important; 
-  background-image: url('left-arrow.png') !important; 
+  background-image: url('images/left-arrow.png') !important; 
 }
 /* --- PREVENT ANIMATION CLIPPING --- */
 /* Allows breathing and floating animations to expand safely beyond the SVG boundaries */

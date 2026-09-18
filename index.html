@@ -47,13 +47,31 @@
     <!-- === SCROLLABLE VIEWS CONTAINER === -->
     <div class="view-container">
       
-      <!-- === VIEW 1: KEEPER'S QUARTERS (HOME) === -->
+<!-- === VIEW 1: KEEPER'S QUARTERS (HOME) === -->
       <div id="view-home" class="view">
         <!-- Avatar Showcase -->
         <div class="keeper-profile" style="display: flex; flex-direction: column; align-items: center; padding: 2.5rem 1rem; background: linear-gradient(to bottom, #2a2a35, #1a1a24); border-bottom: 2px solid #333344;">
-            <div class="avatar-frame" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #d4af37; background-color: #0f0f15; display: flex; justify-content: center; align-items: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 1rem;">
-                <img src="hearth-1.png" alt="Keeper Avatar" id="keeper-avatar-img" style="width: 100%; height: 100%; object-fit: cover;" />
+            
+            <!-- Clickable Avatar Frame with Layered Paper-Doll System -->
+            <div class="avatar-frame" id="avatarFrameBtn" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #d4af37; background-color: #0f0f15; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 1rem; cursor: pointer;">
+                <!-- INNER WRAPPER FOR ZOOMING -->
+                <div style="position: absolute; inset: 0; width: 100%; height: 100%; transform: scale(1.3); transform-origin: center top;">
+                    <!-- Layer 0: Base Body Template -->
+                    <!-- Layer 0: Base Body Template -->
+                <img src="" alt="" id="layer-body" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top;" />
+                
+                <!-- Layer for Pants / Legs -->
+                <img src="" alt="" id="layer-legs" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+
+                <!-- Layer 1: Torso / Shirt -->
+                <img src="" alt="" id="layer-torso" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+                
+                <!-- Layer 2: Head / Hat -->
+                <img src="" alt="" id="layer-head" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+                </div>
+                
             </div>
+
             <h2 class="keeper-name" id="keeper-name-display" style="margin: 0; font-size: 1.6rem; color: #ffffff; letter-spacing: 0.5px; font-family: 'Playfair Display', serif;">Keeper</h2>
             <span class="keeper-title" id="keeper-title-display" style="font-size: 0.85rem; color: #a0a0b5; margin-top: 0.4rem; text-transform: uppercase; font-weight: 600;">Novice Breeder</span>
         </div>
@@ -113,7 +131,7 @@
         <div style="max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; width: 100%; align-items: center; box-sizing: border-box;">
             
           <!-- Header / Dragon Bank Vault -->
-          <div class="quest-card" style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box; position: relative; background: linear-gradient(rgba(10, 15, 20, 0.75), rgba(10, 15, 20, 0.95)), url('Mountains%20View.jpg'); background-size: cover; background-position: center; border: 2px solid #4a2c17; padding: 24px 20px; border-radius: 16px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.8), inset 0 0 40px rgba(212, 88, 23, 0.1);">
+          <div class="quest-card" style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box; position: relative; background: linear-gradient(rgba(10, 15, 20, 0.75), rgba(10, 15, 20, 0.95)), url('images/Mountains%20View.jpg'); background-size: cover; background-position: center; border: 2px solid #4a2c17; padding: 24px 20px; border-radius: 16px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.8), inset 0 0 40px rgba(212, 88, 23, 0.1);">
             
             <!-- Decorative stone corner brackets -->
             <div style="position: absolute; top: 12px; left: 12px; width: 16px; height: 16px; border-top: 2px solid #deb781; border-left: 2px solid #deb781; opacity: 0.6;"></div>
@@ -126,7 +144,7 @@
             <div id="dragonBank" class="dragon-bank-btn" style="position: relative; overflow: hidden; background: linear-gradient(to bottom, rgba(20, 30, 45, 0.9), rgba(10, 15, 25, 1)); border: 1px solid #778da9; border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 4px 10px rgba(0,0,0,0.3); width: 100%; box-sizing: border-box;">
               <div style="text-align: left; display: flex; align-items: center; gap: 12px;">
                 <div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 50%; border: 1px solid rgba(255, 207, 64, 0.3);">
-                  <img src="hearth-1.png" alt="Guard" style="width: 36px; height: 36px; filter: drop-shadow(0 0 6px rgba(255, 207, 64, 0.4));">
+                  <img src="Images/hearth-1.png" alt="Guard" style="width: 36px; height: 36px; filter: drop-shadow(0 0 6px rgba(255, 207, 64, 0.4));">
                 </div>
                 <div>
                   <div style="font-size: 0.7rem; color: #a9d6e5; text-transform: uppercase; letter-spacing: 0.5px;">Bank Vault</div>
@@ -339,9 +357,69 @@
         </div>
       </div>
     </div>
-    
-  </div>
+    <!-- ========================================== -->
+    <!-- === KEEPER'S MIRROR (EXPANDED MODAL) === -->
+    <!-- ========================================== -->
+<!-- NOTE FOR FUTURE ADJUSTMENTS: To change the background dimming, adjust the rgba value in the background property below. -->
+    <div id="expandedCustomizerModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(4, 5, 8, 0.9); z-index: 2500; align-items: center; justify-content: center; padding: 16px;">
+      <div class="modal-content" style="background: linear-gradient(to bottom, #1b263b, #0d1b2a); border: 2px solid #d4af37; border-radius: 16px; max-width: 420px; width: 100%; padding: 24px; box-sizing: border-box; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        
+        <!-- Close Button -->
+        <button id="closeExpandedModalBtn" style="position: absolute; top: 12px; right: 15px; color: #ff4d4d; background: transparent; border: none; font-size: 1.5rem; font-weight: bold; cursor: pointer;">✕</button>
+        
+        <h2 style="color: #ffcf40; margin-top: 0; font-family: 'Playfair Display', serif; font-size: 1.5rem;">The Keeper's Mirror</h2>
+        <p style="font-size: 0.75rem; color: #deb781; margin-bottom: 16px;">Inspect your appearance and adjust your equipment layers.</p>
+        
+        <!-- ========================================== -->
+        <!-- BIGGER AVATAR PREVIEW FRAME & LAYERS       -->
+        <!-- ========================================== -->
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+          <div style="width: 160px; height: 240px; border-radius: 8px; border: 4px solid #d4af37; background-color: #0f0f15; position: relative; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.6);">
+            
+            <!-- LAYER STACK -->
+            <img src="" alt="" id="modal-layer-body" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top;" />
+            
+            <img src="" alt="" id="modal-layer-legs" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+            
+            <img src="" alt="" id="modal-layer-torso" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+            
+            <img src="" alt="" id="modal-layer-head" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+          </div>
+        </div>
 
+        <!-- ========================================== -->
+        <!-- ADJUSTMENT CATEGORY TABS                   -->
+        <!-- ========================================== -->
+        <div style="display: flex; justify-content: center; gap: 6px; margin-bottom: 12px;">
+          <button class="customizer-tab active" data-slot="torso" style="background: #415a77; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Torso</button>
+          <button class="customizer-tab" data-slot="legs" style="background: #1b263b; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Legs</button>
+          <button class="customizer-tab" data-slot="head" style="background: #1b263b; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Head</button>
+          
+          <!-- ADD FUTURE TABS HERE (Just duplicate the button above, change the text, and set data-slot="feet" or "accessory") -->
+        </div>
+
+        <!-- ========================================== -->
+        <!-- INVENTORY GRID                             -->
+        <!-- ========================================== -->
+        <!-- NOTE: The JS renderExpandedItemGrid() function takes over this div. -->
+        <div id="expandedItemGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 160px; overflow-y: auto; margin-bottom: 16px; padding: 6px; background: rgba(10, 15, 25, 0.6); border-radius: 8px; border: 1px solid #333344;">
+          <!-- Dynamically populated inventory items go here -->
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ACTION BUTTONS                             -->
+        <!-- ========================================== -->
+        <div style="display: flex; gap: 8px;">
+          <button id="modalUnequipBtn" style="flex: 1; background: #a12b2b; border: 1px solid #ff4d4d; color: #fff; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem;">Unequip Slot</button>
+          <button id="modalDoneBtn" style="flex: 1; background: #415a77; border: 1px solid #778da9; color: #fff; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem;">Done</button>
+        </div>
+
+      </div>
+    </div>
+    
+  </div> <!-- This is your existing closing div for <div id="app"> -->
+
+  <!-- Your scripts remain at the very bottom -->
   <script src="app.js"></script>
 </body>
 </html>
