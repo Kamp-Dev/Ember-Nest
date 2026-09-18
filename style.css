@@ -1293,9 +1293,9 @@ html.lock-scroll, body.lock-scroll {
 /* Mobile Viewport Fit (Screens Under 800px Height) */
 @media (max-height: 800px) {
   #board {
-    margin-bottom: 8px !important;
+    /* FIX: Increased from 8px to 25px to keep pushing the buttons down on mobile */
+    margin-bottom: 25px !important; 
     gap: 10px !important;
-    /* Increased from 350px to 385px */
     max-width: 385px !important; 
   }
 
@@ -1303,11 +1303,10 @@ html.lock-scroll, body.lock-scroll {
     border-radius: 10px !important;
   }
   
-  /* ... rest of your mobile media query stays the same ... */
-
   .action-buttons {
     margin-top: 0 !important;
-    margin-bottom: 8px !important;
+    /* FIX: Increased from 8px to 15px to give room before the bottom tab bar */
+    margin-bottom: 15px !important; 
     gap: 6px !important;
   }
   
