@@ -524,8 +524,15 @@ function renderKeeperQuarters() {
   
   const bodyLayer = document.getElementById('layer-body');
   if (bodyLayer) {
-    bodyLayer.src = `assets/avatar/${eq.body || 'body_base.png'}`;
-  }
+  // 1. Grab the saved body, or use the default
+  let bodyFileName = eq.body || 'body_base.png';
+  
+  // 2. Defensive check: If the old folder path is stuck in the save file, scrub it out
+  bodyFileName = bodyFileName.replace('assets/avatar/', '');
+  
+  // 3. Inject it cleanly (guarantees the path is only applied once)
+  bodyLayer.src = `assets/avatar/${bodyFileName}`;
+}
 
   const legsLayer = document.getElementById('layer-legs');
   if (legsLayer) {
