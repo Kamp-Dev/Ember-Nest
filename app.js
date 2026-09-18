@@ -1731,26 +1731,48 @@ function unlock(i) {
 }
 
 function gather() {
+  console.log("Gather clicked! Current Energy:", state.energy);
   if (state.mode === "stage") {
-    if ((state.trailGathers || 0) <= 0) {
+    if ((state.trailGathers || 0) <= 0){
       toast("Trail pouch is empty • merge what you have");
       return;
     }
-    if (!spawn(0, 1)) return;
+    // Added a warning if the stage board is full
+    if (!spawn(0, 1)){
+      toast("No space left on the board!");
+      return;
+    }
     state.trailGathers -= 1;
     sfx("gather");
-    save(); render();
+
+    save();
+    render();
+    renderBoard();
+    
     return;
   }
-  if (state.energy <= 0) { toast("Energy empty • wait a moment"); return; }
-  if (!spawn(0, 1)) return;
+
+  // Safety check: force energy to be a number
+  if (typeof state.energy !== 'number') state.energy = 5;
+
+  if (state.energy <= 0){
+    toast("Energy empty • wait a moment");
+    return;
+  }
+
+  //The fix: Tell the player WHY it won't spawn
+  if (!spawn(0, 1)){
+    toast("No space left on the board");
+    return;
+  }
+
   state.energy -= 1;
-  
+
   // --- Bulletproof Gather Particles ---
   const gBtn = document.getElementById("gather");
   if (gBtn) {
     const rect = gBtn.getBoundingClientRect();
-    spawnParticles(rect.left + (rect.width / 2), rect.top + (rect.height / 2), 8, '#ff8033');
+    spawnParticles(rect.left + (rect.width / 2), rect.top + (rect.height / 2), 8, '#ff8033'); 
   }
 
   sfx("gather");
@@ -2048,22 +2070,43 @@ function tickEnergy() {
   
   // 1. Update the New App UI Header Stats
   setSafeText("energyCount", state.energy + "/" + cap);
+  
+  const timerEl = document.getElementById("energyTimer");
 
   if (state.energy >= cap) {
     state.nextEnergyAt = Date.now() + REGEN_MS;
-    setSafeText("regen", "");
+    
+    // Set new timer to FULL and turn it gold
+    if (timerEl) {
+      timerEl.innerText = "FULL";
+      timerEl.style.color = "#d4af37"; 
+    }
+    setSafeText("regen", ""); // Clears the old UI just in case it's still in your HTML
   } else {
     if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
     let left = state.nextEnergyAt - Date.now();
+    
     if (left <= 0) {
       state.energy = Math.min(cap, state.energy + 1);
       state.nextEnergyAt = Date.now() + REGEN_MS;
       save();
       render();
     } else {
-      setSafeText("regen", "⏱ " + Math.ceil(left / 1000) + "s");
+      // Convert remaining milliseconds into MM:SS format
+      const totalSeconds = Math.ceil(left / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const formattedSeconds = seconds.toString().padStart(2, '0');
+      
+      // Update new timer
+      if (timerEl) {
+        timerEl.innerText = `${minutes}:${formattedSeconds}`;
+        timerEl.style.color = "#a0a0b5"; // Keep it grey while counting
+      }
+      setSafeText("regen", ""); // Clears the old UI
     }
   }
+}
 
   const pBtn = document.getElementById("collectPerchBtn");
   if (pBtn) {
@@ -2082,7 +2125,7 @@ function tickEnergy() {
     const wait = Math.max(0, state.perchAt + PERCH_MS - Date.now());
     setSafeText("perchLabel", "Perch: " + Math.ceil(wait / 1000) + "s • +" + inc);
   }
-}
+
 
 function renderTrialBanner() {
   const box = document.getElementById("trialBox");
@@ -2258,8 +2301,22 @@ function openPickerModal(slotId) {
       card.style.flexDirection = "column";
       card.style.alignItems = "center";
       
+      // Grab the element and force lowercase
+      let el = (cell.element || "neutral").toLowerCase();
+
+      // Translate old save data to match your actual image files!
+      if (el === "fire") el = "ember";
+      if (el === "nature") el = "leaf";
+
       card.innerHTML = `
         ${dragonSvg(cell.level, 42, 1, cell.shiny)}
+        
+        <!-- NEW: Element Badge (With auto-translator and broken-image hider) -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(0,0,0,0.5); border: 1px solid #415a77; padding: 2px 6px; border-radius: 4px; margin-top: 6px;">
+           <img src="Images/${el}.png" style="width: 14px; height: 14px; flex-shrink: 0; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'">
+           <span style="font-size: 0.6rem; color: #deb781; text-transform: capitalize;">${el}</span>
+        </div>
+
         <span style="font-size: 0.65rem; font-weight: 700; color: ${cell.shiny ? '#ffcf40' : '#e0e1dd'}; margin-top: 6px; text-align: center;">
           ${cell.shiny ? '✨ ' : ''}${CHAIN[cell.level].name}
         </span>
@@ -2384,9 +2441,9 @@ function render() {
   setSafeText("bonus", bonus());
   
   if (gatherBtn) {
-    gatherBtn.disabled = state.mode === "stage" 
-      ? (state.trailGathers || 0) <= 0 
-      : state.energy <= 0;
+    // We removed the disabled line so the button is ALWAYS clickable!
+    // The gather() function will handle the warning messages instead.
+    
     gatherBtn.textContent = state.mode === "stage" 
       ? "Gather egg • " + (state.trailGathers || 0) + " left" 
       : "Gather egg 🥚";
@@ -2718,6 +2775,7 @@ function endDrag(e) {
 }
 
 function initGame() {
+  
   // --- DRAG & DROP LISTENERS ---
   boardEl?.addEventListener("pointerup", endDrag);
   boardEl?.addEventListener("pointercancel", endDrag);

@@ -37,7 +37,14 @@
       
       <div class="header-right">
         <div class="stat-pill coin-pill"><span id="coinCount">0</span> 🪙</div>
-        <div class="stat-pill energy-pill">⚡<span id="energyCount">5/5</span></div>
+        <!-- Updated Energy Pill with Stacked Timer -->
+        <div class="stat-pill energy-pill" style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 1.1rem;">⚡</span>
+          <div style="display: flex; flex-direction: column; align-items: center; line-height: 1.1;">
+            <span id="energyCount" style="font-weight: bold;">5/5</span>
+            <span id="energyTimer" style="font-size: 0.65rem; color: #a0a0b5; font-family: monospace;">FULL</span>
+          </div>
+        </div>
         <div class="stat-pill level-pill"><span id="lvlChip">Lv 1</span></div>
         <button id="bookBtn" class="stat-pill book-pill" title="Dragon Book">📖</button>
         <button id="muteBtn" class="stat-pill sound-pill" title="Toggle Sound">🔊</button>
