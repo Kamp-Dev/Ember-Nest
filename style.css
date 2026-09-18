@@ -234,6 +234,10 @@ body {
 
 /* --- 6. DRAGONS, ITEMS & PERCHES --- */
 .item {
+  position: absolute !important; /* <--- FIX: Pulls the dragon out of the cell's physical height calculation */
+  top: 0;                        /* <--- FIX: Locks it to the top of the relative .cell */
+  left: 0;                       /* <--- FIX: Locks it to the left of the relative .cell */
+  
   width: 100%;
   height: 100%;
   display: flex;
