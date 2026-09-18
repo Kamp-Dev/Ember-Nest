@@ -1885,10 +1885,10 @@ function itemHtml(item) {
   const badgeHTML = elementIcon ? `
     <img src="${elementIcon}" alt="${item.element}" style="
       position: absolute; 
-      top: 2px; 
-      right: 2px; 
-      width: 18px; 
-      height: 18px; 
+      top: -4px;   /* <-- Changed to pull it up slightly */
+      right: -4px; /* <-- Changed to pull it right slightly */
+      width: 22px; /* <-- Increased from 18px */
+      height: 22px; /* <-- Increased from 18px */
       border-radius: 50%;
       aspect-ratio: 1;
       object-fit: cover;
