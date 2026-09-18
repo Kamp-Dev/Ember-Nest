@@ -178,7 +178,7 @@ body {
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important; 
   gap: 10px !important; 
   width: 100% !important;
-  max-width: 450px !important; 
+  max-width: 480px !important; 
   padding: 0 !important;
   
   /* FIX: 0 (top), auto (right), 50px (BOTTOM - pushes buttons down), auto (left) */
@@ -894,7 +894,7 @@ button:disabled {
 /* Target your main game wrapper class or ID */
 .game-wrapper, #app, body {
   width: 100%;
-  max-width: 450px; /* Keeps it phone-sized on tablets or desktop browsers */
+  max-width: 480px; /* Keeps it phone-sized on tablets or desktop browsers */
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height (automatically adjusts for mobile browser address bars) */
   margin: 0 auto;
@@ -1311,7 +1311,7 @@ html.lock-scroll, body.lock-scroll {
     /* FIX: Increased from 8px to 25px to keep pushing the buttons down on mobile */
     margin-bottom: 25px !important; 
     gap: 10px !important;
-    max-width: 385px !important; 
+    max-width: 480px !important; 
   }
 
   .cell {
