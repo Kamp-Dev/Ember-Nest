@@ -45,29 +45,108 @@ function closeExpandedCustomizer() {
   if (modal) modal.style.display = 'none';
 }
 
-function renderExpandedModalLayers() {
-  const eq = state.keeper?.equipment || {};
+function renderKeeperQuarters() {
+  // 1. Defensively initialize Keeper state
+  if (!state.keeper) {
+    state.keeper = { title: "Novice Breeder", gender: "male" };
+  }
+  if (!state.keeper.equipment) {
+    state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
+  }
   
-  const bodyL = document.getElementById('modal-layer-body');
-  const legsL = document.getElementById('modal-layer-legs');
-  const torsoL = document.getElementById('modal-layer-torso');
-  const headL = document.getElementById('modal-layer-head');
+  // Update Profile Text
+  const nameDisplay = document.getElementById('keeper-name-display');
+  if (nameDisplay) nameDisplay.innerText = state.playerName || "Keeper";
+  
+  const titleDisplay = document.getElementById('keeper-title-display');
+  if (titleDisplay) titleDisplay.innerText = state.keeper.title;
 
-  if (bodyL) bodyL.src = eq.body || 'assets/avatar/body_base.png';
+  // --- THE PATH SCRUBBER ---
+  // This guarantees we only ever have exactly one "assets/avatar/" prefix
+  const getCleanPath = (rawName, defaultName = '') => {
+    let nameToClean = rawName || defaultName;
+    if (!nameToClean) return '';
+    // Strip out the path if it already exists, then grab just the file name
+    let clean = nameToClean.replace(/assets\/avatar\//g, '').split('/').pop();
+    return `assets/avatar/${clean}`;
+  };
+
+  // Render Layered Paper-Doll Avatar Images
+  const eq = state.keeper.equipment || {};
   
-  if (legsL) {
-    if (eq.legs) { legsL.src = eq.legs; legsL.style.display = 'block'; }
-    else { legsL.style.display = 'none'; }
+  const bodyLayer = document.getElementById('layer-body');
+  if (bodyLayer) bodyLayer.src = getCleanPath(eq.body, 'body_base.png');
+
+  const legsLayer = document.getElementById('layer-legs');
+  if (legsLayer) {
+    if (eq.legs) {
+      legsLayer.src = getCleanPath(eq.legs);
+      legsLayer.style.display = 'block';
+    } else {
+      legsLayer.style.display = 'none';
+    }
+  }
+
+  const torsoLayer = document.getElementById('layer-torso');
+  if (torsoLayer) {
+    if (eq.torso) {
+      torsoLayer.src = getCleanPath(eq.torso);
+      torsoLayer.style.display = 'block';
+    } else {
+      torsoLayer.style.display = 'none';
+    }
+  }
+
+  const headLayer = document.getElementById('layer-head');
+  if (headLayer) {
+    if (eq.head) {
+      headLayer.src = getCleanPath(eq.head);
+      headLayer.style.display = 'block';
+    } else {
+      headLayer.style.display = 'none';
+    }
+  }
+
+  // 2. Render Stash Grid
+  const stashGrid = document.getElementById('stash-grid');
+  if (!stashGrid) return;
+  
+  stashGrid.innerHTML = ''; 
+  const minSlots = 8;
+  let currentSlots = 0;
+  const stashData = state.stash || {};
+  
+  for (const [itemId, quantity] of Object.entries(stashData)) {
+    if (quantity <= 0) continue;
+    
+    const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable' };
+    const slot = document.createElement('div');
+    slot.className = 'stash-slot filled';
+    
+    let displayHtml = '';
+    if (itemDef.type === 'cosmetic' && itemDef.img) {
+      // Run the stash images through the scrubber too
+      const cleanSrc = getCleanPath(itemDef.img);
+      displayHtml = `<img src="${cleanSrc}" alt="${itemDef.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">`;
+    } else {
+      displayHtml = `<div style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); pointer-events: none;">${itemDef.icon}</div>`;
+    }
+    
+    slot.innerHTML = `
+      ${displayHtml}
+      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000; pointer-events: none;">x${quantity}</div>
+    `;
+    
+    slot.onclick = () => window.useFromStash(itemId);
+    stashGrid.appendChild(slot);
+    currentSlots++;
   }
   
-  if (torsoL) {
-    if (eq.torso) { torsoL.src = eq.torso; torsoL.style.display = 'block'; }
-    else { torsoL.style.display = 'none'; }
-  }
-  
-  if (headL) {
-    if (eq.head) { headL.src = eq.head; headL.style.display = 'block'; }
-    else { headL.style.display = 'none'; }
+  while (currentSlots < minSlots) {
+    const emptySlot = document.createElement('div');
+    emptySlot.className = 'stash-slot empty';
+    stashGrid.appendChild(emptySlot);
+    currentSlots++;
   }
 }
 
@@ -87,16 +166,23 @@ function renderExpandedItemGrid(slotType) {
       slotEl.className = 'stash-slot filled';
       slotEl.style.cursor = 'pointer';
       
-      const isEquipped = state.keeper?.equipment?.[slotType] === itemDef.img;
+      // 1. Armor the image name so we only ever deal with the clean file
+      const cleanImgName = itemDef.img.split('/').pop();
+      
+      // 2. Safely check if it's equipped to apply the gold border
+      const isEquipped = state.keeper?.equipment?.[slotType] === cleanImgName;
       if (isEquipped) slotEl.style.borderColor = '#d4af37';
       
+      // 3. Upgraded to render the actual transparent PNG instead of the emoji icon
       slotEl.innerHTML = `
-        <div style="font-size: 1.8rem;">${itemDef.icon}</div>
-        <div style="position: absolute; bottom: 2px; font-size: 0.6rem; color: #fff; text-shadow: 0 1px 2px #000;">${itemDef.name}</div>
+        <img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">
+        <div style="position: absolute; bottom: 2px; font-size: 0.6rem; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none;">${itemDef.name}</div>
       `;
       
       slotEl.onclick = () => {
-        state.keeper.equipment[slotType] = itemDef.img;
+        // 4. Safely inject only the clean filename into the save state
+        state.keeper.equipment[slotType] = cleanImgName;
+        
         save();
         renderKeeperQuarters();       
         renderExpandedModalLayers();    
@@ -124,11 +210,38 @@ document.getElementById('modalDoneBtn')?.addEventListener('click', closeExpanded
 // 3. Unequip Button logic
 document.getElementById('modalUnequipBtn')?.addEventListener('click', () => {
   if (state.keeper?.equipment) {
-    state.keeper.equipment[currentCustomizerSlot] = null;
-    save();
+    const slotType = currentCustomizerSlot;
+    const currentImg = state.keeper.equipment[slotType];
+
+    // 1. Check if they are actually wearing something before trying to refund
+    if (currentImg) {
+      let foundItemId = null;
+      
+      // 2. Scan the catalog to find the item ID that matches the worn image
+      for (const [key, def] of Object.entries(STASH_CATALOG)) {
+        if (def.slot === slotType && def.img) {
+          const cleanDefImg = def.img.split('/').pop();
+          if (cleanDefImg === currentImg) {
+            foundItemId = key;
+            break;
+          }
+        }
+      }
+      
+      // 3. Refund the item back into the player's stash
+      if (foundItemId) {
+        if (!state.stash) state.stash = {};
+        state.stash[foundItemId] = (state.stash[foundItemId] || 0) + 1;
+      }
+    }
+
+    // 4. Clear the slot, save, and re-render everything
+    state.keeper.equipment[slotType] = null;
+    
+    if (typeof save === 'function') save();
     renderKeeperQuarters();
     renderExpandedModalLayers();
-    renderExpandedItemGrid(currentCustomizerSlot);
+    renderExpandedItemGrid(slotType);
     toast("Slot unequipped.");
   }
 });
@@ -164,7 +277,7 @@ const TRAIL_BAG = [2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
 const STASH_CATALOG = {
   'rare_egg': { name: 'Rare Egg', icon: '🥚', type: 'consumable' },
   'time_skip_1h': { name: '1h Time Skip', icon: '⏳', type: 'consumable' },
-  'breeder_tunic': { name: 'Breeder Tunic', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'torso_tunic.png' },
+  'breeder_tunic': { name: 'Torso Tunic', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic.png' },
   'leather_cap': { name: 'Leather Cap', icon: '🧢', type: 'cosmetic', slot: 'head', img: 'head_leather_cap.png' },
   'rough_trousers': { name: 'Rough Trousers', icon: '👖', type: 'cosmetic', slot: 'legs', img: 'legs_trousers.png' }
 };
@@ -191,60 +304,126 @@ window.addToStash = function(itemId, amount = 1) {
 };
 
 window.useFromStash = function(itemId) {
-  if (state.stash && state.stash[itemId] && state.stash[itemId] > 0) {
+  const itemDef = STASH_CATALOG[itemId];
+  if (!itemDef) return;
+
+  // Failsafe: Ensure the item actually exists
+  if (!state.stash || !state.stash[itemId] || state.stash[itemId] <= 0) {
+    return;
+  }
+
+  // Failsafe: Ensure the equipment object exists
+  if (!state.keeper.equipment) {
+    state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
+  }
+
+  if (itemDef.type === 'cosmetic') {
+    const slot = itemDef.slot; 
     
-    // Decrease count
-    state.stash[itemId]--;
+    // THE NEW ARMOR: If the catalog forgot the image, gracefully stop instead of crashing
+    if (!itemDef.img) {
+      console.error("Item is missing an 'img' property in STASH_CATALOG:", itemId);
+      toast("Error: Missing item image data!");
+      return; 
+    }
+
+    const currentlyEquippedImg = state.keeper.equipment[slot];
     
-    // Clean up empty data to keep save file lightweight
-    if (state.stash[itemId] === 0) {
+    // 1. Check if the Keeper is already wearing something
+    if (currentlyEquippedImg) {
+      let oldItemId = null;
+      for (const [key, def] of Object.entries(STASH_CATALOG)) {
+        // Reverse lookup: safely check against clean and dirty names, ensuring def.img exists
+        if (def.img && (def.img === currentlyEquippedImg || def.img.split('/').pop() === currentlyEquippedImg)) {
+          oldItemId = key;
+          break;
+        }
+      }
+      
+      // Put the old item back into the stash
+      if (oldItemId) {
+        state.stash[oldItemId] = (state.stash[oldItemId] || 0) + 1;
+      }
+    }
+
+    // 2. Strip any folder paths before saving to the Keeper state
+    const cleanImgName = itemDef.img.split('/').pop();
+    state.keeper.equipment[slot] = cleanImgName;
+
+    // 3. Remove the new item from the stash
+    state.stash[itemId] -= 1;
+    if (state.stash[itemId] <= 0) {
+      delete state.stash[itemId];
+    }
+
+    // 4. Save and refresh
+    if (typeof save === 'function') save(); 
+    renderKeeperQuarters();
+    toast("Equipped " + itemDef.name + "!");
+
+  
+  } else if (itemDef.type === 'consumable') {
+    state.stash[itemId] -= 1;
+    if (state.stash[itemId] <= 0) {
       delete state.stash[itemId];
     }
     
-    save();
+    save(); 
     renderKeeperQuarters();
-    toast("Used " + (STASH_CATALOG[itemId]?.name || "Item") + "!");
+    toast("Used " + itemDef.name + "!");
   }
 };
 
 function renderKeeperQuarters() {
-  // 1. Initialize Keeper state if missing
+  // 1. Initialize Keeper if completely missing
   if (!state.keeper) {
-    state.keeper = { 
-      title: "Novice Breeder", 
-      gender: "male", 
-      equipment: { 
-        body: "body_base.png",
-        torso: null,
-        head: null,
-        legs: null
-      } 
+    state.keeper = { title: "Novice Breeder", gender: "male" };
+  }
+  
+  // 2. NEW: Defensively initialize the equipment object if it's missing from an old save
+  if (!state.keeper.equipment) {
+    state.keeper.equipment = {
+      body: "body_base.png", 
+      torso: null,
+      head: null,
+      legs: null
     };
   }
   
-  // Update Profile Text
-  document.getElementById('keeper-name-display').innerText = state.playerName || "Keeper";
-  document.getElementById('keeper-title-display').innerText = state.keeper.title;
+  // Update Profile Text (Added defensive checks just in case the HTML isn't loaded yet)
+  const nameDisplay = document.getElementById('keeper-name-display');
+  if (nameDisplay) nameDisplay.innerText = state.playerName || "Keeper";
+  
+  const titleDisplay = document.getElementById('keeper-title-display');
+  if (titleDisplay) titleDisplay.innerText = state.keeper.title;
 
   // Render Layered Paper-Doll Avatar Images
   const eq = state.keeper.equipment || {};
   
   const bodyLayer = document.getElementById('layer-body');
   if (bodyLayer) {
-  // 1. Grab the saved body, or use the default
-  let bodyFileName = eq.body || 'body_base.png';
-  
-  // 2. Scrub the extra folder path if it got stuck in your save data
-  bodyFileName = bodyFileName.replace('assets/avatar/', '');
-  
-  // 3. Inject it cleanly
-  bodyLayer.src = `assets/avatar/${bodyFileName}`;
-}
+    let bodyFileName = eq.body || 'body_base.png';
+    // Defensive check: scrub out old folder paths if they got stuck in the save data
+    bodyFileName = bodyFileName.replace('assets/avatar/', '');
+    bodyLayer.src = `assets/avatar/${bodyFileName}`;
+  }
+
+  const legsLayer = document.getElementById('layer-legs');
+  if (legsLayer) {
+    if (eq.legs) {
+      const legsFileName = eq.legs.replace('assets/avatar/', '');
+      legsLayer.src = `assets/avatar/${legsFileName}`;
+      legsLayer.style.display = 'block';
+    } else {
+      legsLayer.style.display = 'none';
+    }
+  }
 
   const torsoLayer = document.getElementById('layer-torso');
   if (torsoLayer) {
     if (eq.torso) {
-      torsoLayer.src = `assets/avatar/${eq.torso}`;
+      const torsoFileName = eq.torso.replace('assets/avatar/', '');
+      torsoLayer.src = `assets/avatar/${torsoFileName}`;
       torsoLayer.style.display = 'block';
     } else {
       torsoLayer.style.display = 'none';
@@ -254,20 +433,11 @@ function renderKeeperQuarters() {
   const headLayer = document.getElementById('layer-head');
   if (headLayer) {
     if (eq.head) {
-      headLayer.src = `assets/avatar/${eq.head}`;
+      const headFileName = eq.head.replace('assets/avatar/', '');
+      headLayer.src = `assets/avatar/${headFileName}`;
       headLayer.style.display = 'block';
     } else {
       headLayer.style.display = 'none';
-    }
-  }
-
-  const legsLayer = document.getElementById('layer-legs');
-  if (legsLayer) {
-    if (eq.legs) {
-      legsLayer.src = `assets/avatar/${eq.legs}`;
-      legsLayer.style.display = 'block';
-    } else {
-      legsLayer.style.display = 'none';
     }
   }
 
@@ -283,17 +453,27 @@ function renderKeeperQuarters() {
   for (const [itemId, quantity] of Object.entries(stashData)) {
     if (quantity <= 0) continue;
     
-    const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓' };
+    const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable' };
     const slot = document.createElement('div');
     slot.className = 'stash-slot filled';
     
-    // Add visual HTML to the slot
+    // NEW LOGIC: Check if it is a cosmetic (PNG) or a consumable (Emoji)
+    let displayHtml = '';
+    
+    if (itemDef.type === 'cosmetic' && itemDef.img) {
+      const cleanImgName = itemDef.img.split('/').pop(); 
+      displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">`;
+    } else {
+      displayHtml = `<div style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); pointer-events: none;">${itemDef.icon}</div>`;
+    }
+    
+    // THE MISSING LINK: We must actually inject the HTML string into the square!
     slot.innerHTML = `
-      <div style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${itemDef.icon}</div>
-      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000;">x${quantity}</div>
+      ${displayHtml}
+      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000; pointer-events: none;">x${quantity}</div>
     `;
     
-    // Clicking the item uses it
+    // Clicking the item triggers the use function
     slot.onclick = () => window.useFromStash(itemId);
     stashGrid.appendChild(slot);
     currentSlots++;
@@ -492,121 +672,6 @@ window.addToStash = function(itemId, amount = 1) {
   toast("Added " + amount + " " + (STASH_CATALOG[itemId]?.name || "Item") + " to Stash!");
   return true;
 };
-
-window.useFromStash = function(itemId) {
-  if (state.stash && state.stash[itemId] && state.stash[itemId] > 0) {
-    state.stash[itemId]--;
-    
-    if (state.stash[itemId] === 0) {
-      delete state.stash[itemId];
-    }
-    
-    save();
-    renderKeeperQuarters();
-    toast("Used " + (STASH_CATALOG[itemId]?.name || "Item") + "!");
-  }
-};
-
-function renderKeeperQuarters() {
-  // 1. Initialize Keeper state with equipment slots if missing
-  if (!state.keeper) {
-    state.keeper = {
-      title: "Novice Breeder",
-      gender: "male", // can toggle between male/female templates
-      equipment: {
-        body: "assets/avatar/body_base.png",
-        torso: null, // e.g., "breeder_tunic.png"
-        head: null,   // e.g., "leather_cap.png"
-        legs: null    // e.g., "breeder_pants.png"  
-      }
-    };
-  }
-  
-  // Update Profile Text
-  document.getElementById('keeper-name-display').innerText = state.playerName || "Keeper";
-  document.getElementById('keeper-title-display').innerText = state.keeper.title;
-
-  // Render Layered Paper-Doll Avatar Images
-  const eq = state.keeper.equipment || {};
-  
-  const bodyLayer = document.getElementById('layer-body');
-  if (bodyLayer) {
-  // 1. Grab the saved body, or use the default
-  let bodyFileName = eq.body || 'assets/avatar/body_base.png';
-  
-  // 2. Defensive check: If the old folder path is stuck in the save file, scrub it out
-  bodyFileName = bodyFileName.replace('assets/avatar/', '');
-  
-  // 3. Inject it cleanly (guarantees the path is only applied once)
-  bodyLayer.src = `assets/avatar/${bodyFileName}`;
-}
-
-  const legsLayer = document.getElementById('layer-legs');
-  if (legsLayer) {
-    if (eq.legs) {
-      legsLayer.src = `assets/avatar/${eq.legs}`;
-      legsLayer.style.display = 'block';
-    } else {
-      legsLayer.style.display = 'none';
-    }
-  }
-
-  const torsoLayer = document.getElementById('layer-torso');
-  if (torsoLayer) {
-    if (eq.torso) {
-      torsoLayer.src = `assets/avatar/${eq.torso}`;
-      torsoLayer.style.display = 'block';
-    } else {
-      torsoLayer.style.display = 'none';
-    }
-  }
-
-  const headLayer = document.getElementById('layer-head');
-  if (headLayer) {
-    if (eq.head) {
-      headLayer.src = `assets/avatar/${eq.head}`;
-      headLayer.style.display = 'block';
-    } else {
-      headLayer.style.display = 'none';
-    }
-  }
-
-  // 2. Render Stash Grid
-  const stashGrid = document.getElementById('stash-grid');
-  if (!stashGrid) return;
-  
-  stashGrid.innerHTML = ''; 
-  const minSlots = 8;
-  let currentSlots = 0;
-  const stashData = state.stash || {};
-  
-  for (const [itemId, quantity] of Object.entries(stashData)) {
-    if (quantity <= 0) continue;
-    
-    const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓' };
-    const slot = document.createElement('div');
-    slot.className = 'stash-slot filled';
-    
-    // Add visual HTML to the slot
-    slot.innerHTML = `
-      <div style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${itemDef.icon}</div>
-      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000;">x${quantity}</div>
-    `;
-    
-    // Clicking the item uses it
-    slot.onclick = () => window.useFromStash(itemId);
-    stashGrid.appendChild(slot);
-    currentSlots++;
-  }
-  
-  // Fill remaining space with empty slot outlines
-  while (currentSlots < minSlots) {
-    const emptySlot = document.createElement('div');
-    emptySlot.className = 'stash-slot empty';
-    stashGrid.appendChild(emptySlot);
-    currentSlots++;
-  }
-}
 
 // --- 2. FIREWORKS & THE REVEAL ---
 function revealChest() {
@@ -1881,7 +1946,7 @@ function itemHtml(item) {
   if (item.element === "fire") elementIcon = "Images/ember.png";
   else if (item.element === "water") elementIcon = "Images/water.png";
   else if (item.element === "nature") elementIcon = "Images/leaf.png";
-
+//* Element Icon Size ----
   const badgeHTML = elementIcon ? `
     <img src="${elementIcon}" alt="${item.element}" style="
       position: absolute; 
@@ -3285,6 +3350,107 @@ document.querySelector(".level-pill")?.addEventListener("click", () => {
   addXp(xpNeed(state.level || 1)); 
 });
 
+function renderStash() {
+  const stashGrid = document.querySelector('.stash-grid');
+  if (!stashGrid) return;
+  
+  stashGrid.innerHTML = ''; 
+  const totalSlots = 20; 
+  
+  for (let i = 0; i < totalSlots; i++) {
+    const itemId = state.stash[i]; // e.g., 'breeder_tunic'
+    
+    if (itemId) {
+      const itemData = STASH_CATALOG[itemId];
+      let displayHtml = '';
+      
+      // Draw image for cosmetics, or emoji for consumables
+      if (itemData.type === 'cosmetic') {
+        // Armor the image name to guarantee no double folder paths
+        const cleanImgName = itemData.img.split('/').pop();
+        displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemData.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">`;
+      } else {
+        displayHtml = `<div style="font-size: 2.2rem; pointer-events: none;">${itemData.icon}</div>`;
+      }
+      
+      stashGrid.innerHTML += `
+        <div class="stash-slot filled" onclick="handleStashClick(${i})">
+          ${displayHtml}
+        </div>
+      `;
+    } else {
+      stashGrid.innerHTML += `<div class="stash-slot"></div>`; // Empty slot
+    }
+  }
+}
+window.handleStashClick = function(stashIndex) {
+  const itemId = state.stash[stashIndex];
+  if (!itemId) return; 
+  
+  const itemData = STASH_CATALOG[itemId];
+  
+  if (itemData.type === 'cosmetic') {
+    // 1. Equip the item
+    state.keeper.equipment[itemData.slot] = itemData.img;
+    
+    // 2. Remove it from the stash
+    state.stash.splice(stashIndex, 1);
+    
+    // 3. Save and refresh the screen
+    save();
+    renderStash();
+    renderKeeperQuarters(); // Your avatar render function
+    
+  } else if (itemData.type === 'consumable') {
+    // Placeholder for consumable logic (e.g., hatching an egg or skipping time)
+    console.log(`You used a ${itemData.name}!`);
+    
+    // state.stash.splice(stashIndex, 1); // Delete after use
+    // save(); 
+    // renderStash();
+  }
+}
+window.renderExpandedModalLayers = function() {
+  const eq = state.keeper?.equipment || {};
+  
+  const bodyL = document.getElementById('modal-layer-body');
+  const legsL = document.getElementById('modal-layer-legs');
+  const torsoL = document.getElementById('modal-layer-torso');
+  const headL = document.getElementById('modal-layer-head');
+
+  if (bodyL) {
+    let bodyFileName = eq.body || 'body_base.png';
+    bodyFileName = bodyFileName.replace('assets/avatar/', '');
+    bodyL.src = `assets/avatar/${bodyFileName}`;
+  }
+  
+  if (legsL) {
+    if (eq.legs) { 
+      const legsFileName = eq.legs.split('/').pop();
+      legsL.src = `assets/avatar/${legsFileName}`; 
+      legsL.style.display = 'block'; 
+    }
+    else { legsL.style.display = 'none'; }
+  }
+  
+  if (torsoL) {
+    if (eq.torso) { 
+      const torsoFileName = eq.torso.split('/').pop();
+      torsoL.src = `assets/avatar/${torsoFileName}`; 
+      torsoL.style.display = 'block'; 
+    }
+    else { torsoL.style.display = 'none'; }
+  }
+  
+  if (headL) {
+    if (eq.head) { 
+      const headFileName = eq.head.split('/').pop();
+      headL.src = `assets/avatar/${headFileName}`; 
+      headL.style.display = 'block'; 
+    }
+    else { headL.style.display = 'none'; }
+  }
+};
 // --- BOOT SEQUENCE ---
 initGame();
 load();

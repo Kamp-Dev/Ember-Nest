@@ -1789,3 +1789,26 @@ html.lock-scroll, body.lock-scroll {
     font-weight: bold;
     text-transform: uppercase;
 }
+
+.avatar-stage {
+  position: relative;
+  width: 120px; /* Adjust to match the size of the circle in your UI */
+  height: 120px;
+  margin: 0 auto;
+}
+
+.avatar-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none; /* Stops the images from intercepting clicks */
+}
+
+/* The Z-Index determines what renders on top */
+.layer-base { z-index: 1; }
+.layer-legs { z-index: 2; }
+.layer-torso { z-index: 3; }
+.layer-head { z-index: 4; }
