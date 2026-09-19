@@ -1716,152 +1716,6 @@ html.lock-scroll, body.lock-scroll {
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 12px;
 }
-
-.stash-slot {
-  /* Default to Common (Gray) colors */
-  --tile-bg: #cbcfd3; 
-  --tile-border: #b6babb;
-  --tile-lip: #a4a8ab;
-
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden; 
-  aspect-ratio: 1 / 1; 
-  
-  /* Applying the variables */
-  background-color: var(--tile-bg); 
-  border: 2px solid var(--tile-border); 
-  border-radius: 10px; 
-  /* Rounded top-left and bottom-right, sharp top-right and bottom-left */
-  border-radius: 16px 4px 16px 4px;
-  box-shadow: 
-    inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
-    inset -2px -2px 3px rgba(0, 0, 0, 0.15),    
-    0 4px 0px var(--tile-lip), /* 3D bottom lip uses the variable */
-    0 6px 4px rgba(0, 0, 0, 0.2);               
-    
-  transition: all 0.1s ease-in-out; 
-}
-
-.stash-slot.filled {
-  cursor: pointer;
-}
-
-.stash-slot.filled:hover {
-  transform: translateY(2px);
-  box-shadow: 
-    inset 2px 2px 3px rgba(255, 255, 255, 0.9),
-    inset -2px -2px 3px rgba(0, 0, 0, 0.15),
-    0 2px 0px var(--tile-lip), /* Bottom lip shrinks on press */
-    0 3px 2px rgba(0, 0, 0, 0.2);
-}
-
-.stash-slot.empty {
-  background-color: #686868; /* Flat, neutral grey */
-  border: 2px solid #686868; /* Subtle flat border */
-  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.05); /* Just enough depth to look like an empty socket */
-  pointer-events: none; /* Prevents hovering or clicking on empty slots */
-}
-/* --- THE RARITY COLOR PALETTES --- */
-.rarity-uncommon {
-  --tile-bg: #9cd4ad;
-  --tile-border: #7ab98f;
-  --tile-lip: #70ab83;
-}
-
-.rarity-rare {
-  --tile-bg: #9ab4d6;
-  --tile-border: #7a98bf;
-  --tile-lip: #6786b3;
-}
-
-.rarity-epic {
-  --tile-bg: #bda4d6;
-  --tile-border: #a485c4;
-  --tile-lip: #9170b3;
-}
-
-/* --- LEGENDARY TIER FX --- */
-.rarity-legendary {
-  /* Fiery gold/red base colors */
-  --tile-bg: #ffdd77;
-  --tile-border: #ff3300;
-  --tile-lip: #cc2200;
-  
-  /* The breathing outer glow */
-  animation: legendaryAura 2s infinite alternate ease-in-out;
-}
-
-/* 1. The Pulsing Aura */
-@keyframes legendaryAura {
-  0% { 
-    box-shadow: 
-      inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
-      inset -2px -2px 3px rgba(0, 0, 0, 0.15), 
-      0 4px 0px var(--tile-lip), 
-      0 0 5px rgba(255, 50, 0, 0.3); 
-  }
-  100% { 
-    box-shadow: 
-      inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
-      inset -2px -2px 3px rgba(0, 0, 0, 0.15), 
-      0 4px 0px var(--tile-lip), 
-      0 0 15px rgba(255, 80, 0, 0.9), 
-      0 0 10px inset rgba(255, 255, 255, 0.6); 
-  }
-}
-
-/* 2. The Sweeping Diagonal Light Beam */
-.rarity-legendary::before {
-  content: '';
-  position: absolute;
-  top: 0; 
-  left: -100%;
-  width: 60%; 
-  height: 100%;
-  background: linear-gradient(
-    to right, 
-    rgba(255, 255, 255, 0) 0%, 
-    rgba(255, 255, 255, 0.8) 50%, 
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: skewX(-25deg);
-  animation: legendarySweep 3s infinite;
-  z-index: 5; /* Passes over the item */
-  pointer-events: none;
-}
-
-@keyframes legendarySweep {
-  0% { left: -100%; }
-  20% { left: 200%; } /* Sweeps quickly */
-  100% { left: 200%; } /* Pauses before sweeping again */
-}
-
-/* 3. The Twinkling Sparkle Particles */
-.rarity-legendary::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  /* Using radial gradients to draw tiny stars in the corners */
-  background-image: 
-    radial-gradient(circle, #fff 20%, transparent 30%),
-    radial-gradient(circle, #fff 20%, transparent 30%);
-  background-size: 6px 6px, 8px 8px;
-  background-position: 8% 8%, 85% 15%;
-  background-repeat: no-repeat;
-  animation: legendarySparkle 1.5s infinite alternate ease-in-out;
-  z-index: 6;
-  pointer-events: none;
-}
-
-@keyframes legendarySparkle {
-  0% { opacity: 0; transform: scale(0.5); }
-  50% { opacity: 1; transform: scale(1.2); }
-  100% { opacity: 0.2; transform: scale(0.8); }
-}
-
 /* The Green Highlighted State from your image[cite: 2] */
 /* You can add this class via JavaScript when an item is currently equipped */
 .stash-slot.equipped {
@@ -1944,3 +1798,157 @@ html.lock-scroll, body.lock-scroll {
 .layer-legs { z-index: 2; }
 .layer-torso { z-index: 3; }
 .layer-head { z-index: 4; }
+
+/* --- BASE STASH TILE & ASYMMETRIC CORNERS --- */
+.stash-slot {
+  --tile-bg: #cbcfd3; 
+  --tile-border: #b6babb;
+  --tile-lip: #a4a8ab;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; 
+  aspect-ratio: 1 / 1; 
+  
+  background-color: var(--tile-bg); 
+  border: 2px solid var(--tile-border); 
+  border-radius: 4px 16px 4px 16px; /* Two opposite corners sharp, two rounded */
+  
+  box-shadow: 
+    inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
+    inset -2px -2px 3px rgba(0, 0, 0, 0.15),    
+    0 4px 0px var(--tile-lip), 
+    0 6px 4px rgba(0, 0, 0, 0.2);               
+    
+  transition: all 0.1s ease-in-out; 
+}
+
+.stash-slot.filled {
+  cursor: pointer;
+}
+
+.stash-slot.filled:hover {
+  transform: translateY(2px);
+  box-shadow: 
+    inset 2px 2px 3px rgba(255, 255, 255, 0.9),
+    inset -2px -2px 3px rgba(0, 0, 0, 0.15),
+    0 2px 0px var(--tile-lip), 
+    0 3px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* --- EMPTY TILES (Flat Grey) --- */
+.stash-slot.empty {
+  background-color: #d1d5d8;
+  border: 2px solid #bdc1c4;
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+}
+
+/* --- RARITY COLOR PALETTES --- */
+.rarity-uncommon {
+  --tile-bg: #9cd4ad;
+  --tile-border: #7ab98f;
+  --tile-lip: #70ab83;
+}
+
+.rarity-rare {
+  --tile-bg: #9ab4d6;
+  --tile-border: #7a98bf;
+  --tile-lip: #6786b3;
+}
+
+.rarity-epic {
+  --tile-bg: #bda4d6;
+  --tile-border: #a485c4;
+  --tile-lip: #9170b3;
+}
+
+/* --- LEGENDARY TIER FX --- */
+.rarity-legendary {
+  --tile-bg: #ffdd77;
+  --tile-border: #ff3300;
+  --tile-lip: #cc2200;
+  animation: legendaryAura 2s infinite alternate ease-in-out;
+}
+
+@keyframes legendaryAura {
+  0% { 
+    box-shadow: 
+      inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
+      inset -2px -2px 3px rgba(0, 0, 0, 0.15), 
+      0 4px 0px var(--tile-lip), 
+      0 0 5px rgba(255, 50, 0, 0.3); 
+  }
+  100% { 
+    box-shadow: 
+      inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
+      inset -2px -2px 3px rgba(0, 0, 0, 0.15), 
+      0 4px 0px var(--tile-lip), 
+      0 0 15px rgba(255, 80, 0, 0.9), 
+      0 0 10px inset rgba(255, 255, 255, 0.6); 
+  }
+}
+
+.rarity-legendary::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-25deg);
+  animation: legendarySweep 3s infinite;
+  z-index: 5;
+  pointer-events: none;
+}
+
+@keyframes legendarySweep {
+  0% { left: -100%; }
+  20%, 100% { left: 200%; }
+}
+
+.rarity-legendary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #fff 20%, transparent 30%), radial-gradient(circle, #fff 20%, transparent 30%);
+  background-size: 6px 6px, 8px 8px;
+  background-position: 8% 8%, 85% 15%;
+  background-repeat: no-repeat;
+  animation: legendarySparkle 1.5s infinite alternate ease-in-out;
+  z-index: 6;
+  pointer-events: none;
+}
+
+@keyframes legendarySparkle {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0.2; transform: scale(0.8); }
+}
+
+/* --- DRAGON KING PORTRAIT & BORDER FRAME --- */
+.portrait-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid #d4af37;
+  background-color: #fefeff;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portrait-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10; /* Sits completely on top of the character avatar */
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+}
