@@ -1718,16 +1718,18 @@ html.lock-scroll, body.lock-scroll {
 }
 
 .stash-slot {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background-color: #232330;
-    border: 2px dashed #444455;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    transition: all 0.2s ease;
+  /* Replace your current background and border with these */
+  background-color: #121218; /* Deep obsidian base color */
+  border: 1px solid #08080c; /* Very dark solid outer edge, completely replacing the dashed line */
+  border-radius: 8px; /* Smooths the harsh corners slightly */
+
+  /* The 3D Inset Carving */
+  box-shadow: 
+    inset 4px 4px 10px rgba(0, 0, 0, 0.85), /* Deep shadow plunging in from the top-left */
+    inset -2px -2px 6px rgba(255, 255, 255, 0.04), /* Faint metallic rim light on the bottom-right */
+    0px 2px 5px rgba(0, 0, 0, 0.6); /* Subtle drop shadow behind the whole block */
+    
+  /* Keep your existing flex/grid centering properties here */
 }
 
 .stash-slot.filled {
