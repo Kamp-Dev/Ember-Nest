@@ -169,10 +169,18 @@ function setSafeText(id, text) {
 const TRAIL_BAG = [2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
 
 // --- KEEPER'S QUARTERS CATALOG ---
+// --- KEEPER'S QUARTERS CATALOG ---
 const STASH_CATALOG = {
   'rare_egg': { name: 'Rare Egg', rarity: 'rare', icon: '🥚', type: 'consumable' },
   'time_skip_1h': { name: '1h Time Skip', rarity: 'epic', icon: '⏳', type: 'consumable' },
-  'breeder_tunic': { name: 'Torso Tunic', rarity: 'uncommon', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic.png' },
+  
+  // Your original uncommon tunic
+  'breeder_tunic': { name: 'Apprentice Tunic', rarity: 'uncommon', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic.png' },
+  
+  // --- NEW: Rare and Epic Tunics ---
+  'rare_tunic': { name: 'Adept Tunic', rarity: 'rare', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic_rare.png' },
+  'epic_tunic': { name: 'Master Tunic', rarity: 'epic', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic_epic.png' },
+  
   'leather_cap': { name: 'Leather Cap', rarity: 'common', icon: '🧢', type: 'cosmetic', slot: 'head', img: 'head_leather_cap.png' },
   'rough_trousers': { name: 'Rough Trousers', rarity: 'common', icon: '👖', type: 'cosmetic', slot: 'legs', img: 'legs_trousers.png' }
 };
