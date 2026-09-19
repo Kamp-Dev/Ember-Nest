@@ -335,7 +335,7 @@ function renderKeeperQuarters() {
   if (!stashGrid) return;
   
   stashGrid.innerHTML = ''; 
-  const minSlots = 8;
+  const minSlots = 25;
   let currentSlots = 0;
   const stashData = state.stash || {};
   
