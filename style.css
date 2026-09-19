@@ -1718,30 +1718,153 @@ html.lock-scroll, body.lock-scroll {
 }
 
 .stash-slot {
-  /* Replace your current background and border with these */
-  background-color: #121218; /* Deep obsidian base color */
-  border: 1px solid #08080c; /* Very dark solid outer edge, completely replacing the dashed line */
-  border-radius: 8px; /* Smooths the harsh corners slightly */
+  /* Default to Common (Gray) colors */
+  --tile-bg: #cbcfd3; 
+  --tile-border: #b6babb;
+  --tile-lip: #a4a8ab;
 
-  /* The 3D Inset Carving */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; 
+  aspect-ratio: 1 / 1; 
+  
+  /* Applying the variables */
+  background-color: var(--tile-bg); 
+  border: 2px solid var(--tile-border); 
+  border-radius: 10px; 
+  
   box-shadow: 
-    inset 4px 4px 10px rgba(0, 0, 0, 0.85), /* Deep shadow plunging in from the top-left */
-    inset -2px -2px 6px rgba(255, 255, 255, 0.04), /* Faint metallic rim light on the bottom-right */
-    0px 2px 5px rgba(0, 0, 0, 0.6); /* Subtle drop shadow behind the whole block */
+    inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
+    inset -2px -2px 3px rgba(0, 0, 0, 0.15),    
+    0 4px 0px var(--tile-lip), /* 3D bottom lip uses the variable */
+    0 6px 4px rgba(0, 0, 0, 0.2);               
     
-  /* Keep your existing flex/grid centering properties here */
+  transition: all 0.1s ease-in-out; 
 }
 
 .stash-slot.filled {
-    border: 2px solid #555566;
-    background-color: #2a2a35;
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .stash-slot.filled:hover {
-    border-color: #d4af37;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.15);
+  transform: translateY(2px);
+  box-shadow: 
+    inset 2px 2px 3px rgba(255, 255, 255, 0.9),
+    inset -2px -2px 3px rgba(0, 0, 0, 0.15),
+    0 2px 0px var(--tile-lip), /* Bottom lip shrinks on press */
+    0 3px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* --- THE RARITY COLOR PALETTES --- */
+.rarity-uncommon {
+  --tile-bg: #9cd4ad;
+  --tile-border: #7ab98f;
+  --tile-lip: #70ab83;
+}
+
+.rarity-rare {
+  --tile-bg: #9ab4d6;
+  --tile-border: #7a98bf;
+  --tile-lip: #6786b3;
+}
+
+.rarity-epic {
+  --tile-bg: #bda4d6;
+  --tile-border: #a485c4;
+  --tile-lip: #9170b3;
+}
+
+/* --- LEGENDARY TIER FX --- */
+.rarity-legendary {
+  /* Fiery gold/red base colors */
+  --tile-bg: #ffdd77;
+  --tile-border: #ff3300;
+  --tile-lip: #cc2200;
+  
+  /* The breathing outer glow */
+  animation: legendaryAura 2s infinite alternate ease-in-out;
+}
+
+/* 1. The Pulsing Aura */
+@keyframes legendaryAura {
+  0% { 
+    box-shadow: 
+      inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
+      inset -2px -2px 3px rgba(0, 0, 0, 0.15), 
+      0 4px 0px var(--tile-lip), 
+      0 0 5px rgba(255, 50, 0, 0.3); 
+  }
+  100% { 
+    box-shadow: 
+      inset 2px 2px 3px rgba(255, 255, 255, 0.9), 
+      inset -2px -2px 3px rgba(0, 0, 0, 0.15), 
+      0 4px 0px var(--tile-lip), 
+      0 0 15px rgba(255, 80, 0, 0.9), 
+      0 0 10px inset rgba(255, 255, 255, 0.6); 
+  }
+}
+
+/* 2. The Sweeping Diagonal Light Beam */
+.rarity-legendary::before {
+  content: '';
+  position: absolute;
+  top: 0; 
+  left: -100%;
+  width: 60%; 
+  height: 100%;
+  background: linear-gradient(
+    to right, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.8) 50%, 
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  animation: legendarySweep 3s infinite;
+  z-index: 5; /* Passes over the item */
+  pointer-events: none;
+}
+
+@keyframes legendarySweep {
+  0% { left: -100%; }
+  20% { left: 200%; } /* Sweeps quickly */
+  100% { left: 200%; } /* Pauses before sweeping again */
+}
+
+/* 3. The Twinkling Sparkle Particles */
+.rarity-legendary::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* Using radial gradients to draw tiny stars in the corners */
+  background-image: 
+    radial-gradient(circle, #fff 20%, transparent 30%),
+    radial-gradient(circle, #fff 20%, transparent 30%);
+  background-size: 6px 6px, 8px 8px;
+  background-position: 8% 8%, 85% 15%;
+  background-repeat: no-repeat;
+  animation: legendarySparkle 1.5s infinite alternate ease-in-out;
+  z-index: 6;
+  pointer-events: none;
+}
+
+@keyframes legendarySparkle {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0.2; transform: scale(0.8); }
+}
+
+/* The Green Highlighted State from your image[cite: 2] */
+/* You can add this class via JavaScript when an item is currently equipped */
+.stash-slot.equipped {
+  background-color: #9cd4ad; /* Soft green background[cite: 2] */
+  border-color: #7ab98f;     /* Darker green rim[cite: 2] */
+  box-shadow: 
+    inset 2px 2px 3px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 3px rgba(0, 0, 0, 0.15),
+    0 4px 0px #70ab83,       /* Green bottom lip[cite: 2] */
+    0 6px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Bottom Navigation */

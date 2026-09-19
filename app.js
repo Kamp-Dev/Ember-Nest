@@ -45,159 +45,6 @@ function closeExpandedCustomizer() {
   if (modal) modal.style.display = 'none';
 }
 
-function renderKeeperQuarters() {
-  // 1. Defensively initialize Keeper state
-  if (!state.keeper) {
-    state.keeper = { title: "Novice Breeder", gender: "male" };
-  }
-  if (!state.keeper.equipment) {
-    state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
-  }
-  
-  // Update Profile Text
-  const nameDisplay = document.getElementById('keeper-name-display');
-  if (nameDisplay) nameDisplay.innerText = state.playerName || "Keeper";
-  
-  const titleDisplay = document.getElementById('keeper-title-display');
-  if (titleDisplay) titleDisplay.innerText = state.keeper.title;
-
-  // --- THE PATH SCRUBBER ---
-  // This guarantees we only ever have exactly one "assets/avatar/" prefix
-  const getCleanPath = (rawName, defaultName = '') => {
-    let nameToClean = rawName || defaultName;
-    if (!nameToClean) return '';
-    // Strip out the path if it already exists, then grab just the file name
-    let clean = nameToClean.replace(/assets\/avatar\//g, '').split('/').pop();
-    return `assets/avatar/${clean}`;
-  };
-
-  // Render Layered Paper-Doll Avatar Images
-  const eq = state.keeper.equipment || {};
-  
-  const bodyLayer = document.getElementById('layer-body');
-  if (bodyLayer) bodyLayer.src = getCleanPath(eq.body, 'body_base.png');
-
-  const legsLayer = document.getElementById('layer-legs');
-  if (legsLayer) {
-    if (eq.legs) {
-      legsLayer.src = getCleanPath(eq.legs);
-      legsLayer.style.display = 'block';
-    } else {
-      legsLayer.style.display = 'none';
-    }
-  }
-
-  const torsoLayer = document.getElementById('layer-torso');
-  if (torsoLayer) {
-    if (eq.torso) {
-      torsoLayer.src = getCleanPath(eq.torso);
-      torsoLayer.style.display = 'block';
-    } else {
-      torsoLayer.style.display = 'none';
-    }
-  }
-
-  const headLayer = document.getElementById('layer-head');
-  if (headLayer) {
-    if (eq.head) {
-      headLayer.src = getCleanPath(eq.head);
-      headLayer.style.display = 'block';
-    } else {
-      headLayer.style.display = 'none';
-    }
-  }
-
-  // 2. Render Stash Grid
-  const stashGrid = document.getElementById('stash-grid');
-  if (!stashGrid) return;
-  
-  stashGrid.innerHTML = ''; 
-  const minSlots = 8;
-  let currentSlots = 0;
-  const stashData = state.stash || {};
-  
-  for (const [itemId, quantity] of Object.entries(stashData)) {
-    if (quantity <= 0) continue;
-    
-    const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable' };
-    const slot = document.createElement('div');
-    slot.className = 'stash-slot filled';
-    
-    let displayHtml = '';
-    if (itemDef.type === 'cosmetic' && itemDef.img) {
-      // Run the stash images through the scrubber too
-      const cleanSrc = getCleanPath(itemDef.img);
-      displayHtml = `<img src="${cleanSrc}" alt="${itemDef.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">`;
-    } else {
-      displayHtml = `<div style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); pointer-events: none;">${itemDef.icon}</div>`;
-    }
-    
-    slot.innerHTML = `
-      ${displayHtml}
-      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000; pointer-events: none;">x${quantity}</div>
-    `;
-    
-    slot.onclick = () => window.useFromStash(itemId);
-    stashGrid.appendChild(slot);
-    currentSlots++;
-  }
-  
-  while (currentSlots < minSlots) {
-    const emptySlot = document.createElement('div');
-    emptySlot.className = 'stash-slot empty';
-    stashGrid.appendChild(emptySlot);
-    currentSlots++;
-  }
-}
-
-function renderExpandedItemGrid(slotType) {
-  const grid = document.getElementById('expandedItemGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  
-  const stashData = state.stash || {};
-  let found = false;
-  
-  for (const [itemId, quantity] of Object.entries(stashData)) {
-    const itemDef = STASH_CATALOG[itemId];
-    if (itemDef && itemDef.type === 'cosmetic' && itemDef.slot === slotType) {
-      found = true;
-      const slotEl = document.createElement('div');
-      slotEl.className = 'stash-slot filled';
-      slotEl.style.cursor = 'pointer';
-      
-      // 1. Armor the image name so we only ever deal with the clean file
-      const cleanImgName = itemDef.img.split('/').pop();
-      
-      // 2. Safely check if it's equipped to apply the gold border
-      const isEquipped = state.keeper?.equipment?.[slotType] === cleanImgName;
-      if (isEquipped) slotEl.style.borderColor = '#d4af37';
-      
-      // 3. Upgraded to render the actual transparent PNG instead of the emoji icon
-      slotEl.innerHTML = `
-        <img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">
-        <div style="position: absolute; bottom: 2px; font-size: 0.6rem; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none;">${itemDef.name}</div>
-      `;
-      
-      slotEl.onclick = () => {
-        // 4. Safely inject only the clean filename into the save state
-        state.keeper.equipment[slotType] = cleanImgName;
-        
-        save();
-        renderKeeperQuarters();       
-        renderExpandedModalLayers();    
-        renderExpandedItemGrid(slotType); 
-        toast("Equipped " + itemDef.name);
-      };
-      grid.appendChild(slotEl);
-    }
-  }
-  
-  if (!found) {
-    grid.innerHTML = `<div style="grid-column: span 3; color: #7a7a8c; font-size: 0.75rem; padding: 15px; text-align: center;">No items found for this slot.</div>`;
-  }
-}
-
 // --- KEEPER'S CUSTOMIZER MIRROR LISTENERS ---
 
 // 1. Click the Avatar Frame to open the expanded modal
@@ -263,6 +110,54 @@ document.querySelectorAll('.customizer-tab').forEach(btn => {
     renderExpandedItemGrid(currentCustomizerSlot);
   });
 });
+
+function renderExpandedItemGrid(slotType) {
+  const modalGrid = document.getElementById('expandedItemGrid'); 
+  if (!modalGrid) return;
+  
+  modalGrid.innerHTML = ''; 
+  const stashData = state.stash || {};
+  
+  for (const [itemId, quantity] of Object.entries(stashData)) {
+    if (quantity <= 0) continue;
+    
+    const itemDef = STASH_CATALOG[itemId];
+    if (!itemDef) continue;
+    
+    // Only proceed if it is a cosmetic and matches the current tab (e.g., 'torso')
+    if (itemDef.type !== 'cosmetic' || itemDef.slot !== slotType) {
+      continue;
+    }
+    
+    const slot = document.createElement('div');
+    // Grab rarity from the catalog, default to 'common' if missing
+    const itemRarity = itemDef.rarity || 'common'; 
+
+    // Inject the rarity class dynamically so the CSS variables trigger
+    slot.className = `stash-slot filled rarity-${itemRarity}`; 
+    slot.style.aspectRatio = '1 / 1';
+    
+    let displayHtml = '';
+    if (itemDef.img) {
+      const cleanImgName = itemDef.img.split('/').pop(); 
+      displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 100%; height: 100%; object-fit: cover; transform: scale(2.8) translateY(-10%); pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">`;
+    }
+    
+    slot.innerHTML = `
+      ${displayHtml}
+      <div style="position: absolute; bottom: 3px; right: 5px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.9); pointer-events: none;">x${quantity}</div>
+    `;
+    
+    slot.onclick = () => {
+      window.useFromStash(itemId);
+      if (typeof renderExpandedModalLayers === 'function') renderExpandedModalLayers();
+      renderExpandedItemGrid(slotType);
+    };
+    
+    modalGrid.appendChild(slot);
+  }
+}
+
 function setSafeHTML(id, html) {
   const el = document.getElementById(id);
   if (el) el.innerHTML = html;
@@ -275,11 +170,11 @@ const TRAIL_BAG = [2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
 
 // --- KEEPER'S QUARTERS CATALOG ---
 const STASH_CATALOG = {
-  'rare_egg': { name: 'Rare Egg', icon: '🥚', type: 'consumable' },
-  'time_skip_1h': { name: '1h Time Skip', icon: '⏳', type: 'consumable' },
-  'breeder_tunic': { name: 'Torso Tunic', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic.png' },
-  'leather_cap': { name: 'Leather Cap', icon: '🧢', type: 'cosmetic', slot: 'head', img: 'head_leather_cap.png' },
-  'rough_trousers': { name: 'Rough Trousers', icon: '👖', type: 'cosmetic', slot: 'legs', img: 'legs_trousers.png' }
+  'rare_egg': { name: 'Rare Egg', rarity: 'rare', icon: '🥚', type: 'consumable' },
+  'time_skip_1h': { name: '1h Time Skip', rarity: 'epic', icon: '⏳', type: 'consumable' },
+  'breeder_tunic': { name: 'Torso Tunic', rarity: 'uncommon', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic.png' },
+  'leather_cap': { name: 'Leather Cap', rarity: 'common', icon: '🧢', type: 'cosmetic', slot: 'head', img: 'head_leather_cap.png' },
+  'rough_trousers': { name: 'Rough Trousers', rarity: 'common', icon: '👖', type: 'cosmetic', slot: 'legs', img: 'legs_trousers.png' }
 };
 
 // --- STASH & KEEPER LOGIC ---
@@ -373,46 +268,42 @@ window.useFromStash = function(itemId) {
     toast("Used " + itemDef.name + "!");
   }
 };
-
+//* MAIN RENDER KEEPER LOCATION -----------
 function renderKeeperQuarters() {
-  // 1. Initialize Keeper if completely missing
+  // 1. Defensively initialize Keeper state
   if (!state.keeper) {
     state.keeper = { title: "Novice Breeder", gender: "male" };
   }
-  
-  // 2. NEW: Defensively initialize the equipment object if it's missing from an old save
   if (!state.keeper.equipment) {
-    state.keeper.equipment = {
-      body: "body_base.png", 
-      torso: null,
-      head: null,
-      legs: null
-    };
+    state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
   }
   
-  // Update Profile Text (Added defensive checks just in case the HTML isn't loaded yet)
+  // Update Profile Text
   const nameDisplay = document.getElementById('keeper-name-display');
   if (nameDisplay) nameDisplay.innerText = state.playerName || "Keeper";
   
   const titleDisplay = document.getElementById('keeper-title-display');
   if (titleDisplay) titleDisplay.innerText = state.keeper.title;
 
+  // --- THE PATH SCRUBBER ---
+  // Guarantees we only ever have exactly one "assets/avatar/" prefix
+  const getCleanPath = (rawName, defaultName = '') => {
+    let nameToClean = rawName || defaultName;
+    if (!nameToClean) return '';
+    let clean = nameToClean.replace(/assets\/avatar\//g, '').split('/').pop();
+    return `assets/avatar/${clean}`;
+  };
+
   // Render Layered Paper-Doll Avatar Images
   const eq = state.keeper.equipment || {};
   
   const bodyLayer = document.getElementById('layer-body');
-  if (bodyLayer) {
-    let bodyFileName = eq.body || 'body_base.png';
-    // Defensive check: scrub out old folder paths if they got stuck in the save data
-    bodyFileName = bodyFileName.replace('assets/avatar/', '');
-    bodyLayer.src = `assets/avatar/${bodyFileName}`;
-  }
+  if (bodyLayer) bodyLayer.src = getCleanPath(eq.body, 'body_base.png');
 
   const legsLayer = document.getElementById('layer-legs');
   if (legsLayer) {
     if (eq.legs) {
-      const legsFileName = eq.legs.replace('assets/avatar/', '');
-      legsLayer.src = `assets/avatar/${legsFileName}`;
+      legsLayer.src = getCleanPath(eq.legs);
       legsLayer.style.display = 'block';
     } else {
       legsLayer.style.display = 'none';
@@ -422,8 +313,7 @@ function renderKeeperQuarters() {
   const torsoLayer = document.getElementById('layer-torso');
   if (torsoLayer) {
     if (eq.torso) {
-      const torsoFileName = eq.torso.replace('assets/avatar/', '');
-      torsoLayer.src = `assets/avatar/${torsoFileName}`;
+      torsoLayer.src = getCleanPath(eq.torso);
       torsoLayer.style.display = 'block';
     } else {
       torsoLayer.style.display = 'none';
@@ -433,8 +323,7 @@ function renderKeeperQuarters() {
   const headLayer = document.getElementById('layer-head');
   if (headLayer) {
     if (eq.head) {
-      const headFileName = eq.head.replace('assets/avatar/', '');
-      headLayer.src = `assets/avatar/${headFileName}`;
+      headLayer.src = getCleanPath(eq.head);
       headLayer.style.display = 'block';
     } else {
       headLayer.style.display = 'none';
@@ -455,25 +344,28 @@ function renderKeeperQuarters() {
     
     const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable' };
     const slot = document.createElement('div');
-    slot.className = 'stash-slot filled';
     
-    // NEW LOGIC: Check if it is a cosmetic (PNG) or a consumable (Emoji)
+    // Grab rarity from the catalog, default to 'common' if missing
+    const itemRarity = itemDef.rarity || 'common'; 
+    
+    // Inject the rarity class dynamically so the CSS variables trigger
+    slot.className = `stash-slot filled rarity-${itemRarity}`; 
+    slot.style.aspectRatio = '1 / 1';
+    
     let displayHtml = '';
     
+    // NEW LOGIC: 92% scaling and heavy drop shadows for the anime aesthetic
     if (itemDef.type === 'cosmetic' && itemDef.img) {
       const cleanImgName = itemDef.img.split('/').pop(); 
-      displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">`;
-    } else {
-      displayHtml = `<div style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); pointer-events: none;">${itemDef.icon}</div>`;
+      // object-fit: cover fills the box, transform: scale zooms in past the empty space
+      displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 100%; height: 100%; object-fit: cover; transform: scale(2.0) translateY(-15%); pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">`;
     }
     
-    // THE MISSING LINK: We must actually inject the HTML string into the square!
     slot.innerHTML = `
       ${displayHtml}
-      <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000; pointer-events: none;">x${quantity}</div>
+      <div style="position: absolute; bottom: 3px; right: 5px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.9); pointer-events: none;">x${quantity}</div>
     `;
     
-    // Clicking the item triggers the use function
     slot.onclick = () => window.useFromStash(itemId);
     stashGrid.appendChild(slot);
     currentSlots++;
@@ -967,9 +859,12 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
 
   // Special handling for Level 5 Elder 
   if (level === 5) {
-    // We only really need elder-1 since they don't merge, but this keeps the logic safe!
-    const elderImages = ["Images/elder-1.png", "Images/elder-1.png", "Images/elder-1.png", "Images/elder-1.png"]; 
-    const currentImg = IMG_DIR + elderImages[n - 1] || IMG_DIR + elderImages[0];
+    // Removed "Images/" from these strings since IMG_DIR already handles it
+    const elderImages = ["elder-1.png", "elder-1.png", "elder-1.png", "elder-1.png"]; 
+    
+    const selectedImg = elderImages[n - 1] || elderImages[0];
+    const currentImg = IMG_DIR + selectedImg;
+
     return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : ''}>
       <g style="animation: float 4s infinite ease-in-out; transform-origin: 16px 16px;">
         <image href="${currentImg}" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
@@ -3365,12 +3260,12 @@ function renderStash() {
       let displayHtml = '';
       
       // Draw image for cosmetics, or emoji for consumables
-      if (itemData.type === 'cosmetic') {
+      if (itemData.type === 'cosmetic' && itemData.img) {
         // Armor the image name to guarantee no double folder paths
         const cleanImgName = itemData.img.split('/').pop();
-        displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemData.name}" style="width: 80%; height: 80%; object-fit: contain; pointer-events: none;">`;
+        displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemData.name}" style="width: 92%; height: 92%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">`;
       } else {
-        displayHtml = `<div style="font-size: 2.2rem; pointer-events: none;">${itemData.icon}</div>`;
+        displayHtml = `<div style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; font-size: 2.6rem; line-height: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.7));">${itemData.icon}</div>`;
       }
       
       stashGrid.innerHTML += `
