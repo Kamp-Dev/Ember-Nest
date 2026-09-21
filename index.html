@@ -58,29 +58,36 @@
  
       <div id="view-home" class="view">
         <!-- Avatar Showcase -->
-        <div class="keeper-profile" style="display: flex; flex-direction: column; align-items: center; padding: 2.5rem 1rem; background: linear-gradient(to bottom, #2a2a35, #1a1a24); border-bottom: 2px solid #333344;">
+        <div class="keeper-profile" style="display: flex; flex-direction: column; align-items: center; padding: 2.5rem 1rem; background: linear-gradient(to bottom, #2a2a35, #1a1a24); border-bottom: 2px solid #444333;">
             
-            <!-- Clickable Avatar Frame with Layered Paper-Doll System -->
-            <div class="avatar-frame" id="avatarFrameBtn" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #d4af37; background-color: #fefeff; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 1rem; cursor: pointer;">
-                <!-- The Swappable Border Frame Overlay (Sits on top) -->
-                <img id="dk-border" src="" alt="Frame" class="portrait-frame" style="display: none;">
-                <!-- INNER WRAPPER FOR ZOOMING -->
-                <div style="position: absolute; inset: 0; width: 100%; height: 100%; transform: scale(1.3); transform-origin: center top; border-radius: 50%; overflow: hidden;"></div>
-                <div style="position: absolute; inset: 0; width: 100%; height: 100%; transform: scale(1.3); transform-origin: center top;">
-                    <!-- Layer 0: Base Body Template -->
-                <img src="" alt="" id="layer-body" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top;" />
-                
-                <!-- Layer for Pants / Legs -->
-                <img src="" alt="" id="layer-legs" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+            <!-- Outer Wrapper to hold the avatar and let the border overflow freely -->
+<div style="position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
 
-                <!-- Layer 1: Torso / Shirt -->
-                <img src="" alt="" id="layer-torso" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
-                
-                <!-- Layer 2: Head / Hat -->
-                <img src="" alt="" id="layer-head" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
-                </div>
-                
-            </div>
+    <!-- Clickable Avatar Frame with Layered Paper-Doll System -->
+    <div class="avatar-frame" id="avatarFrameBtn" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #d4af37; background-color: #fefeff; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); cursor: pointer; z-index: 1;">
+        
+        <!-- INNER WRAPPER FOR ZOOMING -->
+        <div style="position: absolute; inset: 0; width: 100%; height: 100%; transform: scale(1.3); transform-origin: center top; border-radius: 50%; overflow: hidden;"></div>
+        <div style="position: absolute; inset: 0; width: 100%; height: 100%; transform: scale(1.3); transform-origin: center top;">
+            <!-- Layer 0: Base Body Template -->
+            <img src="" alt="" id="layer-body" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top;" />
+            
+            <!-- Layer for Pants / Legs -->
+            <img src="" alt="" id="layer-legs" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+
+            <!-- Layer 1: Torso / Shirt -->
+            <img src="" alt="" id="layer-torso" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+            
+            <!-- Layer 2: Head / Hat -->
+            <img src="" alt="" id="layer-head" class="avatar-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+        </div>
+        
+    </div>
+
+    <!-- The Swappable Border Frame Overlay (Now outside overflow:hidden, layered on top at 180px) -->
+    <img id="dk-border" src="" alt="Frame" class="portrait-frame" style="position: absolute; inset: 0; width: 180px; height: 180px; max-width: none; object-fit: contain; z-index: 50; pointer-events: none; display: none;">
+
+</div>
 
             <h2 class="keeper-name" id="keeper-name-display" style="margin: 0; font-size: 1.6rem; color: #ffffff; letter-spacing: 0.5px; font-family: 'Playfair Display', serif;">Keeper</h2>
             <span class="keeper-title" id="keeper-title-display" style="font-size: 0.85rem; color: #a0a0b5; margin-top: 0.4rem; text-transform: uppercase; font-weight: 600;">Novice Breeder</span>
@@ -92,16 +99,16 @@
                 <h3 style="margin: 0; font-size: 1.25rem; color: #d4af37; font-family: 'Playfair Display', serif;">The Stash</h3>
                 <span class="stash-filter" style="font-size: 0.8rem; color: #7a7a8c;">Consumables</span>
             </div>
-            <div class="stash-grid" id="stash-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 12px;">
+            <div class="stash-grid" id="stash-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(70px, 85px); gap: 5px; width: 100%;">
                 <!-- Placeholder slots -->
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px; display: flex; justify-content: center; align-items: center;"></div>
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
-                <div class="stash-slot empty" style="width: 100%; aspect-ratio: 1 / 1; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px; display: flex; justify-content: center; align-items: center;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
+                <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
             </div>
         </div>
       </div>
@@ -381,7 +388,8 @@
         <p style="font-size: 0.75rem; color: #deb781; margin-bottom: 16px;">Inspect your appearance and adjust your equipment layers.</p>
         
         <!-- ========================================== -->
-        <!-- BIGGER AVATAR PREVIEW FRAME & LAYERS       -->
+        <!-- ========================================== -->
+        <!-- BIGGER AVATAR PREVIEW FRAME & LAYERS      -->
         <!-- ========================================== -->
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
           <div style="width: 160px; height: 240px; border-radius: 8px; border: 4px solid #d4af37; background-color: #0f0f15; position: relative; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.6);">
@@ -394,6 +402,8 @@
             <img src="" alt="" id="modal-layer-torso" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
             
             <img src="" alt="" id="modal-layer-head" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none;" />
+            
+            <!-- NEW: Modal Border Frame Layer (Sits on top of character layers) -->
           </div>
         </div>
 

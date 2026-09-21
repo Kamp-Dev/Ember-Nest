@@ -652,18 +652,19 @@ button:disabled {
 }
 
 @keyframes spinCoin {
-  0%, 100% { transform: scaleX(1); }
-  50% { transform: scaleX(0.1); }
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
 }
 
 .spinning-coin {
   display: inline-block;
-  animation: spinCoin 1.5s infinite ease-in-out;
+  animation: spinCoin 2s infinite linear; /* 'linear' creates an unbroken continuous spin */
   will-change: transform;
   padding: 8px 4px;
   margin: -8px -4px;
   vertical-align: middle;
   line-height: 1;
+  transform-style: preserve-3d; /* Forces hardware acceleration for smoother 3D rendering */
 }
 
 .ghost {
@@ -1660,6 +1661,7 @@ html.lock-scroll, body.lock-scroll {
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(255, 3, 3, 0.4);
     margin-bottom: 1rem;
+    border: 3px solid transparent; /* Hides the default border while preserving layout space */
 }
 
 .avatar-frame img {
@@ -1837,7 +1839,43 @@ html.lock-scroll, body.lock-scroll {
     0 2px 0px var(--tile-lip), 
     0 3px 2px rgba(0, 0, 0, 0.2);
 }
+/* Universal containment for ANYTHING inside a stash slot */
+/* 1. Lock down ONLY the item graphics (Border, Tunic, etc.) so they stay perfectly sized */
+.stash-slot > img,
+.stash-slot > svg {
+  width: 85% !important;
+  height: 85% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) !important;
+}
 
+/* 2. Target the dynamically injected text (anything that is NOT an image/svg) */
+.stash-slot > :not(img):not(svg) {
+  position: absolute !important;
+  bottom: 2px !important;
+  right: 6px !important;
+  
+  /* Release the text from the 100% width prison */
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: none !important;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Specifically lock down SVGs and images at the slot level */
+.stash-slot svg,
+.stash-slot img {
+  display: block;
+  margin: auto;
+}
 /* --- EMPTY TILES (Flat Grey) --- */
 .stash-slot.empty {
   background-color: #d1d5d8;
@@ -1940,6 +1978,7 @@ html.lock-scroll, body.lock-scroll {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 3px solid transparent; /* Hides the default border while preserving layout space */
 }
 
 .portrait-frame {
@@ -1951,4 +1990,45 @@ html.lock-scroll, body.lock-scroll {
   z-index: 10; /* Sits completely on top of the character avatar */
   pointer-events: none;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+}
+/* The "Completed" Stamp */
+.trial-completed-badge {
+  position: absolute;
+  top: 12px;
+  right: -8px;
+  background: linear-gradient(135deg, #ffcf40, #d45817);
+  color: #120c0a;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-weight: 900;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transform: rotate(12deg);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 0 4px rgba(255,255,255,0.5);
+  border: 1.5px solid #fff;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* The Blitz Button */
+.blitz-btn {
+  background: linear-gradient(to bottom, #7b2cbf, #5a189a) !important;
+  border-color: #9d4edd !important;
+  color: #fff !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.3), 0 0 10px rgba(123, 44, 191, 0.4) !important;
+}
+
+.blitz-btn:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #9d4edd, #7b2cbf) !important;
+  border-color: #c77dff !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Wrapper to hold both buttons side-by-side */
+.trial-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
 }
