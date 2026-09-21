@@ -287,33 +287,6 @@ document.getElementById('avatarFrameBtn')?.addEventListener('click', openExpande
   document.getElementById(id)?.addEventListener('click', closeExpandedCustomizer);
 });
 
-// The visible portrait frame doubles as its unequip control.
-document.getElementById('dk-border')?.addEventListener('click', (event) => {
-  event.stopPropagation();
-
-  const equipment = state.keeper?.equipment;
-  const equippedBorder = equipment?.border;
-  if (!equippedBorder) return;
-  const equippedFileName = equippedBorder.split('/').pop();
-
-  const borderEntry = Object.entries(STASH_CATALOG).find(([_, def]) =>
-    def.slot === 'border' && def.img && def.img.split('/').pop() === equippedFileName
-  );
-
-  if (borderEntry) {
-    const [itemId] = borderEntry;
-    state.stash = state.stash || {};
-    state.stash[itemId] = (state.stash[itemId] || 0) + 1;
-  }
-
-  equipment.border = null;
-  save();
-  renderStash();
-  renderDragonKingPortrait();
-  renderExpandedModalLayers();
-  toast('Frame returned to Stash.');
-});
-
 // 2. Unequip Button Logic
 document.getElementById('modalUnequipBtn')?.addEventListener('click', () => {
   if (!state.keeper?.equipment) return;
@@ -373,14 +346,26 @@ function renderStash() {
   const minSlots = 25;
   
   // Convert your object dictionary into an array of entries [itemId, quantity]
-  const stashEntries = Object.entries(state.stash || {}).filter(([_, qty]) => qty > 0);
+  const equippedEntries = Object.entries(state.keeper?.equipment || {})
+    .map(([slot, equippedImg]) => {
+      const fileName = equippedImg?.split('/').pop();
+      const entry = Object.entries(STASH_CATALOG).find(([_, def]) =>
+        def.slot === slot && def.img && def.img.split('/').pop() === fileName
+      );
+      return entry ? { itemId: entry[0], quantity: 1, equipped: true } : null;
+    })
+    .filter(Boolean);
+  const stashEntries = Object.entries(state.stash || {})
+    .filter(([_, qty]) => qty > 0)
+    .map(([itemId, quantity]) => ({ itemId, quantity, equipped: false }));
+  const inventoryEntries = [...equippedEntries, ...stashEntries];
   
   let html = ''; 
   
   // Loop precisely 25 times to guarantee a static 25-slot grid
   for (let i = 0; i < minSlots; i++) {
-    if (i < stashEntries.length) {
-      const [itemId, quantity] = stashEntries[i];
+    if (i < inventoryEntries.length) {
+      const { itemId, quantity, equipped } = inventoryEntries[i];
       const itemData = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable', rarity: 'common' };
       let displayHtml = '';
       
@@ -394,6 +379,7 @@ function renderStash() {
       html += `
         <div class="stash-slot filled rarity-${itemData.rarity || 'common'}" onclick="window.useFromStash('${itemId}')">
           ${displayHtml}
+          ${equipped ? '<div style="position: absolute; top: 3px; left: 4px; font-size: 0.55rem; font-weight: 800; color: #76c893; text-shadow: 0 1px 3px #000; pointer-events: none;">EQUIPPED</div>' : ''}
           <div style="position: absolute; bottom: 3px; right: 5px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.9); pointer-events: none;">x${quantity}</div>
         </div>
       `;
@@ -482,12 +468,13 @@ window.addToStash = function(itemId, amount = 1) {
 
 window.useFromStash = function(itemId) {
   const itemDef = STASH_CATALOG[itemId];
-  if (!itemDef || !state.stash?.[itemId] || state.stash[itemId] <= 0) return;
+  if (!itemDef) return;
 
   // Failsafe: Ensure equipment object exists
   if (!state.keeper.equipment) {
     state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
   }
+  if (!state.stash) state.stash = {};
 
   if (itemDef.type === 'cosmetic') {
     const slot = itemDef.slot; 
@@ -499,6 +486,22 @@ window.useFromStash = function(itemId) {
     }
 
     const currentlyEquippedImg = state.keeper.equipment[slot];
+    const itemFileName = itemDef.img.split('/').pop();
+
+    // An equipped tile stays visible in the Stash. Clicking it again toggles it off.
+    if (currentlyEquippedImg?.split('/').pop() === itemFileName) {
+      state.keeper.equipment[slot] = null;
+      state.stash[itemId] = (state.stash[itemId] || 0) + 1;
+      save();
+      renderStash();
+      renderKeeperQuarters();
+      renderDragonKingPortrait();
+      renderExpandedModalLayers();
+      toast(`${itemDef.name} returned to Stash.`);
+      return;
+    }
+
+    if (!state.stash?.[itemId] || state.stash[itemId] <= 0) return;
     
     // 1. If wearing something, find its catalog ID and return it to the stash
     if (currentlyEquippedImg) {
@@ -513,7 +516,7 @@ window.useFromStash = function(itemId) {
     }
 
     // 2. Strip folder paths and save to Keeper state
-    state.keeper.equipment[slot] = itemDef.img.split('/').pop();
+    state.keeper.equipment[slot] = itemFileName;
 
     // 3. Deduct new item from stash
     state.stash[itemId] -= 1;
