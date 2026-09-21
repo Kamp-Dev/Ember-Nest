@@ -26,9 +26,7 @@ const STASH_CATALOG = {
   'breeder_tunic': { name: 'Apprentice Tunic', rarity: 'uncommon', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic.png' },
   'rare_tunic': { name: 'Adept Tunic', rarity: 'rare', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic_rare.png' },
   'epic_tunic': { name: 'Master Tunic', rarity: 'epic', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic_epic.png' },
-  'border_obsidian': { name: 'Obsidian Frame', rarity: 'epic', icon: '🔳', type: 'cosmetic', slot: 'border', img: 'assets/avatar/border_obsidian.png' },
-  'leather_cap': { name: 'Leather Cap', rarity: 'common', icon: '🧢', type: 'cosmetic', slot: 'head', img: 'head_leather_cap.png' },
-  'rough_trousers': { name: 'Rough Trousers', rarity: 'common', icon: '👖', type: 'cosmetic', slot: 'legs', img: 'legs_trousers.png' }
+  'border_obsidian': { name: 'Obsidian Frame', rarity: 'epic', icon: '🔳', type: 'cosmetic', slot: 'border', img: 'assets/avatar/border_obsidian.png' }
 };
 // ==========================================
 // MODULE 1: STATIC DATA (CONT.)
@@ -287,6 +285,33 @@ function closeExpandedCustomizer() {
 document.getElementById('avatarFrameBtn')?.addEventListener('click', openExpandedCustomizer);
 ['closeExpandedModalBtn', 'modalDoneBtn'].forEach(id => {
   document.getElementById(id)?.addEventListener('click', closeExpandedCustomizer);
+});
+
+// The visible portrait frame doubles as its unequip control.
+document.getElementById('dk-border')?.addEventListener('click', (event) => {
+  event.stopPropagation();
+
+  const equipment = state.keeper?.equipment;
+  const equippedBorder = equipment?.border;
+  if (!equippedBorder) return;
+  const equippedFileName = equippedBorder.split('/').pop();
+
+  const borderEntry = Object.entries(STASH_CATALOG).find(([_, def]) =>
+    def.slot === 'border' && def.img && def.img.split('/').pop() === equippedFileName
+  );
+
+  if (borderEntry) {
+    const [itemId] = borderEntry;
+    state.stash = state.stash || {};
+    state.stash[itemId] = (state.stash[itemId] || 0) + 1;
+  }
+
+  equipment.border = null;
+  save();
+  renderStash();
+  renderDragonKingPortrait();
+  renderExpandedModalLayers();
+  toast('Frame returned to Stash.');
 });
 
 // 2. Unequip Button Logic
@@ -2997,9 +3022,6 @@ function endDrag(e) {
   render();
 }
 
-// Bind to window so drops outside the board bounds are still caught
-window.addEventListener("pointerup", endDrag);
-
 // ==========================================
 // MODULE 23: INITIALIZATION & BINDINGS
 // ==========================================
@@ -3411,18 +3433,6 @@ document.documentElement.classList.add("lock-scroll");
 document.body.classList.add("lock-scroll");
 
 // Load save data, bind events, and render the board!
-load();
-initGame();
-render();
-
-
-// --- BOOT SEQUENCE ---
-
-// Force scroll lock on initial page load
-document.documentElement.classList.add("lock-scroll");
-document.body.classList.add("lock-scroll");
-
-// Wake up the game!
 load();
 initGame();
 render();
