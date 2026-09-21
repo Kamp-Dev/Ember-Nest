@@ -2032,3 +2032,27 @@ html.lock-scroll, body.lock-scroll {
   width: 100%;
   margin-top: 12px;
 }
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 60, 60, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 60, 60, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 60, 60, 0); }
+}
+
+.notify-dot {
+  position: relative;
+}
+
+.notify-dot::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  background-color: #ff3c3c;
+  border-radius: 50%;
+  border: 1px solid #2a1b15; /* Matches a dark UI background to make it pop */
+  animation: pulse-dot 2s infinite;
+  pointer-events: none;
+}

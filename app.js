@@ -3367,6 +3367,17 @@ setInterval(() => {
   if (bankCountEl) {
     const newVal = (state.perchBank || 0);
 
+    // --- ROOST TAB NOTIFICATION DOT ---
+    const roostTabBtn = document.querySelector('[data-tab="view-roost"]');
+    if (roostTabBtn && maxBankLimit > 0) {
+      if (newVal >= maxBankLimit) {
+        roostTabBtn.classList.add("notify-dot");
+      } else {
+        roostTabBtn.classList.remove("notify-dot");
+      }
+    }
+    // ----------------------------------
+
     if (dragonBankBtn && maxBankLimit > 0) {
       if (newVal >= maxBankLimit) {
         dragonBankBtn.classList.add("is-maxed");
