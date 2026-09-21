@@ -10,7 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ember Nest</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   
   <style>
     .coin-icon {
@@ -99,7 +99,7 @@
                 <h3 style="margin: 0; font-size: 1.25rem; color: #d4af37; font-family: 'Playfair Display', serif;">The Stash</h3>
                 <span class="stash-filter" style="font-size: 0.8rem; color: #7a7a8c;">Consumables</span>
             </div>
-            <div class="stash-grid" id="stash-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(70px, 85px); gap: 5px; width: 100%;">
+            <div class="stash-grid" id="stash-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(70px, 85px); gap: 10px; width: 100%;">
                 <!-- Placeholder slots -->
                 <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px; display: flex; justify-content: center; align-items: center;"></div>
                 <div class="stash-slot empty" style="width: 100%; background-color: #232330; border: 2px dashed #444455; border-radius: 8px;"></div>
@@ -440,6 +440,7 @@
   </div> <!-- This is your existing closing div for <div id="app"> -->
 
   <!-- Your scripts remain at the very bottom -->
+  <script src="game-data.js?v=1"></script>
   <script src="app.js"></script>
 </body>
 </html>

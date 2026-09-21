@@ -1,79 +1,4 @@
 // ==========================================
-// MODULE 1: GAME CONFIGURATION & STATIC DATA
-// ==========================================
-
-const COLS = 5, ROWS = 5, MAX_ENERGY = 5;
-const SAVE = "ember-nest-save";
-const REGEN_MS = 8000;
-const PERCH_MS = 60000;
-const OPEN_START = 20; 
-const STAGE_GOAL = 3;
-const ASH_GRACE = 1;
-const ASH_PER_MERGE = 2;
-const ASH_FAIL = 10;   
-const ASH_GOAL = 8;    
-const TRAIL_GATHERS = 4;
-const DAILY_PAYS = [1200, 800, 400];
-const DAILY_CLEARS = 3;
-const RENAME_COST = 2000;
-const IMG_DIR = "Images/";
-
-const TRAIL_BAG = [2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
-
-const STASH_CATALOG = {
-  'rare_egg': { name: 'Rare Egg', rarity: 'rare', icon: '🥚', type: 'consumable' },
-  'time_skip_1h': { name: '1h Time Skip', rarity: 'epic', icon: '⏳', type: 'consumable' },
-  'breeder_tunic': { name: 'Apprentice Tunic', rarity: 'uncommon', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic.png' },
-  'rare_tunic': { name: 'Adept Tunic', rarity: 'rare', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic_rare.png' },
-  'epic_tunic': { name: 'Master Tunic', rarity: 'epic', icon: '🧥', type: 'cosmetic', slot: 'torso', img: 'assets/avatar/torso_tunic_epic.png' },
-  'border_obsidian': { name: 'Obsidian Frame', rarity: 'epic', icon: '🔳', type: 'cosmetic', slot: 'border', img: 'assets/avatar/border_obsidian.png' }
-};
-// ==========================================
-// MODULE 1: STATIC DATA (CONT.)
-// ==========================================
-
-const CHAIN = [
-  { id: "egg",   name: "Egg",       color: "#6b4a32" },
-  { id: "hatch", name: "Hatchling", color: "#8a5a30" },
-  { id: "wyrm",  name: "Wyrmling",  color: "#a35a28" },
-  { id: "young", name: "Young",     color: "#c45c24" },
-  { id: "adult", name: "Hearth",    color: "#e37a3a" },
-  { id: "elder", name: "Elder",     color: "#f0a050" },
-];
-
-const LORE = [
-  "Warm to the touch. Glowing veins pulse under the shell.",
-  "Eats sparks. Sleeps in teacups if allowed.",
-  "Learns the shape of the cave by gliding along the thermals.",
-  "Armored scales harden. First real ember breath.",
-  "Guards the hearth kettle. Radiates warmth across the caverns.",
-  "The nest remembers this one. So does the ancient mountain.",
-];
-
-const ROOMS = [
-  { id: "hatchery", name: "Hatchery", need: null, art: "🛖" },
-  { id: "alcove", name: "Moss alcove", need: "moss", art: "🌿" },
-  { id: "lamp", name: "Lamp walk", need: "lamp", art: "🏮" },
-  { id: "spring", name: "Spring hall", need: "pool", art: "♨️" },
-  { id: "vault", name: "Tea vault", need: "hoard", art: "🫖" },
-];
-
-const DECOR = [
-  { id: "moss",  name: "Moss bed",   art: "🌿", cost: 800,   bonus: 1 },
-  { id: "lamp",  name: "Ember lamp", art: "🏮", cost: 2500,  bonus: 2 },
-  { id: "pool",  name: "Hot spring", art: "♨️", cost: 8000,  bonus: 3 },
-  { id: "hoard", name: "Tea hoard",  art: "🫖", cost: 22000, bonus: 5 },
-  { id: "roost", name: "Star roost", art: "✨", cost: 50000, bonus: 6 },
-];
-
-const QUESTS = [
-  { want: 0, text: "A cold stone wants an egg to warm it.", reward: 180 },
-  { want: 1, text: "A sleepy hatchling wants a sibling to pile with.", reward: 320 },
-  { want: 2, text: "The spring is lonely. Bring a wyrmling.", reward: 520 },
-  { want: 3, text: "A young ember wants a perch-mate.", reward: 860 },
-  { want: 1, text: "Tuck a hatchling into the moss.", reward: 300 },
-];
-// ==========================================
 // MODULE 1.5: UI SAFETY HELPERS
 // ==========================================
 
@@ -343,7 +268,6 @@ function renderStash() {
   if (!stashGrid) return;
   
   stashGrid.innerHTML = ''; 
-  const minSlots = 25;
   
   // Convert your object dictionary into an array of entries [itemId, quantity]
   const equippedEntries = Object.entries(state.keeper?.equipment || {})
@@ -355,15 +279,17 @@ function renderStash() {
       return entry ? { itemId: entry[0], quantity: 1, equipped: true } : null;
     })
     .filter(Boolean);
+  const equippedItemIds = new Set(equippedEntries.map(entry => entry.itemId));
   const stashEntries = Object.entries(state.stash || {})
-    .filter(([_, qty]) => qty > 0)
+    .filter(([itemId, qty]) => qty > 0 && !equippedItemIds.has(itemId))
     .map(([itemId, quantity]) => ({ itemId, quantity, equipped: false }));
   const inventoryEntries = [...equippedEntries, ...stashEntries];
+  const totalSlots = Math.max(20, inventoryEntries.length);
   
   let html = ''; 
   
-  // Loop precisely 25 times to guarantee a static 25-slot grid
-  for (let i = 0; i < minSlots; i++) {
+  // Keep a tidy 4 × 5 Stash, while allowing it to grow for larger inventories.
+  for (let i = 0; i < totalSlots; i++) {
     if (i < inventoryEntries.length) {
       const { itemId, quantity, equipped } = inventoryEntries[i];
       const itemData = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable', rarity: 'common' };
@@ -588,44 +514,8 @@ function renderKeeperQuarters() {
     }
   });
 
- // Render Stash Grid
-const stashGrid = document.getElementById('stash-grid');
-if (!stashGrid) return;
-
-stashGrid.innerHTML = ''; 
-const minSlots = 25;
-let currentSlots = 0;
-
-for (const [itemId, quantity] of Object.entries(state.stash || {})) {
-  if (quantity <= 0) continue;
-  
-  const itemDef = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable', rarity: 'common' };
-  const slot = document.createElement('div');
-  
-  slot.className = `stash-slot filled rarity-${itemDef.rarity}`; 
-  
-  let displayHtml = '';
-  if (itemDef.type === 'cosmetic' && itemDef.img) {
-    const cleanImgName = itemDef.img.split('/').pop(); 
-    displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 100%; height: 100%; object-fit: cover; transform: scale(2.0) translateY(-15%); pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">`;
-  }
-  
-  slot.innerHTML = `
-    ${displayHtml}
-    <div style="position: absolute; bottom: 3px; right: 5px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.9); pointer-events: none;">x${quantity}</div>
-  `;
-  
-  slot.onclick = () => window.useFromStash(itemId);
-  stashGrid.appendChild(slot);
-  currentSlots++;
-}
-
-while (currentSlots < minSlots) {
-    const emptySlot = document.createElement('div');
-    emptySlot.className = 'stash-slot empty';
-    stashGrid.appendChild(emptySlot);
-    currentSlots++;
-  }
+  // The shared renderer also includes equipped cosmetics as toggleable Stash tiles.
+  renderStash();
 }
 
 // ==========================================

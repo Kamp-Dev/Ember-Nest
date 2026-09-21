@@ -1876,11 +1876,12 @@ html.lock-scroll, body.lock-scroll {
   display: block;
   margin: auto;
 }
-/* --- EMPTY TILES (Flat Grey) --- */
+/* --- EMPTY TILES (Faded Grey) --- */
 .stash-slot.empty {
-  background-color: #d1d5d8;
-  border: 2px solid #bdc1c4;
-  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(145deg, #5d636c, #424750);
+  border: 2px solid #707780;
+  box-shadow: inset 1px 1px 4px rgba(255, 255, 255, 0.08), inset -2px -2px 4px rgba(0, 0, 0, 0.25);
+  opacity: 0.65;
   pointer-events: none;
 }
 
