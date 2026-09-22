@@ -98,7 +98,7 @@ function resetTrail() {
   state.stageCells = Array(COLS * ROWS).fill(null);
   state.ash = Array(COLS * ROWS).fill(false);
   state.stageMerges = 0;
-  state.trailGathers = TRAIL_GATHERS + (state.pouchBonus || 0);
+  state.trailGathers = TRAIL_GATHERS + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0);
   state.ashBurned = 0;
   state.trailWon = false;
   state._flash = [];
@@ -123,10 +123,10 @@ const defaultState = () => ({
   mode: "home",
   stageCells: Array(COLS * ROWS).fill(null),
   ash: Array(COLS * ROWS).fill(false),
-  stageMerges: 0, trailGathers: 6, ashCleared: false, ashWins: 0,
+  stageMerges: 0, trailGathers: TRAIL_GATHERS, ashCleared: false, ashWins: 0,
   lastAshWinAt: 0, ashDayKey: "", ashDayWins: 0,
-  book: { 0: true }, rareBook: {}, gives: 0, maxEnergy: 5,
-  hearthDone: false, eggsBought: 0, xp: 0, level: 1, pouchBonus: 0,
+  book: { 0: true }, rareBook: {}, gives: 0, maxEnergy: MAX_ENERGY,
+  hearthDone: false, highestDiscovered: 0, eggsBought: 0, xp: 0, level: 1, pouchBonus: 0,
   perch: [null, null, null], perchBank: 0, theme: "hatchery", perchAt: 0,
   seenGuide: false, muted: false, playerName: "Keeper", nameChanges: 0,
   sleepyDone: false, sleepyStreak: 0, questTab: 0, tributes: 0,
@@ -156,6 +156,13 @@ function load() {
       };
     }
     if (!state.stash) state.stash = {};
+    state.maxEnergy = Math.max(MAX_ENERGY, Number(state.maxEnergy) || MAX_ENERGY,
+      state.level >= 6 ? 25 : 0, state.hearthDone ? 30 : 0);
+    // A saved completed quest has already paid; resume the next request after reload.
+    if (state.questDone) {
+      state.quest = ((state.quest || 0) + 1) % wishList().length;
+      state.questDone = false;
+    }
 
     const gridSize = COLS * ROWS;
     ["cells", "locked", "stageCells", "ash"].forEach(key => {
@@ -174,6 +181,26 @@ function load() {
 
 function save() {
   localStorage.setItem(SAVE, JSON.stringify(state));
+}
+
+// Preserve fractional timer progress and refill all elapsed ticks, including offline.
+function replenishEnergy(now = Date.now()) {
+  const cap = state.maxEnergy || MAX_ENERGY;
+  if (state.energy >= cap) { state.nextEnergyAt = now + REGEN_MS; return; }
+  if (!Number.isFinite(state.nextEnergyAt)) state.nextEnergyAt = now + REGEN_MS;
+  if (now < state.nextEnergyAt) return;
+  const ticks = 1 + Math.floor((now - state.nextEnergyAt) / REGEN_MS);
+  state.energy = Math.min(cap, state.energy + ticks);
+  state.nextEnergyAt = state.energy >= cap ? now + REGEN_MS : state.nextEnergyAt + ticks * REGEN_MS;
+}
+
+function gatherBaseLevel() {
+  return highestOwned() >= 4 ? 1 : 0;
+}
+
+function gatherLevel() {
+  const base = gatherBaseLevel();
+  return highestOwned() >= 3 && Math.random() < GATHER_UPGRADE_CHANCE ? base + 1 : base;
 }
 
 function board() {
@@ -277,7 +304,7 @@ function mergeInto(fromI, toI) {
     element = elements[Math.floor(Math.random() * elements.length)];
   }
 
-  const payout = state.mode === "stage" ? 0 : (80 + nextLevel * 45) * bonus() * (shiny ? 2 : 1);
+  const payout = state.mode === "stage" ? 0 : Math.round((80 + nextLevel * 45) * bonus() * (shiny ? 2 : 1));
   if (payout) state.coins += payout;
   if (state.mode !== "stage" && nextLevel === 4) completeHearthGoal();
   if (state.mode !== "stage") addXp(15 + nextLevel * 10);

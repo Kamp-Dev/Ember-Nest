@@ -779,8 +779,8 @@ function revealChest() {
 function applyLevelUnlock(lv) {
   if (lv === 2) { state.pouchBonus = (state.pouchBonus || 0) + 3; return "trail pouch +3"; }
   if (lv === 3) return "Hearth wish unlocked";
-  if (lv === 4) { openFogFree(3); return "3 land opened"; }
-  if (lv === 6) { state.maxEnergy = Math.max(state.maxEnergy || 5, 6); return "max energy 6"; }
+  if (lv === 4) { openFogFree(1); return "1 land opened"; }
+  if (lv === 6) { state.maxEnergy = Math.max(state.maxEnergy || MAX_ENERGY, 25); return "max energy 25"; }
   if (lv === 8) { state.pouchBonus = (state.pouchBonus || 0) + 3; return "trail pouch +3"; }
   return "Your legacy ascends.";
 }
@@ -788,10 +788,10 @@ function applyLevelUnlock(lv) {
 function completeHearthGoal() {
   if (state.hearthDone) return;
   state.hearthDone = true;
-  state.maxEnergy = Math.max(state.maxEnergy || 5, 6);
+  state.maxEnergy = Math.max(state.maxEnergy || MAX_ENERGY, 30);
   state.coins += 5000;
   sfx("win");
-  toast("Hearth hatched! The mountain warms • +5000 🪙 • max energy 6");
+  toast("Hearth hatched! +5000 🪙 • max energy 30 • improved Hatchery");
 }
 
 // ==========================================
@@ -877,10 +877,10 @@ function openFogFree(n) {
   }
 }
 function bonus() {
-  return 1 + (state.tributes || 0) + Object.keys(state.decor || {}).reduce((sum, id) => {
+  return Math.round((1 + Math.min(state.tributes || 0, 10) * 0.05 + Object.keys(state.decor || {}).reduce((sum, id) => {
     const d = DECOR.find(x => x.id === id);
     return sum + (d ? d.bonus : 0);
-  }, 0);
+  }, 0)) * 100) / 100;
 }
 
 function dismissPay(level, shiny = false) {
@@ -896,9 +896,16 @@ function freePerchSlot() {
 // --- ECONOMY & PURCHASING ---
 
 function highestOwned() {
-  const bookMax = Math.max(0, ...Object.keys(state.book || {}).map(Number));
-  const boardMax = Math.max(0, ...(state.cells || []).map(c => c ? c.level : 0));
-  return Math.max(bookMax, boardMax);
+  // Progression unlocks survive gifting dragons, moving them to the Roost,
+  // and resetting the optional Dragon Book collection.
+  const levels = [state.highestDiscovered, state.hearthDone ? 4 : 0,
+    ...Object.keys(state.book || {}).filter(key => state.book[key]).map(Number),
+    ...Object.keys(state.rareBook || {}).filter(key => state.rareBook[key]).map(Number),
+    ...(state.cells || []).map(c => c?.level),
+    ...(state.perch || []).map(c => c?.level)];
+  state.highestDiscovered = Math.max(0, ...levels.filter(level =>
+    Number.isInteger(level) && level >= 0 && level < CHAIN.length));
+  return state.highestDiscovered;
 }
 
 function trailGiftLevel() {
@@ -906,8 +913,11 @@ function trailGiftLevel() {
 }
 
 function eggPrice() {
-  return 250 + (state.eggsBought || 0) * 40;
+  rollDaily();
+  return 250 + shopEggLevel() * 150 + Math.min(state.dailyEggsBought || 0, 10) * 25;
 }
+
+function shopEggLevel() { return Math.max(0, Math.min(2, highestOwned() - 2)); }
 
 function buyEgg() {
   if (state.mode === "stage") {
@@ -921,12 +931,14 @@ function buyEgg() {
     return; 
   }
   
-  if (!spawn(0, 1)) return; // Fails if board is full
+  const boughtLevel = shopEggLevel();
+  if (!spawn(boughtLevel, 1)) return;
   
   state.coins -= cost;
   state.eggsBought = (state.eggsBought || 0) + 1;
+  state.dailyEggsBought = (state.dailyEggsBought || 0) + 1;
   sfx("buy");
-  toast(`Egg bought for ${cost} 🪙`);
+  toast(`${CHAIN[boughtLevel].name} bought for ${cost} 🪙`);
   
   save(); 
   render();
@@ -936,6 +948,7 @@ function buyEgg() {
 function buyDecor(id) {
   const d = DECOR.find(x => x.id === id);
   if (!d || state.decor[id]) return;
+  if (highestOwned() < d.needStage) { toast(`Discover ${CHAIN[d.needStage].name} to unlock ${d.name}.`); return; }
   
   if (state.coins < d.cost) { 
     toast("Need more ember coins"); 
@@ -944,12 +957,12 @@ function buyDecor(id) {
   
   state.coins -= d.cost;
   state.decor[id] = true;
-  toast(`${d.name} placed • bonus +${d.bonus}`);
+  toast(`${d.name} placed • merge bonus +${Math.round(d.bonus * 100)}%`);
   sfx("buy");
   
   const room = ROOMS.find(r => r.need === id);
   if (room) {
-    openFogFree(2);
+    openFogFree(1);
     sfx("room");
     toast(`${room.name} opened on the mountain`);
   }
@@ -962,7 +975,7 @@ function unlockCost() {
   const lockedCount = state.locked.filter(Boolean).length;
   // Calculate how many of the 5 fog tiles have already been opened
   const opened = 5 - lockedCount; 
-  const costs = [1500, 4500, 12000, 25000, 50000]; 
+  const costs = LAND_COSTS;
   
   return costs[opened] || 999999;
 }
@@ -1108,7 +1121,7 @@ function ashSvg() {
 }
 // --- CORE ACTIONS ---
 
-function gather() {
+function gather(basicEgg = false) {
   if (state.mode === "stage") {
     if ((state.trailGathers || 0) <= 0) {
       toast("Trail pouch is empty • merge what you have");
@@ -1134,7 +1147,7 @@ function gather() {
     return;
   }
 
-  if (!spawn(0, 1)) {
+  if (!spawn(basicEgg === true ? 0 : gatherLevel(), 1)) {
     toast("No space left on the board");
     return;
   }
@@ -1398,6 +1411,7 @@ function rareBookKnown() {
 
 function discover(level) {
   state.book = state.book || { 0: true };
+  state.highestDiscovered = Math.max(highestOwned(), level);
   if (state.book[level]) return;
   
   state.book[level] = true;
@@ -1528,6 +1542,8 @@ function rollDaily() {
     state.ashDayKey = k;
     state.ashDayWins = 0;
     state.sleepyDone = false;
+    state.dailyEggsBought = 0;
+    state.dailyPouchBonus = 0;
   }
 }
 
@@ -1564,47 +1580,18 @@ function trailWaitLabel() {
 // --- LIVE TICK MECHANICS ---
 
 function tickEnergy() {
-  const cap = state.maxEnergy || 5; 
-  const timerEl = document.getElementById("energyTimer");
-  
-  // 1. Update the Header Stats
-  const energyCountEl = document.getElementById("energyCount");
-  if (energyCountEl) energyCountEl.innerText = `${state.energy}/${cap}`;
-
-  // 2. Timer Math
-  if (state.energy >= cap) {
-    state.nextEnergyAt = Date.now() + REGEN_MS;
-    
-    if (timerEl) {
-      timerEl.innerText = "FULL";
-      timerEl.style.color = "#d4af37"; 
-    }
-  } else {
-    if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
-    const left = state.nextEnergyAt - Date.now();
-    
-    if (left <= 0) {
-      state.energy = Math.min(cap, state.energy + 1);
-      state.nextEnergyAt = Date.now() + REGEN_MS;
-      save();
-      render();
-    } else {
-      const totalSeconds = Math.ceil(left / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-      
-      if (timerEl) {
-        timerEl.innerText = `${minutes}:${seconds}`;
-        timerEl.style.color = "#a0a0b5"; 
-      }
-    }
+  const before = state.energy;
+  replenishEnergy();
+  if (state.energy !== before) save();
+  const cap = state.maxEnergy || MAX_ENERGY;
+  const count = document.getElementById("energyCount");
+  if (count) count.innerText = `${state.energy}/${cap}`;
+  const timer = document.getElementById("energyTimer");
+  if (timer) {
+    timer.innerText = state.energy >= cap ? "FULL" : `0:${String(Math.ceil(Math.max(0, state.nextEnergyAt - Date.now()) / 1000)).padStart(2, '0')}`;
+    timer.style.color = state.energy >= cap ? "#d4af37" : "#a0a0b5";
   }
-  
-  // 3. Clear legacy UI safely
-  const regenEl = document.getElementById("regen");
-  if (regenEl) regenEl.innerText = "";
 }
-
 function tickPerch() {
   const pBtn = document.getElementById("collectPerchBtn");
   const pLabel = document.getElementById("perchLabel");
@@ -1649,7 +1636,7 @@ function fulfillQuest() {
     return; 
   }
   
-  const pay = q.reward * bonus();
+  const pay = Math.round(q.reward * bonus());
   state.coins += pay;
   state.gives = (state.gives || 0) + 1;
   
@@ -1661,7 +1648,7 @@ function fulfillQuest() {
   
   // 5-Gift Milestone Payout
   if (state.gives % 5 === 0) {
-    const pack = 1500 * bonus();
+    const pack = Math.round(1500 * bonus());
     state.coins += pack;
     state.energy = Math.min(cap, state.energy + 2);
     
@@ -1705,12 +1692,12 @@ function fulfillSleepy() {
   state.sleepyDone = true;
   state.sleepyStreak = (state.sleepyStreak || 0) + 1;
   state.coins += 3000;
-  state.trailGathers = (state.trailGathers || 0) + 5;
+  state.dailyPouchBonus = 5;
   
   const cap = state.maxEnergy || 5;
   state.energy += 10; 
 
-  let extra = "Dream Hoard! +3000 🪙 • +10 Energy • +5 Pouch";
+  let extra = "Dream Hoard! +3000 🪙 • +10 Energy • +5 Pouch today";
   
   // 7-Day Streak Milestone
   if (state.sleepyStreak % 7 === 0) {
@@ -1907,7 +1894,7 @@ function renderQuest() {
   if (wish && !state.questDone) {
     wish.style.cursor = "pointer";
     wish.onclick = () => {
-      const pay = q.reward * bonus();
+      const pay = Math.round(q.reward * bonus());
       toast(`${CHAIN[q.want].name} • ${q.reward} × ${bonus()} = ${pay} 🪙`);
     };
   }
@@ -2159,7 +2146,7 @@ function render() {
   setText("coinCount", state.coins);
   setText("bonus", bonus());
   setText("roomCount", roomsOpen());
-  setText("tributeBtn", `Mountain Tribute: ${tributeCost()} 🪙 (+1 Bonus)`);
+  setText("tributeBtn", `Mountain Tribute: ${tributeCost()} 🪙 (+5% bonus, max 10)`);
   setText("helpText", state.mode === "stage" 
     ? "Merge next to ash to clear it • Wyrmlings clear 4 directions" 
     : "5-merge to grow • tap fogged tiles to open land • quests use one dragon"
@@ -2200,12 +2187,12 @@ function render() {
   if (gatherBtn) {
     gatherBtn.textContent = state.mode === "stage" 
       ? `Gather egg • ${state.trailGathers || 0} left` 
-      : "Gather egg 🥚";
+    : (highestOwned() >= 4 ? 'Gather dragon 🐉' : 'Gather egg 🥚');
   }
 
   const buy = document.getElementById("buyEgg");
   if (buy) {
-    buy.innerHTML = `Buy egg • ${eggPrice()} 🪙`;
+    buy.innerHTML = `Buy ${CHAIN[shopEggLevel()].name} • ${eggPrice()} 🪙`;
     if (state.mode === "stage") {
       buy.style.setProperty("display", "none", "important");
       buy.disabled = true;
@@ -2218,6 +2205,12 @@ function render() {
   }
 
   // --- 3. MODULAR RENDERS ---
+  const basicEggBtn = document.getElementById('gatherBasicBtn');
+  if (basicEggBtn) basicEggBtn.hidden = state.mode !== 'home' || highestOwned() < 4;
+  setText('hatcheryHint', state.mode === 'stage' ? `First ${ASH_GRACE} merges are safe • ${TRAIL_GATHERS + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0)} starting gathers`
+    : highestOwned() >= 4 ? 'Hatchery: 80% Hatchling / 20% Wyrmling • 1 energy per gather'
+    : highestOwned() >= 3 ? 'Hatchery: 80% Egg / 20% Hatchling • discover Hearth for the next upgrade'
+    : 'Hatchery: Eggs • discover Young to improve gathers');
   renderQuest();
   renderTrialBanner();
   renderBook();
@@ -2233,7 +2226,8 @@ function render() {
       return `<div class="decor ${owned ? "owned" : ""}" data-decor="${d.id}">
         <div class="ico">${d.art}</div>
         <div>${d.name}</div>
-        <div>${owned ? "placed" : d.cost + " 🪙"}</div>
+        <div>${owned ? 'Placed' : highestOwned() < d.needStage ? `Discover ${CHAIN[d.needStage].name}` : d.cost + ' 🪙'}</div>
+        <small>+${Math.round(d.bonus * 100)}% merge coins</small>
       </div>`;
     }).join("");
   }
@@ -2251,7 +2245,7 @@ function render() {
 
     mt.innerHTML = `<div style="display: flex; flex-direction: column; gap: 10px;">
       ${ROOMS.map((r, i) => {
-        const open = i < openN;
+        const open = !r.need || !!state.decor[r.need];
         const now = i === openN - 1;
         const isSelected = state.theme === r.id;
         const decorItem = r.need ? DECOR.find(d => d.id === r.need) : null;
@@ -2278,7 +2272,7 @@ function render() {
               ${!open && costText ? `
                 <button onclick="event.stopPropagation(); buyDecor('${r.need}')" 
                         style="background: linear-gradient(to bottom, #415a77, #1b263b); border: 1px solid #778da9; color: #ffcf40; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; box-shadow: 0 2px 0 #0d1b2a;">
-                  Unlock: ${costText}
+                  ${highestOwned() < decorItem.needStage ? `Discover ${CHAIN[decorItem.needStage].name}` : `Unlock: ${costText}`}
                 </button>
               ` : `<span class="room-status" style="color: ${isSelected ? '#ffcf40' : '#76c893'};">${isSelected ? 'Active' : (open ? 'Ready' : '')}</span>`}
             </div>
@@ -2911,18 +2905,7 @@ document.getElementById("confirmWarningBtn")?.addEventListener("click", () => {
 
 // --- BACKGROUND TICK LOOP (Energy & Bank) ---
 setInterval(() => {
-  // 1. Handle Energy Regeneration Math
-  const cap = state.maxEnergy || 5;
-  if (state.energy < cap) {
-    if (!state.nextEnergyAt) state.nextEnergyAt = Date.now() + REGEN_MS;
-    const left = state.nextEnergyAt - Date.now();
-    if (left <= 0) {
-      state.energy = Math.min(cap, state.energy + 1);
-      state.nextEnergyAt = Date.now() + REGEN_MS;
-      save();
-      // 🔥 RENDER CALL OMITTED: Prevents drag interruptions! 🔥
-    }
-  }
+  // Energy regeneration is shared with render/load through tickEnergy below.
 
   // 2. Handle Perch / Dragon Bank Accumulation Math
   if (state.mode === "home" && (state.perch || []).some(Boolean)) {

@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '../..');
 // Run production scripts in page order with isolated storage and no real timers.
 // Minimal DOM doubles exercise bindings and modal state, not browser layout.
-function game(saved = {}) {
+function game(saved = {}, overrides = {}) {
   const storage = new Map(Object.entries(saved));
   const nodes = new Map();
   let now = 100000;
@@ -24,7 +24,7 @@ function game(saved = {}) {
     nodes.set(id, el);
     return el;
   }
-  ['guide', 'guideBtn', 'guideClose', 'toast', 'trailFail', 'failWhy', 'autoMergeBtn', 'chestOk', 'lootOk'].forEach(node);
+  ['guide', 'guideBtn', 'guideClose', 'toast', 'trailFail', 'failWhy', 'autoMergeBtn', 'chestOk', 'lootOk', 'gatherBasicBtn'].forEach(node);
   context.document = {
     getElementById: id => nodes.get(id) || null,
     querySelector: () => null, querySelectorAll: () => [],
@@ -42,7 +42,14 @@ function game(saved = {}) {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"><\/script>/g)].map(match => match[1]);
   assert.deepEqual(scripts, ['game-data.js', 'game-core.js', 'app.js']);
-  for (const file of scripts) run(fs.readFileSync(path.join(root, file), 'utf8'));
+  for (const file of scripts) {
+    let source = fs.readFileSync(path.join(root, file), 'utf8');
+    if (file === 'game-data.js') for (const [key, value] of Object.entries(overrides)) {
+      if (!/^[A-Z_]+$/.test(key)) throw new Error('Invalid balance key');
+      source = source.replace(new RegExp('const ' + key + ' = [^;]+;'), 'const ' + key + ' = ' + JSON.stringify(value) + ';');
+    }
+    run(source);
+  }
   run('Math.random = () => 0.5');
   return { run, storage, nodes, advance: ms => { now += ms; } };
 }

@@ -1896,6 +1896,7 @@ html.lock-scroll, body.lock-scroll {
   grid-auto-rows: auto !important;
   row-gap: 14px !important;
 }
+.hatchery-hint { margin: 12px 0 0; padding: 0 8px; font-size: 0.72rem; line-height: 1.5; color: #c5c9d0; text-align: center; }
 #view-home > .keeper-profile,
 #view-home > .stash-container { width: 100%; }
 .stash-header { gap: 12px; flex-wrap: wrap; }

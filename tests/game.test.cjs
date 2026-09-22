@@ -2,8 +2,103 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
+const { game } = require('./support/game-harness.cjs');
 const root = path.resolve(__dirname, '..');
+
+test('Hatchery upgrades follow discoveries and preserve basic egg access', () => {
+  game().run(`assert.equal(gatherLevel(), 0);
+    state.book[3] = true; Math.random = () => 0.1; assert.equal(gatherLevel(), 1);
+    Math.random = () => 0.5; assert.equal(gatherLevel(), 0);
+    state.book[4] = true; assert.equal(gatherLevel(), 1);
+    Math.random = () => 0.1; assert.equal(gatherLevel(), 2);
+    gather(true); assert.equal(state.cells.find(Boolean).level, 0);
+    assert.equal(state.energy, 4);`);
+});
+
+test('basic egg unlock persists after dragons leave the board and through reload', () => {
+  const g = game();
+  g.run(`render(); assert.equal(document.getElementById('gatherBasicBtn').hidden, true);
+    state.perch[0] = {level:4,count:1}; render();
+    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
+    state.perch[0] = null; state.cells.fill(null); state.book = {0:true}; render();
+    assert.equal(gatherBaseLevel(), 1); assert.equal(shopEggLevel(), 2);
+    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
+    state.mode = 'stage'; render(); assert.equal(document.getElementById('gatherBasicBtn').hidden, true);
+    state.mode = 'home'; render(); assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
+    save();`);
+  game(Object.fromEntries(g.storage)).run(`render();
+    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);`);
+});
+
+test('legacy Hearth milestone restores basic eggs even without the original dragon', () => {
+  game().run(`state.hearthDone = true; state.book = {0:true}; render();
+    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
+    assert.equal(gatherBaseLevel(), 1);`);
+});
+
+test('décor requires discoveries and grants gradual percentage bonuses', () => {
+  game().run(`state.coins = 100000; buyDecor('roost'); assert.equal(state.decor.roost, undefined);
+    state.book[5] = true;
+    for (const item of DECOR) buyDecor(item.id);
+    assert.equal(bonus(), 2); assert.equal(state.coins, 48700);
+    const before = state.coins; buyDecor('roost'); assert.equal(state.coins, before);
+    state.tributes = 100; assert.equal(bonus(), 2.5);`);
+});
+
+test('percentage payouts remain integer coins', () => {
+  game().run(`state.decor.moss = true; state.book[1] = true;
+    state.cells[0] = {level:0,count:3}; state.cells[1] = {level:0,count:2};
+    mergeInto(0,1); assert.equal(state.coins, 158); assert.ok(Number.isInteger(state.coins));`);
+});
+
+test('shop prices cap per day and the next day resets only the daily count', () => {
+  game().run(`assert.equal(eggPrice(), 250); state.dailyEggsBought = 999;
+    assert.equal(eggPrice(), 500); state.book[3] = true; assert.equal(shopEggLevel(), 1);
+    assert.equal(eggPrice(), 650); state.book[4] = true; assert.equal(eggPrice(), 800);
+    state.eggsBought = 500; state.ashDayKey = '2000-01-01'; rollDaily();
+    assert.equal(eggPrice(), 550); assert.equal(state.eggsBought, 500);`);
+});
+
+test('shop grants the advertised dragon and charges once', () => {
+  game().run(`state.book[4] = true; state.coins = 1000; buyEgg();
+    assert.equal(state.cells.find(Boolean).level, 2); assert.equal(state.coins, 450);
+    assert.equal(state.dailyEggsBought, 1);`);
+});
+
+test('offline energy preserves partial ticks, capacity and bonus energy', () => {
+  const g = game();
+  g.run('state.energy = 0; state.nextEnergyAt = Date.now() + REGEN_MS; save()');
+  g.advance(20500);
+  g.run('load(); tickEnergy(); assert.equal(state.energy, 2); assert.equal(state.nextEnergyAt - Date.now(), 3500)');
+  g.advance(3500); g.run('tickEnergy(); assert.equal(state.energy, 3)');
+  g.advance(1000000); g.run('tickEnergy(); assert.equal(state.energy, MAX_ENERGY)');
+  g.run('state.energy = 35; tickEnergy(); assert.equal(state.energy, 35)');
+});
+
+test('older saves retain possessions and get the appropriate energy capacity', () => {
+  const g = game({'ember-nest-save': JSON.stringify({maxEnergy:6,energy:6,level:10,hearthDone:true,coins:87654,decor:{roost:true},stash:{rare_egg:2},book:{4:true}})});
+  g.run('assert.equal(state.maxEnergy, 30); assert.equal(state.coins, 87654); assert.ok(state.decor.roost); assert.equal(state.stash.rare_egg, 2)');
+});
+
+test('Sleepy pouch bonus applies to subsequent trials and expires the next day', () => {
+  game().run(`state.cells[0] = {level:3,count:1}; fulfillSleepy(); resetTrail();
+    assert.equal(state.trailGathers, TRAIL_GATHERS + 5);
+    state.ashDayKey = '2000-01-01'; rollDaily(); resetTrail();
+    assert.equal(state.trailGathers, TRAIL_GATHERS);`);
+});
+
+test('reload after a quest payout resumes the next request without paying twice', () => {
+  const g = game({'ember-nest-save':JSON.stringify({questDone:true,quest:0,coins:1234})});
+  g.run('assert.equal(state.quest, 1); assert.equal(state.questDone, false); assert.equal(state.coins, 1234)');
+});
+
+test('new players have the full trial pouch and land prices remain bounded', () => {
+  game().run(`resetTrail(); assert.equal(state.trailGathers, 13);
+    assert.equal(ASH_GRACE, 2); assert.equal(unlockCost(), 250);
+    state.coins = 10000; unlock(20); assert.equal(state.coins, 9750);
+    assert.equal(unlockCost(), 500);`);
+});
+
 
 test('buttons with event listeners have no duplicate inline action', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -89,7 +184,6 @@ test('equipping and unequipping preserves cosmetic quantity through saves', () =
 });
 
 
-const { game } = require('./support/game-harness.cjs');
 test('onboarding opens once, closes by keyboard, and reopens from Help', () => {
   const g = game();
   assert.ok(g.nodes.get('guide').classList.contains('open'));
@@ -149,7 +243,8 @@ test('gather spends one energy only when an egg can spawn', () => {
 test('energy regenerates on the timer and never exceeds its cap', () => {
   const g = game();
   g.run('gather()'); g.advance(8000); g.run('tickEnergy(); assert.equal(state.energy, 5)');
-  g.advance(80000); g.run('tickEnergy(); assert.equal(state.energy, 5)');
+  g.advance(80000); g.run('tickEnergy(); assert.equal(state.energy, 15)');
+  g.advance(80000); g.run('tickEnergy(); assert.equal(state.energy, MAX_ENERGY)');
 });
 
 test('trial pouch replaces energy and reset preserves home inventory', () => {

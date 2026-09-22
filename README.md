@@ -6,7 +6,8 @@ Merge + decorate prototype. Cozy dragon nest. **5-merge**.
 Open `index.html` in a browser (phone or desktop).
 
 ## Loop
-- **Gather egg** spends 1 energy and drops an ember egg on the board.
+- **Gather** spends 1 energy. Discoveries improve the gathered dragon tier;
+  basic eggs remain available for quests.
 - Drag matching pieces onto each other to stack them.
 - **5 of the same stage** become the next dragon and pay ember coins.
 - Spend coins on nest decor. Each piece raises the merge coin bonus.
@@ -34,6 +35,10 @@ perched for a Time Skip, or while a Trial is running.
 The scripts load in that order from `index.html`; no build step is required.
 
 ## Run gameplay checks
+Current tuning and pacing measurements are in [BALANCE-TUNING.md](BALANCE-TUNING.md).
+The historical baseline is in [BALANCE-REVIEW.md](BALANCE-REVIEW.md).
+Run `node scripts/balance-sim.cjs` to repeat the current seeded simulations without touching your save.
+
 With Node.js 18 or newer installed, run this from the project folder:
 
 ```sh

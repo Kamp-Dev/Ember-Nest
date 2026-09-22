@@ -1,21 +1,23 @@
 // Immutable game configuration and content definitions.
 // This file must load before app.js.
 
-const COLS = 5, ROWS = 5, MAX_ENERGY = 5;
+const COLS = 5, ROWS = 5, MAX_ENERGY = 20;
 const SAVE = "ember-nest-save";
 const REGEN_MS = 8000;
 const PERCH_MS = 60000;
 const OPEN_START = 20;
 const STAGE_GOAL = 3;
-const ASH_GRACE = 1;
+const ASH_GRACE = 2;
 const ASH_PER_MERGE = 2;
 const ASH_FAIL = 10;
 const ASH_GOAL = 8;
-const TRAIL_GATHERS = 4;
+const TRAIL_GATHERS = 13;
 const DAILY_PAYS = [1200, 800, 400];
 const DAILY_CLEARS = 3;
 const RENAME_COST = 2000;
 const IMG_DIR = "Images/";
+const GATHER_UPGRADE_CHANCE = 0.2;
+const LAND_COSTS = [250, 500, 1000, 2000, 3500];
 
 const TRAIL_BAG = [2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
 
@@ -55,11 +57,11 @@ const ROOMS = [
 ];
 
 const DECOR = [
-  { id: "moss", name: "Moss bed", art: "🌿", cost: 800, bonus: 1 },
-  { id: "lamp", name: "Ember lamp", art: "🏮", cost: 2500, bonus: 2 },
-  { id: "pool", name: "Hot spring", art: "♨️", cost: 8000, bonus: 3 },
-  { id: "hoard", name: "Tea hoard", art: "🫖", cost: 22000, bonus: 5 },
-  { id: "roost", name: "Star roost", art: "✨", cost: 50000, bonus: 6 },
+  { id: "moss", name: "Moss bed", art: "🌿", cost: 600, bonus: 0.1, needStage: 1 },
+  { id: "lamp", name: "Ember lamp", art: "🏮", cost: 2200, bonus: 0.15, needStage: 2 },
+  { id: "pool", name: "Hot spring", art: "♨️", cost: 6500, bonus: 0.2, needStage: 3 },
+  { id: "hoard", name: "Tea hoard", art: "🫖", cost: 14000, bonus: 0.25, needStage: 3 },
+  { id: "roost", name: "Star roost", art: "✨", cost: 28000, bonus: 0.3, needStage: 4 },
 ];
 
 const QUESTS = [

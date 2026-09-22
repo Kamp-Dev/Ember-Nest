@@ -41,7 +41,7 @@
         <div class="stat-pill energy-pill" style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 1.1rem;">⚡</span>
           <div style="display: flex; flex-direction: column; align-items: center; line-height: 1.1;">
-            <span id="energyCount" style="font-weight: bold;">5/5</span>
+            <span id="energyCount" style="font-weight: bold;">5/20</span>
             <span id="energyTimer" style="font-size: 0.65rem; color: #a0a0b5; font-family: monospace;">FULL</span>
           </div>
         </div>
@@ -142,6 +142,8 @@
           <button id="buyEgg" onclick="buyEgg()">Buy Egg</button>          
           <button id="autoMergeBtn">Auto Merge (Lv. 5)</button>
         </div>
+        <p id="hatcheryHint" class="hatchery-hint" aria-live="polite"></p>
+        <button id="gatherBasicBtn" type="button" onclick="gather(true)" hidden>Gather basic egg • 1 energy</button>
       </div>
 
       <!-- === VIEW 3: THE ROOST === -->
@@ -255,7 +257,9 @@
         </ol>
         <p><strong>Roost:</strong> Place dragons on perches to earn coins each minute. Visit the Dragon Bank to collect them. More rooms unlock more perches.</p>
         <p><strong>Nest:</strong> Buy décor to increase merge coin rewards and unlock rooms. Select an unlocked room to change your nest theme.</p>
-        <p><strong>Ash Trial:</strong> Play on a separate board with a limited egg pouch. Merge beside ash to burn it; Young and Hearth dragons clear a row, and Elders clear a row and column. Clear 8 ash to win. Ash spreads after merges beyond your first; reaching 10 ash, having no room for new ash, or exhausting your pouch with no five-merge available ends the run. Your home dragons stay safe.</p>
+        <p><strong>Ash Trial:</strong> Start with 13 gathers and two safe merges. Merge beside ash to burn it; Young and Hearth dragons clear a row, and Elders clear a row and column. Clear 8 ash to win. After two merges, each promotion adds 2 ash. Reaching 10 ash, having no room for new ash, or exhausting your pouch with no five-merge available ends the run. Your home dragons stay safe.</p>
+        <p><strong>Hatchery upgrades:</strong> Discover Young for a 20% chance of gathering a Hatchling. After Hearth, gathers give Hatchlings with a 20% chance of a Wyrmling. Use “Gather basic egg” for lower-stage quests. Each costs 1 energy. Energy refills every 8 seconds, even while away, up to your capacity.</p>
+        <p><strong>Shopping:</strong> New décor unlocks with dragon discoveries and adds percentage bonuses. Each room purchase opens one fog tile. Shop prices rise gently for the first ten purchases each day, then stop rising; the next day resets prices.</p>
         <p><strong>Daily rewards:</strong> The first three trial clears each day pay rewards. After your first victory, Blitz claims a remaining daily clear instantly.</p>
         <p><strong>Home &amp; Stash:</strong> Click a cosmetic to equip it. Click its EQUIPPED tile again to take it off.</p>
         <p class="guide-reminder">You can reopen this guide anytime with the ? button above.</p>
@@ -349,7 +353,7 @@
           <br><br>
           Fulfilling this quest grants:<br>
           <b style="color: #ffcf40;">+3000 🪙</b><br>
-          <b style="color: #778da9;">+10 Energy & +5 Trial Pouch</b>
+          <b style="color: #778da9;">+10 Energy & +5 Trial Pouch today</b>
           <br><br>
           <span style="color: #d45817; font-weight: bold;">Keep the streak alive! Every 7 days you fulfill this quest, your Max Energy permanently increases by +1!</span>
         </p>
