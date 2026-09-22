@@ -10,7 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ember Nest</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   
   <style>
     .coin-icon {
@@ -48,6 +48,7 @@
         <div class="stat-pill level-pill"><span id="lvlChip">Lv 1</span></div>
         <button id="bookBtn" class="stat-pill book-pill" title="Dragon Book">📖</button>
         <button id="muteBtn" class="stat-pill sound-pill" title="Toggle Sound">🔊</button>
+        <button id="guideBtn" class="stat-pill" aria-label="How to play" title="How to play">?</button>
       </div>
     </header>
 
@@ -97,7 +98,7 @@
         <div class="stash-container" style="flex: 1; padding: 1.5rem; overflow-y: auto;">
             <div class="stash-header" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.2rem; border-bottom: 1px solid #333344; padding-bottom: 0.5rem;">
                 <h3 style="margin: 0; font-size: 1.25rem; color: #d4af37; font-family: 'Playfair Display', serif;">The Stash</h3>
-                <span class="stash-filter" style="font-size: 0.8rem; color: #7a7a8c;">Consumables</span>
+                <span class="stash-filter" style="font-size: 0.8rem; color: #7a7a8c;">Items &amp; equipment</span>
             </div>
             <div class="stash-grid" id="stash-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(70px, 85px); gap: 10px; width: 100%;">
                 <!-- Placeholder slots -->
@@ -139,7 +140,7 @@
         <div class="action-buttons" style="display: flex; justify-content: space-between; gap: 8px; width: 100%; margin-top: 15px; box-sizing: border-box;">
           <button id="gather">Gather egg 🥚</button>
           <button id="buyEgg" onclick="buyEgg()">Buy Egg</button>          
-          <button id="autoMergeBtn" onclick="triggerAutoMerge()">Auto Merge (Lv. 5)</button>
+          <button id="autoMergeBtn">Auto Merge (Lv. 5)</button>
         </div>
       </div>
 
@@ -243,13 +244,32 @@
     <!-- === MODALS & OVERLAYS === -->
     <div id="toast"></div>
 
+    <div id="guide" class="modal" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideIntro">
+      <div class="modal-content guide-content">
+        <h2 id="guideTitle">Welcome to Ember Nest</h2>
+        <p id="guideIntro">Your first goal: gather five eggs and grow your first Hatchling.</p>
+        <ol class="guide-steps">
+          <li><strong>Gather.</strong> Each egg costs 1 energy. Energy refills automatically; watch the timer beside it.</li>
+          <li><strong>Merge.</strong> Drag matching stages onto each other to stack them. Five become the next dragon; any leftovers stay on the board.</li>
+          <li><strong>Grow.</strong> Merges earn coins and XP. Tap fogged tiles to buy more space, or give a dragon to a quest for rewards. Auto Merge unlocks at level 5.</li>
+        </ol>
+        <p><strong>Roost:</strong> Place dragons on perches to earn coins each minute. Visit the Dragon Bank to collect them. More rooms unlock more perches.</p>
+        <p><strong>Nest:</strong> Buy décor to increase merge coin rewards and unlock rooms. Select an unlocked room to change your nest theme.</p>
+        <p><strong>Ash Trial:</strong> Play on a separate board with a limited egg pouch. Merge beside ash to burn it; Young and Hearth dragons clear a row, and Elders clear a row and column. Clear 8 ash to win. Ash spreads after merges beyond your first; reaching 10 ash, having no room for new ash, or exhausting your pouch with no five-merge available ends the run. Your home dragons stay safe.</p>
+        <p><strong>Daily rewards:</strong> The first three trial clears each day pay rewards. After your first victory, Blitz claims a remaining daily clear instantly.</p>
+        <p><strong>Home &amp; Stash:</strong> Click a cosmetic to equip it. Click its EQUIPPED tile again to take it off.</p>
+        <p class="guide-reminder">You can reopen this guide anytime with the ? button above.</p>
+        <button id="guideClose" type="button">Ready to play</button>
+      </div>
+    </div>
+
     <div id="chest" class="modal">
       <div class="modal-content">
         <h2 id="chestTitle">Level Up</h2>
         <p id="chestSub"></p>
         <button id="chestBox" class="chest-box">🎁</button>
         <div id="chestLoot"></div>
-        <button id="chestOk" onclick="document.getElementById('chest').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Continue</button>
+        <button id="chestOk">Continue</button>
       </div>
     </div>
 
@@ -259,7 +279,7 @@
         <h2 style="color: #ffea75;">Mountain Bounty</h2>
         <div id="rewardList"></div>
         <div class="modal-buttons">
-          <button id="lootOk" onclick="document.getElementById('lootModal').classList.remove('open'); levelShowing = false; typeof showLevelEvent === 'function' && showLevelEvent();">Take to Nest</button>
+          <button id="lootOk">Take to Nest</button>
         </div>
       </div>
     </div>

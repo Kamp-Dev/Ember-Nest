@@ -1,5 +1,117 @@
-// Mutable game state, persistence, and low-level board operations.
+// Mutable game state, persistence, board operations, merging, and Ash Trial rules.
 // This file must load after game-data.js and before app.js.
+
+function clearAshAt(i) {
+  if (!state.ash || !state.ash[i]) return false;
+  state.ash[i] = false;
+  state.ashBurned = (state.ashBurned || 0) + 1;
+  return true;
+}
+
+function applyWarmth(landed, nextLevel) {
+  if (nextLevel < 1) return;
+  const flashes = [];
+  const col = landed % COLS;
+  const row = Math.floor(landed / COLS);
+
+  const burnNear = () => neighbors(landed).forEach(i => { if (clearAshAt(i)) flashes.push(i); });
+
+  const burnFourDirections = () => {
+    const targets = [];
+    if (row > 0) targets.push((row - 1) * COLS + col);
+    if (row < ROWS - 1) targets.push((row + 1) * COLS + col);
+    if (col > 0) targets.push(row * COLS + (col - 1));
+    if (col < COLS - 1) targets.push(row * COLS + (col + 1));
+    targets.forEach(i => { if (clearAshAt(i)) flashes.push(i); });
+  };
+
+  const burnRow = () => {
+    for (let c = 0; c < COLS; c++) {
+      const i = row * COLS + c;
+      if (clearAshAt(i)) flashes.push(i);
+    }
+  };
+
+  const burnCol = () => {
+    for (let r = 0; r < ROWS; r++) {
+      const i = r * COLS + col;
+      if (clearAshAt(i)) flashes.push(i);
+    }
+  };
+
+  if (nextLevel >= 5) { burnRow(); burnCol(); }
+  else if (nextLevel >= 3) burnRow();
+  else if (nextLevel === 2) burnFourDirections();
+  else burnNear();
+
+  state._flash = flashes;
+}
+
+function generateTrail() {
+  resetTrail(); // Rely on resetTrail to clear the board rather than duplicating logic
+
+  let bagIndex = 0;
+
+  // Guaranteed extra starting egg
+  state.stageCells[0] = { level: 0, count: 1, shiny: false };
+
+  // Fill cells skipping multiples of 7
+  for (let i = 1; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
+    if (i % 7 !== 0) {
+      const isShiny = Math.random() < 0.05;
+      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1, shiny: isShiny };
+      if (isShiny && typeof discoverRare === "function") discoverRare(TRAIL_BAG[bagIndex]);
+      bagIndex++;
+    }
+  }
+
+  // Fill remaining blanks
+  for (let i = 0; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
+    if (!state.stageCells[i]) {
+      const isShiny = Math.random() < 0.05;
+      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1, shiny: isShiny };
+      if (isShiny && typeof discoverRare === "function") discoverRare(TRAIL_BAG[bagIndex]);
+      bagIndex++;
+    }
+  }
+
+  // Sample free cells without replacement so generation always terminates.
+  const free = state.stageCells.map((cell, i) => cell ? -1 : i).filter(i => i >= 0);
+  for (let n = 0; n < ASH_GOAL && free.length; n++) {
+    const index = free.splice(Math.floor(Math.random() * free.length), 1)[0];
+    state.ash[index] = true;
+  }
+}
+
+function spawnAsh(n) {
+  const free = board().map((v, i) => (!v && !state.ash[i] ? i : -1)).filter(i => i >= 0);
+  for (let k = 0; k < n; k++) {
+    if (!free.length) return false;
+    const pickIdx = Math.floor(Math.random() * free.length);
+    const spot = free.splice(pickIdx, 1)[0];
+    state.ash[spot] = true;
+  }
+  return true;
+}
+
+function resetTrail() {
+  state.stageCells = Array(COLS * ROWS).fill(null);
+  state.ash = Array(COLS * ROWS).fill(false);
+  state.stageMerges = 0;
+  state.trailGathers = TRAIL_GATHERS + (state.pouchBonus || 0);
+  state.ashBurned = 0;
+  state.trailWon = false;
+  state._flash = [];
+}
+// --- TRAIL WIN/FAIL STATES & UI ---
+
+function canFiveMerge() {
+  const tally = {};
+  board().forEach(it => {
+    if (it && it.level < CHAIN.length - 1) tally[it.level] = (tally[it.level] || 0) + it.count;
+  });
+  return Object.values(tally).some(n => n >= 5);
+}
 
 const defaultState = () => ({
   coins: 20,
@@ -18,6 +130,8 @@ const defaultState = () => ({
   perch: [null, null, null], perchBank: 0, theme: "hatchery", perchAt: 0,
   seenGuide: false, muted: false, playerName: "Keeper", nameChanges: 0,
   sleepyDone: false, sleepyStreak: 0, questTab: 0, tributes: 0,
+  keeper: { title: 'Novice Breeder', equipment: { body: 'body_base.png', torso: null, head: null, legs: null } },
+  stash: {},
 });
 
 let state = defaultState();
@@ -45,7 +159,8 @@ function load() {
 
     const gridSize = COLS * ROWS;
     ["cells", "locked", "stageCells", "ash"].forEach(key => {
-      if (Array.isArray(state[key]) && state[key].length !== gridSize) {
+      if (!Array.isArray(state[key])) state[key] = defaultState()[key];
+      if (state[key].length !== gridSize) {
         state[key] = state[key].length > gridSize ? state[key].slice(0, gridSize) : defaultState()[key];
       }
     });
@@ -92,7 +207,7 @@ function spawn(level, count = 1, at, forceShiny = false) {
     return false;
   }
 
-  const index = at != null && !cells[at] && !isLocked(at)
+  const index = Number.isInteger(at) && at >= 0 && at < cells.length && !cells[at] && !isLocked(at) && !isAsh(at)
     ? at
     : free[Math.floor(Math.random() * free.length)];
   const shiny = forceShiny || Math.random() < 0.05;
@@ -125,4 +240,78 @@ function neighbors(index) {
   if (row > 0) result.push(index - COLS);
   if (row < ROWS - 1) result.push(index + COLS);
   return result;
+}
+
+// Resolves a merge without depending on a particular input method. UI feedback
+// is delegated to the existing presentation helpers in app.js.
+function mergeInto(fromI, toI) {
+  const cells = board();
+  const source = cells[fromI];
+  const target = cells[toI];
+  if (!source || !target || fromI === toI || source.level !== target.level) return false;
+  if (source.level >= CHAIN.length - 1) {
+    toast("Elders keep watch • no further merge");
+    return false;
+  }
+
+  const shiny = source.shiny || target.shiny || Math.random() < 0.08;
+  let carriedElement = "neutral";
+  if (source.count > target.count) carriedElement = source.element || "neutral";
+  else if (target.count > source.count) carriedElement = target.element || "neutral";
+  else carriedElement = source.element && source.element !== "neutral" ? source.element : (target.element || "neutral");
+
+  let total = source.count + target.count;
+  cells[fromI] = null;
+  const produced = Math.floor(total / 5);
+  total %= 5;
+
+  if (!produced) {
+    cells[toI] = { level: source.level, count: total, shiny: source.shiny, element: carriedElement };
+    return true;
+  }
+
+  const nextLevel = source.level + 1;
+  let element = carriedElement;
+  if (nextLevel >= 2 && (!element || element === "neutral")) {
+    const elements = ["fire", "water", "nature"];
+    element = elements[Math.floor(Math.random() * elements.length)];
+  }
+
+  const payout = state.mode === "stage" ? 0 : (80 + nextLevel * 45) * bonus() * (shiny ? 2 : 1);
+  if (payout) state.coins += payout;
+  if (state.mode !== "stage" && nextLevel === 4) completeHearthGoal();
+  if (state.mode !== "stage") addXp(15 + nextLevel * 10);
+
+  sfx(shiny ? "shiny" : "merge");
+  const cellElement = boardEl?.children[toI];
+  if (cellElement) {
+    const rect = cellElement.getBoundingClientRect();
+    spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, shiny ? 20 : 12, shiny ? "#ffea75" : "#ffcf40");
+  }
+  if (shiny && typeof discoverRare === "function") discoverRare(nextLevel);
+  if (typeof discover === "function") discover(nextLevel);
+  toast(payout
+    ? `${shiny ? "✨ Shiny " : ""}${CHAIN[nextLevel].name} hatched! +${payout} 🪙`
+    : `${CHAIN[nextLevel].name} hatched!`);
+
+  cells[toI] = { level: nextLevel, count: produced, shiny, element };
+  if (total > 0) cells[fromI] = { level: source.level, count: total, shiny: source.shiny, element: carriedElement };
+
+  if (state.mode === "stage") {
+    applyWarmth(toI, nextLevel);
+    if (state._flash?.length) sfx("ash");
+    state.stageMerges = (state.stageMerges || 0) + 1;
+    if ((state.ashBurned || 0) >= ASH_GOAL) {
+      state.trailWon = true;
+      state.ashTrialCompleted = true;
+      save();
+      setTimeout(winStage, 400);
+      return true;
+    }
+    if (state.stageMerges > ASH_GRACE) {
+      const ashSpawned = spawnAsh(ASH_PER_MERGE);
+      if (!ashSpawned || ashCount() >= ASH_FAIL) setTimeout(failStage, 250);
+    }
+  }
+  return true;
 }

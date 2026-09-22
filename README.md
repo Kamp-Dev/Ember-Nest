@@ -14,8 +14,38 @@ Open `index.html` in a browser (phone or desktop).
 ## Chain
 Egg → Hatchling → Wyrmling → Young ember → Hearth dragon → Elder hearth
 
-## Next build steps
-- Unique SVG art per stage (replace emoji)
-- Fogged land / unlock rooms
-- Daily “sleepy dragon” request
-- Capacitor wrap for App Store / Play
+## Getting started
+The how-to-play guide opens on your first visit. Dismiss it to start playing,
+and use the **?** button in the header to reopen it anytime. It explains
+merging, progression, the Roost, décor, Ash Trials, Blitz, and Stash equipment.
+Progress is saved in this browser's local storage.
+
+Rare Eggs place a guaranteed shiny egg on the home board. A 1h Time Skip adds
+60 minutes of current Roost income to the Dragon Bank, up to its eight-hour cap.
+Consumables stay in inventory when the board or bank is full, when no dragon is
+perched for a Time Skip, or while a Trial is running.
+
+## Code layout
+- `game-data.js`: configuration, dragons, quests, rooms, and item definitions.
+- `game-core.js`: saves, board operations, merging, and Ash Trial board rules.
+- `app.js`: input handling, presentation, progression, and remaining game actions.
+- `style.css`: interface styling.
+
+The scripts load in that order from `index.html`; no build step is required.
+
+## Run gameplay checks
+With Node.js 18 or newer installed, run this from the project folder:
+
+```sh
+node --test tests/game.test.cjs
+```
+
+The suite runs the production scripts with isolated in-memory saves, a controlled
+clock, and minimal DOM doubles. It covers onboarding, merges, save round trips
+and migration, energy, trial generation and clearing, rewards, and daily resets.
+It does not change your browser save or verify browser layout/touch behavior.
+
+For a browser check, open the game on desktop and mobile, open **?**, scroll the
+guide, and dismiss it with its button (or Escape on desktop). Refresh to confirm
+it stays dismissed. Gather and merge eggs, then check that the Stash and Trials
+still respond normally.

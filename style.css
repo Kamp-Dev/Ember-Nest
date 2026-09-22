@@ -1876,6 +1876,35 @@ html.lock-scroll, body.lock-scroll {
   display: block;
   margin: auto;
 }
+.modal .guide-content {
+  max-height: 85vh;
+  max-height: 85dvh;
+  overflow-y: auto;
+  text-align: left;
+}
+.guide-steps {
+  padding-left: 1.4rem;
+  line-height: 1.5;
+}
+.guide-content > * { flex-shrink: 0; }
+.guide-steps li + li { margin-top: 0.6rem; }
+.guide-reminder { font-size: 0.85rem; }
+#guideClose { width: 100%; }
+
+#stash-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-auto-rows: auto !important;
+  row-gap: 14px !important;
+}
+#view-home > .keeper-profile,
+#view-home > .stash-container { width: 100%; }
+.stash-header { gap: 12px; flex-wrap: wrap; }
+@media (max-width: 480px) {
+  .game-header { flex-wrap: wrap; flex-shrink: 0; }
+  .header-right { flex-wrap: wrap !important; max-width: 100%; }
+  #mountain .room { padding: 12px 16px !important; gap: 8px; }
+}
+
 /* --- EMPTY TILES (Faded Grey) --- */
 .stash-slot.empty {
   background: linear-gradient(145deg, #5d636c, #424750);

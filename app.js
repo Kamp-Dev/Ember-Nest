@@ -27,8 +27,20 @@ function applyTheme(id) {
   document.getElementById("app")?.setAttribute("data-theme", state.theme);
 }
 
+let guideReturnFocus = null;
 function showGuide() {
-  document.getElementById("guide")?.classList.add("open");
+  const guide = document.getElementById("guide");
+  if (!guide || guide.classList.contains("open")) return;
+  guideReturnFocus = document.activeElement;
+  guide.classList.add("open");
+  document.getElementById("guideClose")?.focus();
+}
+
+function closeGuide() {
+  document.getElementById("guide")?.classList.remove("open");
+  state.seenGuide = true;
+  save();
+  guideReturnFocus?.focus();
 }
 // --- GLOBAL DOM REFERENCES ---
 const boardEl = document.getElementById("board");
@@ -397,6 +409,7 @@ window.useFromStash = function(itemId) {
   if (!itemDef) return;
 
   // Failsafe: Ensure equipment object exists
+  if (!state.keeper) state.keeper = { title: 'Novice Breeder' };
   if (!state.keeper.equipment) {
     state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
   }
@@ -456,12 +469,31 @@ window.useFromStash = function(itemId) {
     toast(`Equipped ${itemDef.name}!`);
 
   } else if (itemDef.type === 'consumable') {
+    if (!(state.stash[itemId] > 0)) return;
+    if (state.mode !== 'home') { toast('Return to the nest to use this item.'); return; }
+    let message;
+    if (itemId === 'rare_egg') {
+      if (!spawn(0, 1, undefined, true)) return;
+      message = 'A shiny egg was placed on your board!';
+    } else if (itemId === 'time_skip_1h') {
+      const rate = perchIncome();
+      const bank = state.perchBank || 0;
+      const capacity = rate * 480;
+      if (!rate) { toast('Perch a dragon before using a Time Skip.'); return; }
+      if (bank >= capacity) { toast('Collect your Dragon Bank coins first.'); return; }
+      const earned = Math.min(rate * 60, capacity - bank);
+      state.perchBank = bank + earned;
+      message = `Time Skip added ${earned} coins to the Dragon Bank!`;
+    } else {
+      toast('This item cannot be used yet.');
+      return;
+    }
     state.stash[itemId] -= 1;
     if (state.stash[itemId] <= 0) delete state.stash[itemId];
     
     save(); 
-    renderKeeperQuarters();
-    toast(`Used ${itemDef.name}!`);
+    render();
+    toast(message);
   }
 };
 // --- BORDER PORTRAIT RENDER ---
@@ -822,6 +854,19 @@ function emptyPerch(slot) {
   render();
 }
 
+function seatPerch(slot, boardIndex) {
+  if (state.mode !== 'home' || !perchOpen(slot) || state.perch[slot]) return;
+  const dragon = state.cells[boardIndex];
+  if (!dragon) return;
+  state.perch[slot] = { ...dragon, count: 1 };
+  if (dragon.count > 1) dragon.count--;
+  else state.cells[boardIndex] = null;
+  if (!state.perchAt) state.perchAt = Date.now();
+  perchArmed = -1;
+  save();
+  render();
+}
+
 function openFogFree(n) {
   let left = n;
   for (let i = 0; i < state.locked.length && left > 0; i++) {
@@ -1061,99 +1106,6 @@ function ashSvg() {
     <circle cx="19" cy="22" r="1" fill="#ff9900"/>
   </svg>`;
 }
-function mergeInto(fromI, toI) {
-  const cells = board();
-  const a = cells[fromI];
-  const b = cells[toI];
-  
-  if (!a || !b || fromI === toI || a.level !== b.level) return false;
-  if (a.level >= CHAIN.length - 1) { 
-    toast("Elders keep watch • no further merge"); 
-    return false; 
-  }
-  
-  const isShiny = a.shiny || b.shiny || (Math.random() < 0.08);
-
-  // --- MAJORITY ELEMENT INHERITANCE LOGIC ---
-  let carriedElement = "neutral";
-  if (a.count > b.count) carriedElement = a.element || "neutral";
-  else if (b.count > a.count) carriedElement = b.element || "neutral";
-  else carriedElement = (a.element && a.element !== "neutral") ? a.element : (b.element || "neutral");
-
-  let total = a.count + b.count;
-  cells[fromI] = null;
-  let produced = 0;
-  
-  while (total >= 5) {
-    total -= 5;
-    produced += 1;
-  }
-  
-  if (produced) {
-    const next = a.level + 1;
-    
-    // --- ELEMENTAL MUTATION LOGIC ---
-    let finalElement = carriedElement;
-    if (next >= 2 && (!finalElement || finalElement === "neutral")) {
-      const elements = ["fire", "water", "nature"];
-      finalElement = elements[Math.floor(Math.random() * elements.length)];
-    }
-
-    // Payouts & Progression
-    const payout = state.mode === "stage" ? 0 : (80 + next * 45) * bonus() * (isShiny ? 2 : 1);
-    if (payout) state.coins += payout;
-    if (state.mode !== "stage" && next === 4) completeHearthGoal();
-    if (state.mode !== "stage") addXp(15 + next * 10);
-    
-    sfx(isShiny ? "shiny" : "merge");
-    
-    const cellEl = boardEl?.children[toI];
-    if (cellEl) {
-      const rect = cellEl.getBoundingClientRect();
-      spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, isShiny ? 20 : 12, isShiny ? '#ffea75' : '#ffcf40');
-    }
-
-    if (isShiny && typeof discoverRare === "function") discoverRare(next);
-    if (typeof discover === "function") discover(next);
-
-    toast(payout 
-      ? `${isShiny ? '✨ Shiny ' : ''}${CHAIN[next].name} hatched! +${payout} 🪙` 
-      : `${CHAIN[next].name} hatched!`
-    );
-
-    // 1. Lock the newly upgraded Dragon directly under the mouse
-    cells[toI] = { level: next, count: produced, shiny: isShiny, element: finalElement };
-    
-    // 2. Safely bounce leftovers back to the original tile
-    if (total > 0) {
-      cells[fromI] = { level: a.level, count: total, shiny: a.shiny, element: carriedElement };
-    }
-    
-    // 3. Stage Mode Hooks
-    if (state.mode === "stage") {
-      applyWarmth(toI, next);
-      if (state._flash && state._flash.length) sfx("ash");
-      state.stageMerges = (state.stageMerges || 0) + 1;
-      
-      if ((state.ashBurned || 0) >= ASH_GOAL) {
-        state.trailWon = true;
-        state.ashTrialCompleted = true; // <-- Added this line to unlock Blitz!
-        save(); // <-- Ensure it saves the unlock immediately
-        setTimeout(winStage, 400);
-        return true;
-      }
-      
-      if (state.stageMerges > ASH_GRACE) {
-        const ok = spawnAsh(ASH_PER_MERGE);
-        if (!ok || ashCount() >= ASH_FAIL) setTimeout(failStage, 250);
-      }
-    }
-  } else {
-    // Just stacking items together without hitting 5
-    cells[toI] = { level: a.level, count: total, shiny: a.shiny, element: carriedElement };
-  }
-  return true;
-}
 // --- CORE ACTIONS ---
 
 function gather() {
@@ -1201,6 +1153,7 @@ function gather() {
   render();
 }
 function triggerAutoMerge() {
+  if (state.mode !== 'home') return;
   if ((state.level || 1) < 5) {
     toast("Auto Merge unlocks at Level 5!");
     return;
@@ -1285,120 +1238,6 @@ function triggerAutoMerge() {
 // MODULE 14: TRAIL & ASH MECHANICS
 // ==========================================
 
-function clearAshAt(i) {
-  if (!state.ash || !state.ash[i]) return false;
-  state.ash[i] = false;
-  state.ashBurned = (state.ashBurned || 0) + 1;
-  return true;
-}
-
-function applyWarmth(landed, nextLevel) {
-  if (nextLevel < 1) return;
-  const flashes = [];
-  const col = landed % COLS;
-  const row = Math.floor(landed / COLS);
-
-  const burnNear = () => neighbors(landed).forEach(i => { if (clearAshAt(i)) flashes.push(i); });
-  
-  const burnFourDirections = () => {
-    const targets = [];
-    if (row > 0) targets.push((row - 1) * COLS + col);
-    if (row < ROWS - 1) targets.push((row + 1) * COLS + col);
-    if (col > 0) targets.push(row * COLS + (col - 1));
-    if (col < COLS - 1) targets.push(row * COLS + (col + 1));
-    targets.forEach(i => { if (clearAshAt(i)) flashes.push(i); });
-  };
-
-  const burnRow = () => {
-    for (let c = 0; c < COLS; c++) {
-      const i = row * COLS + c;
-      if (clearAshAt(i)) flashes.push(i);
-    }
-  };
-
-  const burnCol = () => {
-    for (let r = 0; r < ROWS; r++) {
-      const i = r * COLS + col;
-      if (clearAshAt(i)) flashes.push(i);
-    }
-  };
-
-  if (nextLevel >= 5) { burnRow(); burnCol(); }
-  else if (nextLevel >= 3) burnRow();
-  else if (nextLevel === 2) burnFourDirections();
-  else burnNear();
-
-  state._flash = flashes;
-}
-
-function generateTrail() {
-  resetTrail(); // Rely on resetTrail to clear the board rather than duplicating logic
-
-  let bagIndex = 0;
-  
-  // Guaranteed extra starting egg
-  state.stageCells[0] = { level: 0, count: 1, shiny: false };
-
-  // Fill cells skipping multiples of 7
-  for (let i = 1; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
-    if (i % 7 !== 0) { 
-      const isShiny = Math.random() < 0.05;
-      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1, shiny: isShiny };
-      if (isShiny && typeof discoverRare === "function") discoverRare(TRAIL_BAG[bagIndex]);
-      bagIndex++;
-    }
-  }
-
-  // Fill remaining blanks
-  for (let i = 0; i < COLS * ROWS && bagIndex < TRAIL_BAG.length; i++) {
-    if (!state.stageCells[i]) {
-      const isShiny = Math.random() < 0.05;
-      state.stageCells[i] = { level: TRAIL_BAG[bagIndex], count: 1, shiny: isShiny };
-      if (isShiny && typeof discoverRare === "function") discoverRare(TRAIL_BAG[bagIndex]);
-      bagIndex++;
-    }
-  }
-
-  // Scatter Ash
-  let ashPlaced = 0;
-  while (ashPlaced < ASH_GOAL) {
-    const randIdx = Math.floor(Math.random() * (COLS * ROWS));
-    if (!state.stageCells[randIdx] && !state.ash[randIdx]) {
-      state.ash[randIdx] = true;
-      ashPlaced++;
-    }
-  }
-}
-
-function spawnAsh(n) {
-  const free = board().map((v, i) => (!v && !state.ash[i] ? i : -1)).filter(i => i >= 0);
-  for (let k = 0; k < n; k++) {
-    if (!free.length) return false;
-    const pickIdx = Math.floor(Math.random() * free.length);
-    const spot = free.splice(pickIdx, 1)[0];
-    state.ash[spot] = true;
-  }
-  return true;
-}
-
-function resetTrail() {
-  state.stageCells = Array(COLS * ROWS).fill(null);
-  state.ash = Array(COLS * ROWS).fill(false);
-  state.stageMerges = 0;
-  state.trailGathers = TRAIL_GATHERS + (state.pouchBonus || 0);
-  state.ashBurned = 0;
-  state.trailWon = false;
-  state._flash = [];
-}
-// --- TRAIL WIN/FAIL STATES & UI ---
-
-function canFiveMerge() {
-  const tally = {};
-  board().forEach(it => {
-    if (it) tally[it.level] = (tally[it.level] || 0) + it.count;
-  });
-  return Object.values(tally).some(n => n >= 5);
-}
 
 function checkTrailStuck() {
   if (state.mode !== "stage" || state.trailWon || (state.ashBurned || 0) >= ASH_GOAL) return;
@@ -1526,6 +1365,10 @@ function hideTrailWin() {
 }
 
 window.blitzAshTrial = function() {
+  if (!state.ashTrialCompleted || state.mode !== 'home') {
+    toast('Complete the Ash Trial first, then Blitz from the nest.');
+    return;
+  }
   if (dailyLeft() <= 0) {
     toast("No daily clears left!");
     return;
@@ -2679,6 +2522,7 @@ function endDrag(e) {
   document.querySelectorAll(".valid").forEach(c => c.classList.remove("valid"));
   
   // 1. MOBILE SAFETY: Lock in touch coordinates even as the finger lifts
+  if (e.type === 'pointercancel') { drag = null; return; }
   const x = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : 0);
   const y = e.clientY || (e.changedTouches ? e.changedTouches[0].clientY : 0);
   
@@ -2694,13 +2538,11 @@ function endDrag(e) {
     const slot = +perchEl.dataset.perch;
     
     // Ensure we are dragging FROM the board
-    if (cells[from]) {
-      if (perchOpen(slot)) {
-        // FIX: Manually move the dragon to the empty perch
-        state.perch[slot] = cells[from]; 
-        cells[from] = null; 
+    if (cells[from] && perchOpen(slot)) {
+      if (!state.perch[slot]) {
+        seatPerch(slot, from);
       } else {
-        // Perch is occupied -> Swap the dragons!
+        // Preserve both dragons when replacing an occupied perch.
         const temp = state.perch[slot];
         state.perch[slot] = cells[from];
         cells[from] = temp;
@@ -2948,9 +2790,15 @@ function initGame() {
 
   // --- GUIDES ---
   document.getElementById("guideBtn")?.addEventListener("click", showGuide);
-  bindClose("guideClose", "guide", () => { 
-    state.seenGuide = true; 
-    save(); 
+  document.getElementById("guideClose")?.addEventListener("click", closeGuide);
+  document.getElementById("guide")?.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeGuide();
+    } else if (event.key === "Tab") {
+      event.preventDefault();
+      document.getElementById("guideClose")?.focus();
+    }
   });
   bindClose("sleepyGuideClose", "sleepyGuide");
 
@@ -3156,3 +3004,4 @@ initGame();
 render();
 renderStash();
 renderDragonKingPortrait();
+if (!state.seenGuide) showGuide();
