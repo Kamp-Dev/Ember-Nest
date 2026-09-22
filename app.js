@@ -36,6 +36,30 @@ function showGuide() {
   document.getElementById("guideClose")?.focus();
 }
 
+// Appearance is a device preference, independent of rooms and game saves.
+const APPEARANCE_KEY = 'ember-nest-appearance';
+function setAppearance(value, persist = true) {
+  const dark = value === 'dark';
+  document.documentElement.dataset.appearance = dark ? 'dark' : 'light';
+  const button = document.getElementById('appearanceBtn');
+  if (button) {
+    button.textContent = dark ? '☀' : '☾';
+    button.setAttribute('aria-pressed', String(dark));
+    button.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+    button.title = dark ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+  if (persist) {
+    try { localStorage.setItem(APPEARANCE_KEY, dark ? 'dark' : 'light'); }
+    catch (_) { toast('Theme changed for this visit; browser storage is unavailable.'); }
+  }
+}
+let initialAppearance = 'light';
+try { initialAppearance = localStorage.getItem(APPEARANCE_KEY); } catch (_) {}
+setAppearance(initialAppearance, false);
+document.getElementById('appearanceBtn')?.addEventListener('click', () => {
+  setAppearance(document.documentElement.dataset.appearance === 'dark' ? 'light' : 'dark');
+});
+
 function closeGuide() {
   document.getElementById("guide")?.classList.remove("open");
   state.seenGuide = true;

@@ -1,0 +1,84 @@
+/* Palette-only companion: never alter the shared board/header layout. */
+html[data-appearance='dark'] { color-scheme: dark; }
+html[data-appearance='light'] { color-scheme: light; }
+html[data-appearance='dark'] body.storybook .view { color: #e5ecdf; }
+html[data-appearance='dark'] body.storybook {
+  --bg: #14262d; --panel: #20363e; --border: #47616a;
+  --text-main: #e5ecdf; --text-muted: #b2c5be; --gold: #eac28a;
+  --ember: #d59369; --danger: #f09f8e;
+  color: #e5ecdf;
+  background: linear-gradient(#07192333, #07192366), url('assets/theme/forest-sanctuary-night-v1.png') center / cover fixed !important;
+}
+html[data-appearance='dark'] body.storybook #app,
+html[data-appearance='dark'] body.storybook .view-container,
+html[data-appearance='dark'] body.storybook #view-board > .action-buttons { background: #182e35; border-color: #405b63; }
+html[data-appearance='dark'] body.storybook .game-header,
+html[data-appearance='dark'] body.storybook #tabBar { background: #192e35 !important; border-color: #425961; }
+html[data-appearance='dark'] body.storybook #title { color: #e6ebdc; }
+html[data-appearance='dark'] body.storybook #title span { color: #e3ad79; }
+html[data-appearance='dark'] body.storybook :is(.player-name,#energyTimer,.hatchery-hint,.stash-filter,.keeper-title) { color: #b7c9bf !important; }
+html[data-appearance='dark'] body.storybook .stat-pill { background: #2a4249 !important; border-color: #506871 !important; color: #ede7cf !important; }
+html[data-appearance='dark'] body.storybook #app[data-theme] #view-board.active,
+html[data-appearance='dark'] body.storybook :is(#view-home,#view-roost,#view-trials,#view-nest) {
+  background: linear-gradient(#172f39de, #142930f5), url('assets/theme/forest-sanctuary-night-v1.png') center top / auto 650px !important;
+}
+html[data-appearance='dark'] body.storybook .keeper-profile {
+  background: linear-gradient(#132d3533, #172f35f5), url('assets/theme/forest-sanctuary-night-v1.png') center 40% / cover !important;
+  border-color: #425e62 !important;
+}
+html[data-appearance='dark'] body.storybook :is(.section-title,.keeper-name,.stash-header h3) { color: #e3dec0 !important; text-shadow: none; }
+html[data-appearance='dark'] body.storybook #quest-carousel .quest-card {
+  background: linear-gradient(110deg, #293f49f5, #20363fed), url('assets/theme/forest-sanctuary-night-v1.png') center / cover !important;
+  border-color: #61736c !important;
+}
+html[data-appearance='dark'] body.storybook #quest-carousel .quest-card :is(h2,h3,h4,p,span,small,strong,div) { color: #e6e7d3 !important; }
+html[data-appearance='dark'] body.storybook #perchRow .perch { background: linear-gradient(145deg,#365451,#243d42) !important; border-color: #627b69 !important; color: #d8e3d2; box-shadow: inset 0 1px 0 #79918233 !important; }
+html[data-appearance='dark'] body.storybook #perchRow .perch.lock { background: #2c3f46 !important; opacity: .8; }
+html[data-appearance='dark'] body.storybook .cell { background: linear-gradient(145deg,#304b52,#233b43) !important; border-color: #526a70 !important; box-shadow: inset 0 1px 0 #72928a33, 0 3px 5px #081a2626 !important; }
+html[data-appearance='dark'] body.storybook .cell:has(.item) { background: linear-gradient(145deg,#3c5660,#2b424c) !important; border-color: #7a8a7b !important; }
+html[data-appearance='dark'] body.storybook .cell.locked { background: #203239 !important; color: #b7c6bf !important; }
+html[data-appearance='dark'] body.storybook .cell.ash { background: #353940 !important; }
+html[data-appearance='dark'] body.storybook .item .lvl { background: #192c36f5 !important; color: #f1ddb2 !important; }
+html[data-appearance='dark'] body.storybook #tabBar .tab-btn { color: #bbcdc0; }
+html[data-appearance='dark'] body.storybook #tabBar .tab-btn.active { background: #35544f !important; color: #f3e3b9; box-shadow: inset 0 -3px 0 #9ea577; }
+html[data-appearance='dark'] body.storybook #app button:not(.tab-btn):not(.stat-pill):not(.book-arrow) { background: #42675e !important; border-color: #729084 !important; box-shadow: 0 3px 0 #102b30 !important; color: #fff2d8 !important; }
+html[data-appearance='dark'] body.storybook #app #gather { background: #92553e !important; border-color: #c38b62 !important; }
+html[data-appearance='dark'] body.storybook #app :is(button.nest-tab-btn,button.customizer-tab):not(.active),
+html[data-appearance='dark'] body.storybook #app #book .tab-btn-sub:not(.active) { background: #293f48 !important; color: #bccbc1 !important; box-shadow: none !important; }
+html[data-appearance='dark'] body.storybook .stash-slot.filled { background: #2b414b !important; box-shadow: 0 4px 0 #10252c !important; }
+html[data-appearance='dark'] body.storybook .stash-slot.filled > div { color: #ead7ac !important; }
+html[data-appearance='dark'] body.storybook .stash-slot.empty { background: #343f44 !important; border-color: #58666b !important; }
+html[data-appearance='dark'] body.storybook .stash-header { border-color: #49616a !important; }
+html[data-appearance='dark'] body.storybook #view-roost .quest-card,
+html[data-appearance='dark'] body.storybook #roostPerchContainer > div,
+html[data-appearance='dark'] body.storybook :is(#trialBox,#mountain .room,.decor,#sub-decor) { background: #243c44f5 !important; border-color: #536b6b !important; box-shadow: 0 4px 0 #0b202626 !important; }
+html[data-appearance='dark'] body.storybook #view-roost :is(h2,h4,p,span),
+html[data-appearance='dark'] body.storybook #dragonBank div,
+html[data-appearance='dark'] body.storybook #bankTimer,
+html[data-appearance='dark'] body.storybook #mountain :is(h4,small,span),
+html[data-appearance='dark'] body.storybook #sub-decor p { color: #dce5d2 !important; }
+html[data-appearance='dark'] body.storybook #dragonBank,
+html[data-appearance='dark'] body.storybook #roostPerchContainer > div > div[style*='radial-gradient'],
+html[data-appearance='dark'] body.storybook #roostPerchContainer > div div[style*='rgba(0,0,0,0.'] { background: #2c494a !important; border-color: #627f71 !important; }
+html[data-appearance='dark'] body.storybook #mountain .room.now { background: #34524b !important; border-color: #96a681 !important; }
+html[data-appearance='dark'] body.storybook .modal { background: #06141dc9 !important; }
+html[data-appearance='dark'] body.storybook .modal-content:not(.custom-book-bg),
+html[data-appearance='dark'] body.storybook #roostPickerModal > div { background: #20363f !important; color: #e2e8d9 !important; border-color: #637972 !important; }
+html[data-appearance='dark'] body.storybook .modal-content:not(.custom-book-bg) :is(h2,h3,h4,p,label,small,strong),
+html[data-appearance='dark'] body.storybook #roostPickerModal :is(h3,span) { color: #e2e8d9 !important; border-color: #526965 !important; }
+html[data-appearance='dark'] body.storybook .modal :is(input,select) { background: #182c35 !important; color: #ede7d2 !important; border-color: #64796b !important; }
+html[data-appearance='dark'] body.storybook :is(.contract-row,.mastery-card,.cosmetic-reward),
+html[data-appearance='dark'] body.storybook #roostPickerGrid > div,
+html[data-appearance='dark'] body.storybook #roostPickerGrid > div > div { background: #2c454c !important; border-color: #56716e !important; }
+html[data-appearance='dark'] body.storybook .book-controls { background: #20363f; border-color: #637972; }
+html[data-appearance='dark'] body.storybook :is(#bookPageLabel,#book .book-chapter-picker) { color: #dfdfc8; }
+html[data-appearance='dark'] body.storybook #app #resetBookGameBtn { background: transparent !important; color: #f0b19c !important; border-color: #a77f69 !important; }
+html[data-appearance='dark'] body.storybook #app #book :is(#nextPageBtn,#prevPageBtn) { background: #29434b !important; color: #e8dbad !important; border-color: #8e9a79 !important; }
+html[data-appearance='dark'] body.storybook .board-playfield { scrollbar-color: #6b877a transparent; }
+html[data-appearance='dark'] body.storybook :is(button,select,input):focus-visible { outline-color: #f2c384 !important; }
+/* Four tools still fit alongside the title on small phones. */
+@media (max-width: 350px) {
+  body.storybook .header-tools .stat-pill { width: 29px; }
+  body.storybook .header-tools { gap: 3px; }
+  body.storybook #title { font-size: 20px !important; }
+}

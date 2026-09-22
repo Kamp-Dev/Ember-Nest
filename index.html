@@ -11,7 +11,12 @@
   <title>Ember Nest</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css?v=4">
-  <link rel="stylesheet" href="storybook.css?v=2">
+  <script>
+    // Restore appearance before paint; keep this separate from game progress.
+    try { document.documentElement.dataset.appearance = localStorage.getItem('ember-nest-appearance') === 'dark' ? 'dark' : 'light'; } catch (_) {}
+  </script>
+  <link rel="stylesheet" href="storybook.css?v=3">
+  <link rel="stylesheet" href="moonlight.css?v=1">
   
   <style>
     .coin-icon {
@@ -37,6 +42,7 @@
       </div>
       
       <div class="header-tools" aria-label="Game tools">
+        <button id="appearanceBtn" class="stat-pill" aria-label="Switch to dark theme" aria-pressed="false" title="Switch to dark theme">☾</button>
         <button id="bookBtn" class="stat-pill book-pill" aria-label="Dragon Book" title="Dragon Book">📖</button>
         <button id="muteBtn" class="stat-pill sound-pill" aria-label="Toggle Sound" title="Toggle Sound">🔊</button>
         <button id="guideBtn" class="stat-pill" aria-label="How to play" title="How to play">?</button>

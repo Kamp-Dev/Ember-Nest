@@ -15,7 +15,7 @@ function game(saved = {}, overrides = {}) {
     const classes = new Set();
     const listeners = {};
     const el = {
-      dataset: {}, getBoundingClientRect: () => null,
+      dataset: {}, attributes: {}, setAttribute(key, value) { this.attributes[key] = value; }, getBoundingClientRect: () => null,
       style: { setProperty(key, value) { this[key] = value; } }, innerHTML: '', textContent: '',
       classList: { add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x), toggle: (x,on) => on ? classes.add(x) : classes.delete(x) },
       addEventListener: (type, fn) => (listeners[type] ||= []).push(fn),
@@ -27,10 +27,11 @@ function game(saved = {}, overrides = {}) {
     return el;
   }
   ['guide', 'guideBtn', 'guideClose', 'toast', 'trailFail', 'failWhy', 'autoMergeBtn', 'chestOk', 'lootOk', 'chestBox', 'dragonBank', 'contractsModal', 'contractsList', 'contractsReset', 'bookSpread', 'bookElement', 'bookPageLabel', 'countMain', 'countRare', 'prevPageBtn', 'nextPageBtn', 'tabMain', 'tabRare', 'book', 'masteryModal', 'masteryList', 'masterySummary', 'masteryOpen', 'masteryClose', 'keeper-title-display'].forEach(node);
+  node('appearanceBtn');
   context.document = {
     getElementById: id => nodes.get(id) || null,
     querySelector: () => null, querySelectorAll: () => [],
-    documentElement: { classList: { add() {} } }, body: { classList: { add() {} } },
+    documentElement: { dataset: {}, classList: { add() {} } }, body: { classList: { add() {} } },
     activeElement: nodes.get('guideBtn'),
   };
   context.window = context;

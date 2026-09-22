@@ -5,6 +5,23 @@ const path = require('node:path');
 const { game } = require('./support/game-harness.cjs');
 const root = path.resolve(__dirname, '..');
 
+test('appearance toggles, persists and stays independent of room and game progression', () => {
+  const g = game();
+  const button = g.nodes.get('appearanceBtn');
+  assert.equal(button.attributes['aria-pressed'], 'false');
+  g.run('globalThis.beforeAppearance = JSON.stringify(state)');
+  button.click();
+  assert.equal(button.attributes['aria-label'], 'Switch to light theme');
+  assert.equal(g.storage.get('ember-nest-appearance'), 'dark');
+  g.run("assert.equal(document.documentElement.dataset.appearance, 'dark'); assert.equal(JSON.stringify(state), beforeAppearance)");
+  const restored = game(Object.fromEntries(g.storage));
+  assert.equal(restored.nodes.get('appearanceBtn').attributes['aria-pressed'], 'true');
+  restored.nodes.get('appearanceBtn').click();
+  assert.equal(restored.storage.get('ember-nest-appearance'), 'light');
+  g.run("localStorage.setItem = () => { throw new Error('blocked') }; setAppearance('light'); assert.equal(document.documentElement.dataset.appearance, 'light')");
+  assert.equal(game({'ember-nest-appearance':'invalid'}).nodes.get('appearanceBtn').attributes['aria-pressed'], 'false');
+});
+
 test('board action dock stays outside its scroller and header tools have their own row', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'storybook.css'), 'utf8');
