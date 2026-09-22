@@ -1,5 +1,9 @@
 # Progression tuning
 
+Follow-up: [REWARD-PLAYTEST.md](REWARD-PLAYTEST.md) includes quests, chests, Roost
+income and Trial rewards, plus the subsequent chest and Roost tuning. The core-loop
+measurements below intentionally exclude those systems.
+
 ## Applied model
 
 - Energy regenerates every eight seconds, with a 20-point starting capacity

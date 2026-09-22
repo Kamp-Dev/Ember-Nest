@@ -91,6 +91,7 @@ let bankTimer = 60;
 let currentCustomizerSlot = 'torso'; // Used by the mirror UI
 // --- GLOBAL UI STATE TRACKERS ---
 let currentBookPage = 0;
+let currentBookElement = 'growth';
 let perchArmed = -1;
 let overflowArm = null;
 let roostTargetSlot = -1;
@@ -102,8 +103,8 @@ let pendingViewId = null;
 function getPerchYield(p, i) {
   if (!p) return { base: 0, bonus: 0, total: 0, hasSynergy: false };
   
-  const curve = [5, 15, 30, 60, 120, 240, 480, 960]; 
-  const baseIncome = Math.floor((curve[p.level] || 5) * (p.shiny ? 2.5 : 1)) * 3;
+  const baseIncome = Math.floor((PERCH_INCOME_BY_LEVEL[p.level] || PERCH_INCOME_BY_LEVEL[0]) *
+    (p.shiny ? PERCH_SHINY_MULTIPLIER : 1));
   
   const roomElements = ["fire", "nature", "water"]; 
   const hasSynergy = (p.element === roomElements[i] || p.element === "neutral");
@@ -530,7 +531,7 @@ function renderKeeperQuarters() {
   if (nameDisplay) nameDisplay.innerText = state.playerName || "Keeper";
   
   const titleDisplay = document.getElementById('keeper-title-display');
-  if (titleDisplay) titleDisplay.innerText = state.keeper.title;
+  if (titleDisplay) titleDisplay.innerText = activeMasteryTitle() || state.keeper.title;
 
   // Render Layered Paper-Doll Avatar Images (Optimized)
   const eq = state.keeper.equipment;
@@ -726,6 +727,10 @@ function showLevelEvent() {
 function revealChest() {
   const box = document.getElementById("chestBox");
   const lv = box && box.dataset.level ? +box.dataset.level : 1;
+  if (!box || box.disabled || !Number.isInteger(lv) || lv < 5 || lv % 5 !== 0 || lv > state.level) return;
+  state.claimedChests = state.claimedChests || {};
+  if (state.claimedChests[lv]) return;
+  state.claimedChests[lv] = true;
   
   // 1. Swap image to OPEN chest
   if (box) {
@@ -747,7 +752,7 @@ function revealChest() {
   
   // 3. Loot Math
   const tier = Math.max(1, Math.floor(lv / 5));
-  const coins = 3000 * tier;
+  const coins = Math.min(CHEST_MAX_COINS, CHEST_BASE_COINS + (tier - 1) * CHEST_COIN_STEP);
   const eggs = Math.min(8, 2 + tier * 2);
   
   if (state) state.coins = (state.coins || 0) + coins;
@@ -1067,7 +1072,7 @@ function stackLayout(n) {
   return [[10, 10, 0.55], [22, 10, 0.55], [10, 22, 0.55], [22, 22, 0.55]];
 }
 
-function dragonSvg(level, size = 42, count = 1, shiny = false) {
+function dragonSvg(level, size = 42, count = 1, shiny = false, element = 'neutral') {
   const pal = [
     ["#d99b66", "#8a4f28"], ["#ffb554", "#d45817"], ["#ff8a36", "#a82e05"],
     ["#ff6a20", "#b32000"], ["#ff8a47", "#d9381e"], ["#ffc83b", "#e04e1b"],
@@ -1077,6 +1082,14 @@ function dragonSvg(level, size = 42, count = 1, shiny = false) {
   const lo = shiny ? "#e5a100" : pal[1];
   const n = Math.max(1, Math.min(4, count || 1));
   const filterStyle = shiny ? 'style="filter: drop-shadow(0 0 4px #ffcf40);"' : '';
+  const art = Object.prototype.hasOwnProperty.call(ELEMENT_DRAGON_ART, element) ? ELEMENT_DRAGON_ART[element] : null;
+  if (ELEMENTAL_ASSETS_READY && art && level >= 2 && level <= 5) {
+    const stage = ['wyrmling','young','hearth','elder'][level - 2];
+    const suffix = level === 5 ? 1 : n;
+    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" role="img" aria-label="${element} ${CHAIN[level].name}, ${count || 1}${shiny ? ', shiny' : ''}" ${filterStyle}>
+      <image href="${IMG_DIR}elements/${art}-${stage}-${suffix}.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>`;
+  }
 
   // Clean mapping for Levels 1-5 to replace the massive if/else chains
   const spriteMap = {
@@ -1121,7 +1134,7 @@ function ashSvg() {
 }
 // --- CORE ACTIONS ---
 
-function gather(basicEgg = false) {
+function gather() {
   if (state.mode === "stage") {
     if ((state.trailGathers || 0) <= 0) {
       toast("Trail pouch is empty • merge what you have");
@@ -1147,12 +1160,13 @@ function gather(basicEgg = false) {
     return;
   }
 
-  if (!spawn(basicEgg === true ? 0 : gatherLevel(), 1)) {
+  if (!spawn(gatherLevel(), 1)) {
     toast("No space left on the board");
     return;
   }
 
   state.energy -= 1;
+  contractEvent('gather');
 
   // Bulletproof Gather Particles
   const gBtn = document.getElementById("gather");
@@ -1305,6 +1319,7 @@ function winStage() {
   const gift = paid ? trailGiftLevel() : -1;
   
   state.ashCleared = true;
+  contractEvent('trial');
   state.ashWins = (state.ashWins || 0) + 1;
   if (paid) state.ashDayWins = (state.ashDayWins || 0) + 1;
   state.lastAshWinAt = 0;
@@ -1344,7 +1359,7 @@ const left = dailyLeft();
     : "Come back after midnight for nest gifts.";
     
   hideTrailFail();
-  addXp(40);
+  if (paid) addXp(40);
   sfx("win");
   showTrailWin(lines, sub);
   
@@ -1442,87 +1457,168 @@ function scanBook() {
   });
 }
 
-// --- DRAGON BOOK UI & PAGINATION ---
+// Element discoveries never replay stage-based coin rewards.
+function recordElementDiscovery(item) {
+  if (!item || !Number.isInteger(item.level) || item.level < 2 || item.level > 5 ||
+      !Object.prototype.hasOwnProperty.call(ELEMENT_BOOK, item.element)) return;
+  for (const key of item.shiny ? ['elementBook','rareElementBook'] : ['elementBook']) {
+    if (!state[key] || typeof state[key] !== 'object' || Array.isArray(state[key])) state[key] = {};
+    if (!state[key][item.element] || typeof state[key][item.element] !== 'object') state[key][item.element] = {};
+    state[key][item.element][item.level] = true;
+  }
+}
+
+function recoverElementDiscoveries() {
+  // Old saves have no element history: recover verified owned dragons only.
+  [...(state.cells || []), ...(state.perch || []),
+    ...(state.mode === 'stage' ? state.stageCells || [] : [])].forEach(recordElementDiscovery);
+}
+
+function bookChapterCount(rare = false) {
+  const records = currentBookElement === 'growth'
+    ? (rare ? state.rareBook : state.book)
+    : (rare ? state.rareElementBook : state.elementBook)?.[currentBookElement];
+  const first = currentBookElement === 'growth' ? 0 : 2;
+  return CHAIN.slice(first, currentBookElement === 'growth' ? 2 : CHAIN.length).filter((_, i) => records?.[i + first]).length;
+}
+
+window.switchBookElement = (element) => {
+  if (element !== 'growth' && !Object.prototype.hasOwnProperty.call(ELEMENT_BOOK, element)) return;
+  currentBookElement = element;
+  currentBookPage = Math.min(element === 'growth' ? 1 : CHAIN.length-1, Math.max(element === 'growth' ? 0 : 2, currentBookPage));
+  renderBook();
+};
 
 window.switchBookTab = (tabIndex) => {
+  if (tabIndex !== 0 && tabIndex !== 1) return;
   currentBookTab = tabIndex;
-  currentBookPage = 0; // Reset to Egg whenever tabs swap
-  
   document.getElementById("tabMain")?.classList.toggle("active", tabIndex === 0);
   document.getElementById("tabRare")?.classList.toggle("active", tabIndex === 1);
   renderBook();
 };
 
-// Arrow Click Handlers
 document.getElementById("prevPageBtn")?.addEventListener("click", () => {
-  if (currentBookPage > 0) {
+  if (currentBookPage > (currentBookElement === 'growth' ? 0 : 2)) {
     currentBookPage--;
     renderBook();
-    sfx("click"); 
+    sfx("click");
   }
 });
-
 document.getElementById("nextPageBtn")?.addEventListener("click", () => {
-  if (currentBookPage < CHAIN.length - 1) {
+  if (currentBookPage < (currentBookElement === 'growth' ? 1 : CHAIN.length - 1)) {
     currentBookPage++;
     renderBook();
-    sfx("click"); 
+    sfx("click");
   }
 });
 
 function renderBook() {
   const spread = document.getElementById("bookSpread");
   if (!spread) return;
-  
-  state.book = state.book || { 0: true };
+  state.book = state.book || {0:true};
   state.rareBook = state.rareBook || {};
-  
   const isRare = currentBookTab === 1;
-  const known = isRare ? !!state.rareBook[currentBookPage] : !!state.book[currentBookPage];
+  const chapter = ELEMENT_BOOK[currentBookElement];
+  const last = chapter ? CHAIN.length - 1 : 1;
+  currentBookPage = Math.max(chapter ? 2 : 0, Math.min(last, currentBookPage));
+  const records = chapter ? (isRare ? state.rareElementBook : state.elementBook)?.[currentBookElement]
+    : (isRare ? state.rareBook : state.book);
+  const known = !!records?.[currentBookPage];
   const spec = CHAIN[currentBookPage];
-  
-  // 1. Update Arrow States
-  const prevBtn = document.getElementById("prevPageBtn");
-  const nextBtn = document.getElementById("nextPageBtn");
-  if (prevBtn) prevBtn.disabled = currentBookPage === 0;
-  if (nextBtn) nextBtn.disabled = currentBookPage === CHAIN.length - 1;
+  const entryName = chapter ? chapter.name + ' ' + spec.name : spec.name;
+  const lore = chapter ? chapter.lore[currentBookPage - 2] : (currentBookPage === 1
+    ? 'Five Hatchlings become a Wyrmling of Fire, Water, or Nature. Follow its element in the other chapters.'
+    : 'Every dragon begins here. Merge five Eggs into a Hatchling; its element emerges at Wyrmling.');
+  const first = chapter ? 2 : 0;
+  const picker = document.getElementById('bookElement');
+  if (picker) picker.value = currentBookElement;
+  const total = last-first+1;
+  setSafeText('bookPageLabel', (chapter ? chapter.name : 'Beginnings') + ' · ' + (currentBookPage-first+1) + ' / ' + total);
+  const prev = document.getElementById("prevPageBtn");
+  const next = document.getElementById("nextPageBtn");
+  if (prev) prev.disabled = currentBookPage === first;
+  if (next) next.disabled = currentBookPage === last;
+  const art = known ? '<div class="book-portrait">' + dragonSvg(currentBookPage, 120, 1, isRare, chapter ? currentBookElement : 'neutral') + '</div>'
+    : '<div class="book-unknown" aria-label="Undiscovered dragon">?</div>';
+  const hint = chapter ? 'Discover ' + (isRare ? 'a shiny ' : 'a ') + entryName + ' to reveal this page.'
+    : (isRare ? 'Discover a shiny dragon of this stage.' : 'Not yet hatched.');
+  spread.innerHTML = '<div class="page-left">' + art + '</div><div class="page-right"><h3>' +
+    (known ? (isRare ? '✨ ' : '') + entryName : 'Unknown') + '</h3><p>' +
+    (known ? (isRare ? '<strong>Perch Bonus:</strong> 1.5x base coin rate.<br><br>' : '') + lore : hint) +
+    '</p></div>';
+  setSafeText('countMain', bookChapterCount() + ' / ' + total);
+  setSafeText('countRare', bookChapterCount(true) + ' / ' + total);
+  const ready = Object.keys(MASTERY_REWARDS).filter(id => masteryProgress(id) === 4 && !state.masteryClaims?.[id]).length;
+  setSafeText('masteryOpen', 'Elemental mastery' + (ready ? ' · ' + ready + ' ready' : ''));
+}
 
-  // 2. Build the Two-Page Spread
-  let artHtml, textHtml;
+function masteryProgress(id) {
+  if (!Object.prototype.hasOwnProperty.call(MASTERY_REWARDS,id)) return 0;
+  const reward = MASTERY_REWARDS[id];
+  const records = (reward.rare ? state.rareElementBook : state.elementBook)?.[reward.element];
+  return [2,3,4,5].filter(level => records?.[level] === true).length;
+}
 
-  if (known) {
-    artHtml = dragonSvg(currentBookPage, 75, 1, isRare);
-    textHtml = `
-      <h3 style="color: #2b1d14; margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 1.1rem; border-bottom: 1px solid rgba(43,29,20,0.3); padding-bottom: 4px;">
-        ${isRare ? '✨ ' : ''}${spec.name}
-      </h3>
-      <p style="color: #4a2c17; font-size: 0.75rem; font-family: 'Montserrat', sans-serif; margin: 0; line-height: 1.4;">
-        ${isRare ? '<strong>Perch Bonus:</strong> 2.5x coin rate.<br><br>' : ''}${LORE[currentBookPage]}
-      </p>
-    `;
-  } else {
-    artHtml = `<div style="font-size: 3rem; opacity: 0.4; filter: grayscale(100%);">❓</div>`;
-    textHtml = `
-      <h3 style="color: #2b1d14; margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 1.1rem; border-bottom: 1px solid rgba(43,29,20,0.3); padding-bottom: 4px; opacity: 0.5;">
-        Unknown
-      </h3>
-      <p style="color: #4a2c17; font-size: 0.75rem; font-family: 'Montserrat', sans-serif; margin: 0; opacity: 0.6; font-style: italic;">
-        ${isRare ? 'Find a shiny variant in the mountain.' : 'Not yet hatched.'}
-      </p>
-    `;
-  }
+function activeMasteryTitle() {
+  const id = state.keeper?.masteryTitle;
+  return Object.prototype.hasOwnProperty.call(MASTERY_REWARDS,id) && state.masteryClaims?.[id] === true
+    ? MASTERY_REWARDS[id].title : '';
+}
 
-  // 3. Inject into the DOM
-  spread.innerHTML = `
-    <div class="page-left">${artHtml}</div>
-    <div class="page-right">${textHtml}</div>
-  `;
+function claimMastery(id) {
+  if (state.mode !== 'home' || !Object.prototype.hasOwnProperty.call(MASTERY_REWARDS,id) || state.masteryClaims?.[id] === true) return;
+  recoverElementDiscoveries();
+  if (masteryProgress(id) !== 4) return;
+  const reward = MASTERY_REWARDS[id];
+  if (!state.masteryClaims || typeof state.masteryClaims !== 'object' || Array.isArray(state.masteryClaims)) state.masteryClaims = {};
+  state.masteryClaims[id] = true;
+  state.contractTokens = (state.contractTokens || 0) + reward.tokens;
+  save(); renderMastery(); renderBook();
+  toast(reward.title + ' unlocked! +' + reward.tokens + ' cosmetic token' + (reward.tokens === 1 ? '' : 's'));
+}
 
-  // 4. Update the tracker numbers
-  const countMain = document.getElementById("countMain");
-  const countRare = document.getElementById("countRare");
-  if (countMain) countMain.textContent = bookKnown();
-  if (countRare) countRare.textContent = rareBookKnown();
+function equipMasteryTitle(id) {
+  if (state.mode !== 'home') return;
+  if (id && (!Object.prototype.hasOwnProperty.call(MASTERY_REWARDS,id) || state.masteryClaims?.[id] !== true)) return;
+  state.keeper = state.keeper || {title:'Novice Breeder'};
+  state.keeper.masteryTitle = id || null;
+  save(); renderKeeperQuarters(); renderMastery();
+}
+
+function renderMastery() {
+  const target = document.getElementById('masteryList');
+  if (!target) return;
+  setSafeText('masterySummary', 'Cosmetic tokens: ' + (state.contractTokens || 0) + ' · Title: ' + (activeMasteryTitle() || state.keeper?.title || 'Novice Breeder'));
+  target.innerHTML = Object.entries(MASTERY_REWARDS).map(([id,reward]) => {
+    const progress = masteryProgress(id);
+    const claimed = state.masteryClaims?.[id] === true;
+    const equipped = state.keeper?.masteryTitle === id && claimed;
+    const disabled = state.mode !== 'home';
+    return `<section class="mastery-card"><h3>${reward.title}</h3>
+      <p>${reward.rare ? 'Shiny ' : ''}${ELEMENT_BOOK[reward.element].name}: ${progress}/4 stages discovered</p>
+      <progress max="4" value="${progress}" aria-label="${reward.title} discovery progress"></progress>
+      <p class="mastery-stages">${[2,3,4,5].map(level => {
+        const found = (reward.rare ? state.rareElementBook : state.elementBook)?.[reward.element]?.[level] === true;
+        return `${found ? '✓' : '○'} ${CHAIN[level].name}`;
+      }).join(' · ')}</p>
+      <p>Reward: title + ${reward.tokens} cosmetic token${reward.tokens === 1 ? '' : 's'} · one-time</p>
+      ${claimed ? `<button onclick="equipMasteryTitle('${equipped ? '' : id}')" ${disabled ? 'disabled' : ''}>${equipped ? 'Remove title' : 'Equip title'}</button><span class="mastery-claimed"> Claimed ✓</span>`
+        : `<button onclick="claimMastery('${id}')" ${disabled || progress < 4 ? 'disabled' : ''}>${progress === 4 ? 'Claim reward' : 'Discover all four'}</button>`}
+      </section>`;
+  }).join('');
+}
+
+function openMastery() {
+  recoverElementDiscoveries(); save(); renderMastery();
+  document.getElementById('book')?.classList.remove('open');
+  document.getElementById('masteryModal')?.classList.add('open');
+  document.getElementById('masteryModal')?.focus();
+}
+
+function closeMastery() {
+  document.getElementById('masteryModal')?.classList.remove('open');
+  document.getElementById('book')?.classList.add('open');
+  renderBook(); document.getElementById('masteryOpen')?.focus();
 }
 
 // ==========================================
@@ -1580,6 +1676,7 @@ function trailWaitLabel() {
 // --- LIVE TICK MECHANICS ---
 
 function tickEnergy() {
+  if (rollContracts()) { save(); renderContractsPanel(); renderQuest(); }
   const before = state.energy;
   replenishEnergy();
   if (state.energy !== before) save();
@@ -1617,69 +1714,126 @@ function tickPerch() {
 // MODULE 17: QUESTS & OFFERINGS
 // ==========================================
 
-function wishList() {
-  const list = [...QUESTS]; // Clean copy of the base quests
-  if ((state.level || 1) >= 3) {
-    list.push({ want: 4, text: "The hearth wants another Hearth to share the perch.", reward: 1400 });
-  }
-  return list;
+// Weekly contracts use local calendar weeks, not a fixed 7-day millisecond span.
+function contractWeek(now = Date.now()) {
+  const date = new Date(now);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - (date.getDay() + 6) % 7);
+  const key = [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
+  const next = new Date(date); next.setDate(next.getDate() + 7);
+  return { key, next: next.getTime() };
 }
-
-function fulfillQuest() {
-  if (state.questDone) return;
-  
-  const list = wishList();
-  const q = list[state.quest % list.length];
-  
-  if (!consumeOne(q.want)) { 
-    toast(`Need a ${CHAIN[q.want].name} on the board`); 
-    return; 
+function rollContracts() {
+  const week = contractWeek();
+  if (state.contracts?.week === week.key) return false;
+  const tier = highestOwned();
+  const make = (kind, target, want = null) => ({kind, target, want, progress: 0, claimed: false, reward: 200 + tier * 100});
+  const rotation = Math.abs(Math.floor(new Date(week.next).getTime() / 86400000)) % 3;
+  state.contracts = {week: week.key, replaced: false, completed: false, selectedTier: tier, items: [
+    make('gather', 40 + tier * 10 + rotation * 5),
+    make('merge', 10 + tier * 3),
+    make('gather', 80 + tier * 20),
+    state.ashTrialCompleted ? make('trial', 1 + rotation % 2) : make('merge', 20 + tier * 4),
+    tier > 0 ? make('donate', 1, tier - 1) : make('gather', 25),
+  ]};
+  save();
+  return true;
+}
+function contractEvent(kind, count = 1) {
+  rollContracts();
+  for (const item of state.contracts.items) if (!item.claimed && item.kind === kind)
+    item.progress = Math.min(item.target, item.progress + count);
+}
+function contractTitle(item) {
+  if (item.kind === 'donate') return 'Donate one ' + CHAIN[item.want].name;
+  if (item.kind === 'trial') return 'Clear Ash Trials';
+  if (item.kind === 'merge') return 'Promote dragons at the nest';
+  return 'Gather at the nest';
+}
+function claimContract(index, week) {
+  rollContracts();
+  const item = state.contracts.items[index];
+  if (state.mode !== 'home' || week !== state.contracts.week || !item || item.claimed) return;
+  if (item.kind === 'donate') {
+    // Never request a player's highest tier, even on old or unusual saves.
+    if (item.want >= highestOwned() || !consumeOne(item.want)) return;
+    item.progress = item.target;
   }
-  
-  const pay = Math.round(q.reward * bonus());
-  state.coins += pay;
-  state.gives = (state.gives || 0) + 1;
-  
-  const cap = state.maxEnergy || 5;
-  state.energy = Math.min(cap, state.energy + 1);
-  state.questDone = true;
-  
-  let extra = "";
-  
-  // 5-Gift Milestone Payout
-  if (state.gives % 5 === 0) {
-    const pack = Math.round(1500 * bonus());
-    state.coins += pack;
-    state.energy = Math.min(cap, state.energy + 2);
-    
-    const nth = state.gives / 5;
-    extra = ` • 5 gifts! +${pack} 🪙`;
-    sfx("room");
-    
-    spawn(0, 1); spawn(0, 1); spawn(0, 1);
-    extra += " +3 eggs";
-    
-    if (nth % 2 === 0) {
-      spawn(2, 1);
-      extra += " +wyrmling";
-    } else {
-      spawn(1, 1);
-      extra += " +hatchling";
-    }
-  }
-  
-  addXp(20);
-  toast(`Nest is pleased • +${pay} 🪙` + extra);
-  
-  setTimeout(() => {
-    state.quest = (state.quest + 1) % wishList().length;
-    state.questDone = false;
-    save(); 
-    render();
-  }, 900);
-  
-  save(); 
-  render();
+  if (item.progress < item.target) return;
+  item.claimed = true;
+  state.coins += item.reward;
+  if (state.contracts.items.every(c => c.claimed) && !state.contracts.completed) {
+    state.contracts.completed = true;
+    state.coins += 500;
+    state.contractTokens = (state.contractTokens || 0) + 1;
+    toast('Week complete! +500 coins and 1 cosmetic token saved for cosmetic rewards.');
+  } else toast('Contract complete! +' + item.reward + ' coins');
+  save(); render(); renderContractsPanel();
+}
+function replaceContract(index, week) {
+  rollContracts();
+  const item = state.contracts.items[index];
+  if (state.mode !== 'home' || week !== state.contracts.week || !item || item.claimed || state.contracts.replaced) return;
+  state.contracts.replaced = true;
+  const kind = item.kind === 'gather' ? 'merge' : 'gather';
+  state.contracts.items[index] = {kind, target: kind === 'merge' ? 12 + state.contracts.selectedTier * 2 : 35 + state.contracts.selectedTier * 10,
+    want: null, progress: 0, claimed: false, reward: item.reward};
+  save(); render(); renderContractsPanel();
+}
+function renderContractsPanel() {
+  const panel = document.getElementById('contractsList');
+  if (!panel) return;
+  rollContracts();
+  const weekly = state.contracts;
+  panel.innerHTML = weekly.items.map((item, i) => {
+    const ready = item.kind === 'donate' ? findLevel(item.want) >= 0 && item.want < highestOwned() : item.progress >= item.target;
+    return `<section class="contract-row"><strong>${contractTitle(item)}</strong>
+      <p>${item.kind === 'donate' ? 'Spends one dragon from your board' : item.progress + '/' + item.target} · ${item.reward} 🪙</p>
+      <button ${item.claimed || !ready || state.mode !== 'home' ? 'disabled' : ''} onclick="claimContract(${i}, '${weekly.week}')">${item.claimed ? 'Claimed ✓' : item.kind === 'donate' ? 'Donate & claim' : 'Claim'}</button>
+      <button ${item.claimed || weekly.replaced || state.mode !== 'home' ? 'disabled' : ''} onclick="replaceContract(${i}, '${weekly.week}')">Replace</button></section>`;
+  }).join('');
+  const resetLabel = document.getElementById('contractsReset');
+  if (resetLabel) resetLabel.textContent = 'Resets Monday: ' + new Date(contractWeek().next).toLocaleString() + ' · ' +
+    (weekly.replaced ? 'Replacement used' : '1 free replacement; replaces current progress') +
+    ' · Cosmetic tokens: ' + (state.contractTokens || 0);
+  renderCosmeticShop();
+}
+function ownsCosmeticReward(id) {
+  const item = STASH_CATALOG[id];
+  return !!item && (!!state.redeemedCosmetics?.[id] || (state.stash?.[id] || 0) > 0 ||
+    state.keeper?.equipment?.[item.slot]?.split('/').pop() === item.img?.split('/').pop());
+}
+function redeemCosmetic(id) {
+  if (!ELEMENTAL_ASSETS_READY) return;
+  const item = STASH_CATALOG[id];
+  if (state.mode !== 'home' || !item || !Number.isInteger(item.tokenCost) || ownsCosmeticReward(id)) return;
+  const tokens = state.contractTokens || 0;
+  if (tokens < item.tokenCost) { toast('Earn cosmetic tokens by completing weekly contracts.'); return; }
+  state.contractTokens = tokens - item.tokenCost;
+  state.redeemedCosmetics = state.redeemedCosmetics || {};
+  state.redeemedCosmetics[id] = true;
+  state.stash = state.stash || {};
+  state.stash[id] = (state.stash[id] || 0) + 1;
+  save(); render(); renderContractsPanel();
+  toast(item.name + ' added to The Stash. Select it there to equip.');
+}
+function renderCosmeticShop() {
+  const target = document.getElementById('cosmeticRewards');
+  if (!target) return;
+  if (!ELEMENTAL_ASSETS_READY) { target.innerHTML = '<p>Elemental frames are being prepared. Your tokens remain saved.</p>'; return; }
+  target.innerHTML = Object.entries(STASH_CATALOG).filter(([,item]) => Number.isInteger(item.tokenCost)).map(([id,item]) =>
+    `<section class="cosmetic-reward"><img src="${item.img}" alt="${item.name} portrait frame"><strong>${item.name}</strong>
+      <button onclick="redeemCosmetic('${id}')" ${ownsCosmeticReward(id) || state.mode !== 'home' || (state.contractTokens || 0) < item.tokenCost ? 'disabled' : ''}>
+      ${ownsCosmeticReward(id) ? 'Owned ✓' : item.tokenCost ? item.tokenCost + ' cosmetic token' : 'Claim free'}</button></section>`).join('');
+}
+function openContracts() {
+  rollContracts(); save(); renderContractsPanel();
+  document.getElementById('contractsModal')?.classList.add('open');
+  document.getElementById('contractsModal')?.focus();
+}
+function closeContracts() {
+  document.getElementById('contractsModal')?.classList.remove('open');
+  document.getElementById('contractsOpen')?.focus();
 }
 
 function fulfillSleepy() {
@@ -1748,7 +1902,7 @@ function itemHtml(item) {
     <!-- Custom Elemental Badge -->
     ${badgeHTML}
 
-    ${dragonSvg(item.level, 42, item.count, item.shiny)}
+    ${dragonSvg(item.level, 42, item.count, item.shiny, item.element)}
     
     <!-- Floating Name Pill with Tier Border -->
     <div class="lvl" style="
@@ -1828,22 +1982,11 @@ function renderQuest() {
   });
 
   const hasSleepy = !state.sleepyDone && state.level >= 3;
-  const list = wishList();
-  const q = list[state.quest % list.length];
-  const haveNormal = findLevel(q.want) >= 0;
-  
-  const normalQuestHTML = `
-    <div style="display:flex; align-items:center; gap:12px; width:100%;">
-      <div class="art">${dragonSvg(q.want, 40)}</div>
-      <div style="flex:1;">
-        <p id="wishText" style="margin: 0; line-height: 1.4;">${state.questDone ? "The nest settles..." : q.text}<br>
-        <span style="font-size:0.7rem;">Gifts: ${(state.gives || 0) % 5}/5</span></p>
-      </div>
-      <div style="display:flex; flex-direction:column; justify-content:center;">
-        <button id="giveBtnNormal" ${haveNormal && !state.questDone ? "" : "disabled"}>${state.questDone ? "✨" : "Give"}</button>
-      </div>
-    </div>
-  `;
+  rollContracts();
+  const done = state.contracts.items.filter(item => item.claimed).length;
+  const normalQuestHTML = `<div style="flex:1"><strong>Weekly contracts · ${done}/5</strong>
+    <p style="font-size:0.75rem;margin:4px 0">Five goals · Monday reset · Complete all for a cosmetic token</p>
+    <button id="contractsOpen" onclick="openContracts()">View contracts</button></div>`;
 
   // --- RENDER LOGIC ---
   if (hasSleepy) {
@@ -1887,17 +2030,6 @@ function renderQuest() {
     }
   }
   
-  // Attach Handlers for Normal Quest (safely catches it regardless of how many boxes are showing)
-  document.getElementById("giveBtnNormal")?.addEventListener("click", fulfillQuest);
-  
-  const wish = document.getElementById("wishText");
-  if (wish && !state.questDone) {
-    wish.style.cursor = "pointer";
-    wish.onclick = () => {
-      const pay = Math.round(q.reward * bonus());
-      toast(`${CHAIN[q.want].name} • ${q.reward} × ${bonus()} = ${pay} 🪙`);
-    };
-  }
 
   if (typeof updateCarouselDots === "function") updateCarouselDots();
 }
@@ -2014,13 +2146,13 @@ function renderRoost() {
       
       return `<div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('${IMG_DIR}Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid ${hasSynergy ? t.border : (p.shiny ? '#ffea75' : '#415a77')}; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px ${hasSynergy ? t.glow : 'rgba(0,0,0,0)'};">
         
-        <div style="position: relative; background: radial-gradient(circle, ${hasSynergy ? t.glow : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
+        <div style="position: relative; background: radial-gradient(circle, ${hasSynergy ? t.glow : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
           ${badgeHTML}
-          ${dragonSvg(p.level, 56, 1, p.shiny)}
+          ${dragonSvg(p.level, 68, 1, p.shiny, p.element)}
         </div>
         
-        <div style="flex: 1;">
-          <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
             <h4 style="margin: 0; font-family: 'Playfair Display', serif; color: ${p.shiny ? '#ffea75' : '#e0e1dd'}; font-size: 1.2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);">
               ${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}
             </h4>
@@ -2091,7 +2223,7 @@ function openPickerModal(slotId) {
       if (el === "nature") el = "leaf";
 
       card.innerHTML = `
-        ${dragonSvg(cell.level, 42, 1, cell.shiny)}
+        ${dragonSvg(cell.level, 64, 1, cell.shiny, cell.element)}
         <div style="display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(0,0,0,0.5); border: 1px solid #415a77; padding: 2px 6px; border-radius: 4px; margin-top: 6px;">
            <img src="${IMG_DIR}${el}.png" style="width: 14px; height: 14px; flex-shrink: 0; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'">
            <span style="font-size: 0.6rem; color: #deb781; text-transform: capitalize;">${el}</span>
@@ -2205,8 +2337,6 @@ function render() {
   }
 
   // --- 3. MODULAR RENDERS ---
-  const basicEggBtn = document.getElementById('gatherBasicBtn');
-  if (basicEggBtn) basicEggBtn.hidden = state.mode !== 'home' || highestOwned() < 4;
   setText('hatcheryHint', state.mode === 'stage' ? `First ${ASH_GRACE} merges are safe • ${TRAIL_GATHERS + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0)} starting gathers`
     : highestOwned() >= 4 ? 'Hatchery: 80% Hatchling / 20% Wyrmling • 1 energy per gather'
     : highestOwned() >= 3 ? 'Hatchery: 80% Egg / 20% Hatchling • discover Hearth for the next upgrade'
@@ -2301,7 +2431,7 @@ function render() {
       if (!open) return `<div class="perch lock" data-perch="${i}"><span>Locked</span></div>`;
       if (p) {
         return `<div class="perch on ${armed ? "armed" : ""}" data-perch="${i}">
-                  <div style="transform: translateY(-5px); z-index: 1;">${dragonSvg(p.level, 38, 1, p.shiny)}</div>
+                  <div style="transform: translateY(-5px); z-index: 1;">${dragonSvg(p.level, 48, 1, p.shiny, p.element)}</div>
                   <div style="position: absolute; bottom: 4px; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.5px; background: rgba(10, 5, 3, 0.8); border: 1px solid ${p.shiny ? '#ffcf40' : 'rgba(222, 183, 129, 0.3)'}; color: ${p.shiny ? '#ffea75' : '#e0e1dd'}; padding: 2px 6px; border-radius: 6px; white-space: nowrap; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">
                     ${p.shiny ? '✨ ' : ''}${CHAIN[p.level].name}
                   </div>
@@ -2460,7 +2590,8 @@ boardEl?.addEventListener("pointerdown", (e) => {
   
   ghost = document.createElement("div");
   ghost.className = "ghost";
-  ghost.innerHTML = dragonSvg(currentBoard[i].level, 42, currentBoard[i].count, currentBoard[i].shiny);
+  const dragArtSize = (cell.getBoundingClientRect()?.width || 76) * 0.9;
+  ghost.innerHTML = dragonSvg(currentBoard[i].level, dragArtSize, currentBoard[i].count, currentBoard[i].shiny, currentBoard[i].element);
   
   document.body.appendChild(ghost);
   ghost.style.left = `${e.clientX}px`;
@@ -2634,7 +2765,7 @@ function initGame() {
       toast(`Collected ${bankValue} 🪙 from the Dragon Bank!`);
       
       state.perchBank = 0;
-      state.perchAt = Date.now(); // Resets the bank timer
+      // Collecting does not discard progress toward the next income tick.
       
       sfx("gather");
       document.getElementById("dragonBank").classList.remove("is-maxed");
@@ -2713,6 +2844,8 @@ function initGame() {
 
   // --- DRAGON BOOK ---
   document.getElementById("bookBtn")?.addEventListener("click", () => {
+    recoverElementDiscoveries();
+    save();
     sfx("click"); 
     renderBook();
     document.getElementById("book")?.classList.add("open");
@@ -2731,6 +2864,8 @@ function initGame() {
     if (confirm("Are you sure you want to reset your Dragon Book progress? This will lock discovered entries again.")) {
       state.book = { 0: true };
       state.rareBook = {};
+      state.elementBook = {};
+      state.rareElementBook = {};
       save();
       renderBook();
       toast("Dragon Book reset.");
@@ -2794,6 +2929,12 @@ function initGame() {
       document.getElementById("guideClose")?.focus();
     }
   });
+  document.getElementById('contractsModal')?.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); closeContracts(); }
+  });
+  document.getElementById('masteryModal')?.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); closeMastery(); }
+  });
   bindClose("sleepyGuideClose", "sleepyGuide");
 
   // --- DEV CHEAT: Instant Level Up ---
@@ -2846,12 +2987,8 @@ function executeTabSwitch(targetTab, viewId) {
   }
 }
 
-// Prevent scrolling when the body has the "lock-scroll" class
-window.addEventListener("wheel", (e) => {
-  if (document.body.classList.contains("lock-scroll")) {
-    e.preventDefault();
-  }
-}, { passive: false });
+// The page shell is locked by CSS. Nested board and modal scrollers must
+// retain native wheel scrolling; cancelling it here strands offscreen tiles.
 
 // 1. Intercepting the Tab Click
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -2916,7 +3053,8 @@ setInterval(() => {
       if (ticks > 0) {
         const inc = perchIncome() * ticks;
         const maxBank = perchIncome() * 480; // 8 hours of capacity        
-        state.perchBank = Math.min(maxBank, (state.perchBank || 0) + inc);
+        const bank = state.perchBank || 0;
+        state.perchBank = Math.max(bank, Math.min(maxBank, bank + inc));
         state.perchAt += ticks * PERCH_MS;
         save();
       }
@@ -2983,6 +3121,7 @@ document.body.classList.add("lock-scroll");
 
 // Load save data, bind events, and render the board!
 load();
+recoverElementDiscoveries();
 initGame();
 render();
 renderStash();

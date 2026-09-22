@@ -1,0 +1,1553 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="../"><link rel="stylesheet" href="style.css"><title>Dragon scale QA</title>
+<style>html,body{display:block;height:auto;overflow:auto}body{padding:16px;box-sizing:border-box}main{max-width:480px;margin:auto}h1,h2{text-align:center;font-size:16px;margin:20px 0}.preview-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:20px 0 36px}.qa-roost{display:grid;gap:12px}.custom-book-bg{width:100%;height:280px}.book-spread{margin:auto}</style></head><body><main><h1>Dragon scale QA</h1><h2>Single dragons: Hatchling → Elder</h2><div class="preview-board"><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" >
+      <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="Images/hatchling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #6b4a32;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hatchling
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Wyrmling, 1" >
+      <image href="Images/elements/fire-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #d45817;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Wyrmling
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Young, 1" >
+      <image href="Images/elements/fire-young-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ff6a20;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Young
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Hearth, 1" >
+      <image href="Images/elements/fire-hearth-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffcf40;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hearth
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Elder, 1" >
+      <image href="Images/elements/fire-elder-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffe08a;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Elder
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" >
+      <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="Images/hatchling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #6b4a32;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hatchling
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Wyrmling, 1" >
+      <image href="Images/elements/water-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #d45817;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Wyrmling
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Young, 1" >
+      <image href="Images/elements/water-young-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ff6a20;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Young
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Hearth, 1" >
+      <image href="Images/elements/water-hearth-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffcf40;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hearth
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Elder, 1" >
+      <image href="Images/elements/water-elder-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffe08a;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Elder
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" >
+      <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="Images/hatchling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #6b4a32;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hatchling
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Wyrmling, 1" >
+      <image href="Images/elements/nature-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #d45817;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Wyrmling
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Young, 1" >
+      <image href="Images/elements/nature-young-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ff6a20;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Young
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Hearth, 1" >
+      <image href="Images/elements/nature-hearth-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffcf40;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hearth
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Elder, 1" >
+      <image href="Images/elements/nature-elder-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffe08a;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Elder
+    </div>
+
+    
+  </div></div></div><h2>Stacks: Hatchling → Elder</h2><div class="preview-board"><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" >
+      <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="Images/hatchling-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #6b4a32;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hatchling
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Wyrmling, 4" >
+      <image href="Images/elements/fire-wyrmling-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #d45817;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Wyrmling
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Young, 4" >
+      <image href="Images/elements/fire-young-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ff6a20;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Young
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Hearth, 4" >
+      <image href="Images/elements/fire-hearth-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffcf40;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hearth
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/ember.png" alt="fire" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="fire Elder, 1" >
+      <image href="Images/elements/fire-elder-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffe08a;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Elder
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" >
+      <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="Images/hatchling-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #6b4a32;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hatchling
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Wyrmling, 4" >
+      <image href="Images/elements/water-wyrmling-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #d45817;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Wyrmling
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Young, 4" >
+      <image href="Images/elements/water-young-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ff6a20;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Young
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Hearth, 4" >
+      <image href="Images/elements/water-hearth-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffcf40;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hearth
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/water.png" alt="water" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="water Elder, 1" >
+      <image href="Images/elements/water-elder-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffe08a;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Elder
+    </div>
+
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" >
+      <g style="animation: breathe 1.4s infinite ease-in-out; transform-origin: 16px 16px;">
+        <image href="Images/hatchling-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
+      </g>
+    </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #6b4a32;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hatchling
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Wyrmling, 4" >
+      <image href="Images/elements/nature-wyrmling-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #d45817;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Wyrmling
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Young, 4" >
+      <image href="Images/elements/nature-young-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ff6a20;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Young
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Hearth, 4" >
+      <image href="Images/elements/nature-hearth-4.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffcf40;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Hearth
+    </div>
+
+    
+      <!-- Stack Count Badge -->
+      <div style="
+        position: absolute; 
+        top: 2px; 
+        left: 4px; 
+        background: var(--ember); 
+        color: white; 
+        font-size: 0.6rem; 
+        font-weight: 800; 
+        padding: 1px 4px; 
+        border-radius: 6px; 
+        border: 1px solid #ffcf40;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        z-index: 5;
+      ">
+        ×4
+      </div>
+    
+  </div></div><div class="cell"><div class="item pop" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <!-- Custom Elemental Badge -->
+    
+    <img src="Images/leaf.png" alt="nature" style="
+      position: absolute; 
+      top: -4px; 
+      right: -4px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.85)); 
+      z-index: 10; 
+      pointer-events: none;
+    ">
+
+    <svg viewBox="0 0 32 32" width="42" height="42" role="img" aria-label="nature Elder, 1" >
+      <image href="Images/elements/nature-elder-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+    
+    <!-- Floating Name Pill with Tier Border -->
+    <div class="lvl" style="
+      position: absolute; 
+      bottom: -4px; 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      color: #f8ece4; 
+      background: linear-gradient(to bottom, rgba(30, 21, 17, 0.95), rgba(18, 12, 10, 0.95));
+      border: 1px solid #ffe08a;
+      padding: 1px 6px; 
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 5;
+    ">
+      Elder
+    </div>
+
+    
+  </div></div></div><h2>Perches</h2><div class="perchRow"><div class="perch on " data-perch="0">
+                  <div style="transform: translateY(-5px); z-index: 1;"><svg viewBox="0 0 32 32" width="48" height="48" role="img" aria-label="fire Wyrmling, 1" >
+      <image href="Images/elements/fire-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg></div>
+                  <div style="position: absolute; bottom: 4px; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.5px; background: rgba(10, 5, 3, 0.8); border: 1px solid rgba(222, 183, 129, 0.3); color: #e0e1dd; padding: 2px 6px; border-radius: 6px; white-space: nowrap; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">
+                    Wyrmling
+                  </div>
+                </div><div class="perch lock" data-perch="1"><span>Locked</span></div><div class="perch lock" data-perch="2"><span>Locked</span></div></div><h2>Roost</h2><div class="qa-roost"><div style="position: relative; background: linear-gradient(to bottom, rgba(15,20,35,0.85), rgba(10,15,25,0.95)), url('Images/Mountains%20View.jpg'); background-size: cover; background-position: center; border: 1px solid #d45817; padding: 18px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 40px rgba(212, 88, 23, 0.25);">
+        
+        <div style="position: relative; background: radial-gradient(circle, rgba(212, 88, 23, 0.25) 0%, rgba(0,0,0,0.8) 80%); border-radius: 50%; width: 72px; height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5);">
+          
+        <img src="Images/ember.png" alt="fire" style="
+          position: absolute; top: 0px; right: 0px; width: 22px; height: 22px; 
+          border-radius: 50%; aspect-ratio: 1; object-fit: cover;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9)); z-index: 10;
+        ">
+          <svg viewBox="0 0 32 32" width="68" height="68" role="img" aria-label="fire Wyrmling, 1" >
+      <image href="Images/elements/fire-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg>
+        </div>
+        
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+            <h4 style="margin: 0; font-family: 'Playfair Display', serif; color: #e0e1dd; font-size: 1.2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);">
+              Wyrmling
+            </h4>
+            <span style="font-size: 0.6rem; background: #d45817; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: bold; letter-spacing: 0.5px; box-shadow: 0 0 8px #d45817;">SYNERGY</span>
+          </div>
+          
+          <p style="margin: 4px 0 0; font-size: 0.7rem; color: #d45817; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Hatchery Hearth</p>
+          
+          <div style="margin-top: 8px; display: inline-block; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; border: 1px solid #d45817;">
+            <span style="font-size: 0.8rem; font-weight: 800; color: #d45817;">
+              +70 🪙/m <span style="color: #ffea75; margin-left: 4px; text-shadow: 0 0 5px rgba(255, 234, 117, 0.5);">(+35 ✨)</span>
+            </span>
+          </div>
+        </div>
+        
+        <button onclick="emptyPerch(0)" style="background: linear-gradient(to bottom, #a12b2b, #5c1414); border: 1px solid #ff4d4d; color: #f8ece4; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5);">Return</button>
+      </div><div style="background: rgba(15, 23, 42, 0.8); border: 1px dashed #415a77; padding: 24px; border-radius: 16px; text-align: center; opacity: 0.6; box-shadow: inset 0 4px 15px rgba(0,0,0,0.6);">
+        <span style="font-size: 1.8rem; filter: grayscale(100%); opacity: 0.5;">🔒</span>
+        <h4 style="margin: 10px 0 0; color: #778da9; font-family: 'Playfair Display', serif;">Moss Alcove</h4>
+        <span style="font-size: 0.7rem; color: #415a77; text-transform: uppercase; letter-spacing: 1px;">Sealed</span>
+      </div><div style="background: rgba(15, 23, 42, 0.8); border: 1px dashed #415a77; padding: 24px; border-radius: 16px; text-align: center; opacity: 0.6; box-shadow: inset 0 4px 15px rgba(0,0,0,0.6);">
+        <span style="font-size: 1.8rem; filter: grayscale(100%); opacity: 0.5;">🔒</span>
+        <h4 style="margin: 10px 0 0; color: #778da9; font-family: 'Playfair Display', serif;">Lamp Walk</h4>
+        <span style="font-size: 0.7rem; color: #415a77; text-transform: uppercase; letter-spacing: 1px;">Sealed</span>
+      </div></div><h2>Dragon Book</h2><div class="custom-book-bg"><div class="book-spread">
+    <div class="page-left"><div class="book-elements"><figure><svg viewBox="0 0 32 32" width="60" height="60" role="img" aria-label="fire Wyrmling, 1" >
+      <image href="Images/elements/fire-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg><figcaption>fire</figcaption></figure><figure><svg viewBox="0 0 32 32" width="60" height="60" role="img" aria-label="water Wyrmling, 1" >
+      <image href="Images/elements/water-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg><figcaption>water</figcaption></figure><figure><svg viewBox="0 0 32 32" width="60" height="60" role="img" aria-label="nature Wyrmling, 1" >
+      <image href="Images/elements/nature-wyrmling-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg><figcaption>nature</figcaption></figure></div></div>
+    <div class="page-right">
+      <h3 style="color: #2b1d14; margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 1.1rem; border-bottom: 1px solid rgba(43,29,20,0.3); padding-bottom: 4px;">
+        Wyrmling
+      </h3>
+      <p style="color: #4a2c17; font-size: 0.75rem; font-family: 'Montserrat', sans-serif; margin: 0; line-height: 1.4;">
+        Learns the shape of the cave by gliding along the thermals.
+      </p>
+    </div>
+  </div></div></main></body></html>

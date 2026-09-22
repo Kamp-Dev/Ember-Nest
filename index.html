@@ -11,6 +11,7 @@
   <title>Ember Nest</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="storybook.css?v=2">
   
   <style>
     .coin-icon {
@@ -25,7 +26,7 @@
   </style>
 </head>
 
-<body>
+<body class="storybook">
   <div id="app">
     
     <!-- === UNIFIED GAME HEADER === -->
@@ -35,7 +36,12 @@
         <span id="nameLine" class="player-name">Keeper</span>
       </div>
       
-      <div class="header-right">
+      <div class="header-tools" aria-label="Game tools">
+        <button id="bookBtn" class="stat-pill book-pill" aria-label="Dragon Book" title="Dragon Book">📖</button>
+        <button id="muteBtn" class="stat-pill sound-pill" aria-label="Toggle Sound" title="Toggle Sound">🔊</button>
+        <button id="guideBtn" class="stat-pill" aria-label="How to play" title="How to play">?</button>
+      </div>
+      <div class="header-right" aria-label="Player resources">
         <div class="stat-pill coin-pill"><span id="coinCount">0</span> 🪙</div>
         <!-- Updated Energy Pill with Stacked Timer -->
         <div class="stat-pill energy-pill" style="display: flex; align-items: center; gap: 6px;">
@@ -46,9 +52,6 @@
           </div>
         </div>
         <div class="stat-pill level-pill"><span id="lvlChip">Lv 1</span></div>
-        <button id="bookBtn" class="stat-pill book-pill" title="Dragon Book">📖</button>
-        <button id="muteBtn" class="stat-pill sound-pill" title="Toggle Sound">🔊</button>
-        <button id="guideBtn" class="stat-pill" aria-label="How to play" title="How to play">?</button>
       </div>
     </header>
 
@@ -116,6 +119,7 @@
 
       <!-- === VIEW 2: THE BOARD === -->
       <div id="view-board" class="view active">
+        <div class="board-playfield" tabindex="0" role="region" aria-label="Dragon board and contracts">
         <!-- QUEST CAROUSEL -->
         <div id="quest-carousel-container" style="margin-bottom: 12px;">
           <div id="quest-carousel" class="quest-carousel">
@@ -135,6 +139,7 @@
         
         <!-- GRID -->
         <div id="board"></div>
+        </div>
         
         <!-- ACTION BUTTONS -->
         <div class="action-buttons" style="display: flex; justify-content: space-between; gap: 8px; width: 100%; margin-top: 15px; box-sizing: border-box;">
@@ -143,7 +148,6 @@
           <button id="autoMergeBtn">Auto Merge (Lv. 5)</button>
         </div>
         <p id="hatcheryHint" class="hatchery-hint" aria-live="polite"></p>
-        <button id="gatherBasicBtn" type="button" onclick="gather(true)" hidden>Gather basic egg • 1 energy</button>
       </div>
 
       <!-- === VIEW 3: THE ROOST === -->
@@ -246,6 +250,18 @@
     <!-- === MODALS & OVERLAYS === -->
     <div id="toast"></div>
 
+    <div id="contractsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="contractsTitle" tabindex="-1">
+      <div class="modal-content contracts-content">
+        <h2 id="contractsTitle">Weekly contracts</h2>
+        <p id="contractsReset"></p>
+        <p>Claim all five: +500 coins and one cosmetic token. Spend tokens on portrait frames below, then equip them from The Stash. Unclaimed contract rewards expire at reset.</p>
+        <div id="contractsList"></div>
+        <h3>Elemental Collection</h3>
+        <p>Elemental portrait frames for The Stash. Availability and token costs appear below.</p>
+        <div id="cosmeticRewards"></div>
+        <button id="contractsClose" onclick="closeContracts()">Close</button>
+      </div>
+    </div>
     <div id="guide" class="modal" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideIntro">
       <div class="modal-content guide-content">
         <h2 id="guideTitle">Welcome to Ember Nest</h2>
@@ -253,12 +269,13 @@
         <ol class="guide-steps">
           <li><strong>Gather.</strong> Each egg costs 1 energy. Energy refills automatically; watch the timer beside it.</li>
           <li><strong>Merge.</strong> Drag matching stages onto each other to stack them. Five become the next dragon; any leftovers stay on the board.</li>
-          <li><strong>Grow.</strong> Merges earn coins and XP. Tap fogged tiles to buy more space, or give a dragon to a quest for rewards. Auto Merge unlocks at level 5.</li>
+          <li><strong>Grow.</strong> Merges earn coins and XP. Tap fogged tiles to buy more space, and complete weekly contracts for rewards. Auto Merge unlocks at level 5.</li>
         </ol>
         <p><strong>Roost:</strong> Place dragons on perches to earn coins each minute. Visit the Dragon Bank to collect them. More rooms unlock more perches.</p>
         <p><strong>Nest:</strong> Buy décor to increase merge coin rewards and unlock rooms. Select an unlocked room to change your nest theme.</p>
         <p><strong>Ash Trial:</strong> Start with 13 gathers and two safe merges. Merge beside ash to burn it; Young and Hearth dragons clear a row, and Elders clear a row and column. Clear 8 ash to win. After two merges, each promotion adds 2 ash. Reaching 10 ash, having no room for new ash, or exhausting your pouch with no five-merge available ends the run. Your home dragons stay safe.</p>
-        <p><strong>Hatchery upgrades:</strong> Discover Young for a 20% chance of gathering a Hatchling. After Hearth, gathers give Hatchlings with a 20% chance of a Wyrmling. Use “Gather basic egg” for lower-stage quests. Each costs 1 energy. Energy refills every 8 seconds, even while away, up to your capacity.</p>
+        <p><strong>Hatchery upgrades:</strong> Discover Young for a 20% chance of gathering a Hatchling. After Hearth, gathers give Hatchlings with a 20% chance of a Wyrmling. Each gather costs 1 energy. Energy refills every 8 seconds, even while away, up to your capacity.</p>
+        <p><strong>Weekly contracts:</strong> Five goals replace the old nest quests and five-gift milestone. They reset Monday at midnight in your local time. Each week's difficulty is fixed when generated. Replace one unclaimed contract per week for free (its progress is lost). Claim all five for +500 coins and a cosmetic token. In the contracts panel, claim Ember Crown free or spend one token each on Tide Crown and Grove Crown. Equip or unequip these frames from The Stash. Sleepy Dragon remains a separate daily offering.</p>
         <p><strong>Shopping:</strong> New décor unlocks with dragon discoveries and adds percentage bonuses. Each room purchase opens one fog tile. Shop prices rise gently for the first ten purchases each day, then stop rising; the next day resets prices.</p>
         <p><strong>Daily rewards:</strong> The first three trial clears each day pay rewards. After your first victory, Blitz claims a remaining daily clear instantly.</p>
         <p><strong>Home &amp; Stash:</strong> Click a cosmetic to equip it. Click its EQUIPPED tile again to take it off.</p>
@@ -301,20 +318,41 @@
       </div>
     </div>
 
-    <!-- THE DRAGON BOOK -->
+    <!-- THE DRAGON BOOK: shared beginnings, then three elemental branches -->
     <div id="book" class="modal">
       <div class="modal-content custom-book-bg">
         <button id="bookClose" class="close-btn" style="position: absolute; top: 10px; right: 15px; z-index: 10; color: #ea02ff; background: transparent; border: none; font-size: 1.5rem; font-weight: bold;">✕</button>
-        <button id="prevPageBtn" class="page-arrow left-arrow"></button>
-        <button id="nextPageBtn" class="page-arrow right-arrow"></button>
+        <button id="prevPageBtn" class="page-arrow left-arrow" aria-label="Previous dragon page"></button>
+        <button id="nextPageBtn" class="page-arrow right-arrow" aria-label="Next dragon page"></button>
         <div id="bookSpread" class="book-spread"></div>
-        <div class="book-controls" style="position: absolute; bottom: -120px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+        <div class="book-controls">
+          <label class="book-chapter-picker">Chapter
+            <select id="bookElement" onchange="switchBookElement(this.value)">
+              <option value="growth">Beginnings — Egg &amp; Hatchling</option>
+              <option value="fire">Fire Dragons</option>
+              <option value="water">Water Dragons</option>
+              <option value="nature">Nature Dragons</option>
+            </select>
+          </label>
+          <div id="bookPageLabel" aria-live="polite">Beginnings · 1 / 2</div>
           <div style="display: flex; justify-content: center; gap: 10px;">
             <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="countMain">0</span>)</button>
             <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare (<span id="countRare">0</span>)</button>
           </div>
+          <button id="masteryOpen" onclick="openMastery()">Elemental mastery</button>
           <button id="resetBookGameBtn" style="background: transparent; border: none; color: #a12b2b; text-decoration: underline; font-size: 0.75rem; cursor: pointer;">Reset All Game Data</button>
         </div>
+      </div>
+    </div>
+
+    <div id="masteryModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="masteryTitle" tabindex="-1">
+      <div class="modal-content mastery-content">
+        <h2 id="masteryTitle">Elemental mastery</h2>
+        <p>Discover Wyrmling, Young, Hearth, and Elder in each element. Discoveries are permanent; you do not need to keep the dragons. Shiny discoveries also count toward Main mastery.</p>
+        <p>Titles are cosmetic. Tokens can be spent on frames in Weekly contracts. Each reward is claimable once, at the nest.</p>
+        <p id="masterySummary" aria-live="polite"></p>
+        <div id="masteryList"></div>
+        <button id="masteryClose" onclick="closeMastery()">Back to Dragon Book</button>
       </div>
     </div>
 

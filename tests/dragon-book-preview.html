@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="../"><link rel="stylesheet" href="style.css"><title>Dragon Book visual QA</title></head><body><div id="book" class="modal open">
+      <div class="modal-content custom-book-bg">
+        <button id="bookClose" class="close-btn" style="position: absolute; top: 10px; right: 15px; z-index: 10; color: #ea02ff; background: transparent; border: none; font-size: 1.5rem; font-weight: bold;">✕</button>
+        <button id="prevPageBtn" class="page-arrow left-arrow" aria-label="Previous dragon page"></button>
+        <button id="nextPageBtn" class="page-arrow right-arrow" aria-label="Next dragon page"></button>
+        <div id="bookSpread" class="book-spread"><div class="page-left"><div class="book-portrait"><svg viewBox="0 0 32 32" width="120" height="120" role="img" aria-label="water Elder, 1, shiny" style="filter: drop-shadow(0 0 4px #ffcf40);">
+      <image href="Images/elements/water-elder-1.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </svg></div></div><div class="page-right"><h3>✨ Water Elder</h3><p><strong>Perch Bonus:</strong> 1.5x base coin rate.<br><br>A quiet guardian of the deepest pools. The mountain waters grow still when it passes.</p></div></div>
+        <div class="book-controls">
+          <label class="book-chapter-picker">Chapter
+            <select id="bookElement" onchange="switchBookElement(this.value)">
+              <option value="growth">Beginnings — Egg &amp; Hatchling</option>
+              <option value="fire">Fire Dragons</option>
+              <option value="water" selected>Water Dragons</option>
+              <option value="nature">Nature Dragons</option>
+            </select>
+          </label>
+          <div id="bookPageLabel" aria-live="polite">Water · 4 / 4</div>
+          <div style="display: flex; justify-content: center; gap: 10px;">
+            <button id="tabMain" class="tab-btn-sub active" onclick="switchBookTab(0)">Main (<span id="countMain">1 / 4</span>)</button>
+            <button id="tabRare" class="tab-btn-sub" onclick="switchBookTab(1)">Rare (<span id="countRare">1 / 4</span>)</button>
+          </div>
+          <button id="masteryOpen" onclick="openMastery()">Elemental mastery</button>
+          <button id="resetBookGameBtn" style="background: transparent; border: none; color: #a12b2b; text-decoration: underline; font-size: 0.75rem; cursor: pointer;">Reset All Game Data</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="masteryModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="masteryTitle" tabindex="-1">
+      <div class="modal-content mastery-content">
+        <h2 id="masteryTitle">Elemental mastery</h2>
+        <p>Discover Wyrmling, Young, Hearth, and Elder in each element. Discoveries are permanent; you do not need to keep the dragons. Shiny discoveries also count toward Main mastery.</p>
+        <p>Titles are cosmetic. Tokens can be spent on frames in Weekly contracts. Each reward is claimable once, at the nest.</p>
+        <p id="masterySummary" aria-live="polite"></p>
+        <div id="masteryList"></div>
+        <button id="masteryClose" onclick="closeMastery()">Back to Dragon Book</button>
+      </div>
+    </div>
+
+    </body></html>

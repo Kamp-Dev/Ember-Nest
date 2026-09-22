@@ -5,35 +5,249 @@ const path = require('node:path');
 const { game } = require('./support/game-harness.cjs');
 const root = path.resolve(__dirname, '..');
 
-test('Hatchery upgrades follow discoveries and preserve basic egg access', () => {
+test('board action dock stays outside its scroller and header tools have their own row', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'storybook.css'), 'utf8');
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(html, /class="board-playfield"[^>]*tabindex="0"/);
+  assert.match(html, /<div id="board"><\/div>\s*<\/div>\s*<!-- ACTION BUTTONS -->/);
+  assert.match(html, /class="header-tools"[\s\S]*id="guideBtn"[\s\S]*class="header-right"/);
+  for (const id of ['bookBtn', 'muteBtn', 'guideBtn', 'gather', 'buyEgg', 'autoMergeBtn']) {
+    assert.equal(html.split(`id="${id}"`).length - 1, 1, `${id} must remain unique`);
+  }
+  assert.match(css, /\.board-playfield\s*\{[^}]*overflow-y: auto/);
+  assert.match(css, /#view-board > \.action-buttons\s*\{[^}]*flex: 0 0 auto/);
+  assert.doesNotMatch(app, /window\.addEventListener\("wheel"/);
+});
+
+test('Beginnings ends at Hatchling while legacy tier discoveries remain intact', () => {
+  const g=game();g.run(`state.book={0:true,1:true,2:true,3:true,4:true,5:true};currentBookElement='fire';currentBookPage=5;switchBookElement('growth');assert.equal(currentBookPage,1);assert.equal(state.book[5],true);`);
+  assert.equal(g.nodes.get('nextPageBtn').disabled,true);
+  g.nodes.get('nextPageBtn').click();
+  g.run(`assert.equal(currentBookPage,1);assert.equal(bookChapterCount(),2);`);
+  assert.match(g.nodes.get('bookSpread').innerHTML,/hatchling-1.png/);
+  assert.doesNotMatch(g.nodes.get('bookSpread').innerHTML,/elder-1.png/);
+  assert.match(g.nodes.get('bookSpread').innerHTML,/Fire, Water, or Nature/);
+  g.nodes.get('prevPageBtn').click();assert.equal(g.nodes.get('prevPageBtn').disabled,true);
+  g.run(`switchBookElement('nature');assert.equal(currentBookPage,2);`);
+});
+
+test('mastery rewards are one-time, cosmetic-only and permanent across reloads', () => {
+  const g=game();g.run(`const startCoins=state.coins;const startEnergy=state.energy;
+    state.keeper.title='Original title';
+    claimMastery('fire');assert.equal(state.contractTokens,undefined);
+    for(let level=2;level<=5;level++)recordElementDiscovery({level,element:'fire'});
+    claimMastery('fire');claimMastery('fire');assert.equal(state.contractTokens,1);
+    claimMastery('fire_rare');assert.equal(state.contractTokens,1);
+    equipMasteryTitle('fire');assert.equal(activeMasteryTitle(),'Fire Keeper');
+    equipMasteryTitle('water');assert.equal(activeMasteryTitle(),'Fire Keeper');
+    assert.equal(state.coins,startCoins);assert.equal(state.energy,startEnergy);save();`);
+  const loaded=game(Object.fromEntries(g.storage));loaded.run(`claimMastery('fire');assert.equal(state.contractTokens,1);
+    assert.equal(activeMasteryTitle(),'Fire Keeper');equipMasteryTitle('');assert.equal(activeMasteryTitle(),'');
+    assert.equal(state.keeper.title,'Original title');`);
+  assert.equal(loaded.nodes.get('keeper-title-display').innerText,'Original title');
+});
+
+test('all six mastery awards require four exact stages and cannot be claimed in Trials', () => {
+  game().run(`for(const element of ['fire','water','nature'])for(let level=2;level<=5;level++)recordElementDiscovery({level,element,shiny:true});
+    state.mode='stage';for(const id of Object.keys(MASTERY_REWARDS))claimMastery(id);
+    assert.equal(state.contractTokens,undefined);state.mode='home';
+    for(const id of Object.keys(MASTERY_REWARDS)){assert.equal(masteryProgress(id),4);claimMastery(id);claimMastery(id);}
+    assert.equal(state.contractTokens,9);assert.equal(Object.keys(state.masteryClaims).length,6);
+    equipMasteryTitle('nature_rare');assert.equal(activeMasteryTitle(),'Radiant Nature Keeper');
+    state.mode='stage';equipMasteryTitle('fire');assert.equal(activeMasteryTitle(),'Radiant Nature Keeper');
+    state.mode='home';claimMastery('__proto__');equipMasteryTitle('__proto__');assert.equal(state.contractTokens,9);`);
+});
+
+test('mastery counts discoveries rather than stack size and keeps claims through book resets', () => {
+  game().run(`recordElementDiscovery({level:5,element:'water',count:99});assert.equal(masteryProgress('water'),1);
+    claimMastery('water');assert.equal(state.contractTokens,undefined);
+    for(let level=2;level<=4;level++)recordElementDiscovery({level,element:'water'});
+    claimMastery('water');state.elementBook={};state.rareElementBook={};
+    for(let level=2;level<=5;level++)recordElementDiscovery({level,element:'water'});
+    claimMastery('water');assert.equal(state.contractTokens,1);`);
+});
+
+test('mastery panel shows progress and returns to the same book chapter with Escape', () => {
+  const g=game();g.run(`switchBookElement('water');currentBookPage=4;recordElementDiscovery({level:4,element:'water'});openMastery();`);
+  assert.ok(g.nodes.get('masteryModal').classList.contains('open'));
+  assert.match(g.nodes.get('masteryList').innerHTML,/Water: 1\/4/);
+  assert.match(g.nodes.get('masteryList').innerHTML,/✓ Hearth/);
+  g.nodes.get('masteryModal').key('Escape');
+  assert.ok(!g.nodes.get('masteryModal').classList.contains('open'));
+  assert.ok(g.nodes.get('book').classList.contains('open'));
+  g.run(`assert.equal(currentBookElement,'water');assert.equal(currentBookPage,4);`);
+});
+
+test('element book tracks each stage and rarity permanently without paying coins', () => {
+  const g=game();g.run(`const initialCoins=state.coins;
+    recordElementDiscovery({level:2,element:'fire'});
+    recordElementDiscovery({level:2,element:'fire'});
+    recordElementDiscovery({level:5,element:'nature',shiny:true});
+    recordElementDiscovery({level:1,element:'water'});
+    recordElementDiscovery({level:3,element:'neutral'});
+    assert.equal(state.coins,initialCoins);
+    assert.equal(state.elementBook.fire[2],true);
+    assert.equal(state.rareElementBook.fire,undefined);
+    assert.equal(state.elementBook.nature[5],true);
+    assert.equal(state.rareElementBook.nature[5],true);
+    assert.equal(state.elementBook.water,undefined);save();`);
+  game(Object.fromEntries(g.storage)).run(`assert.equal(state.elementBook.fire[2],true);assert.equal(state.rareElementBook.nature[5],true);`);
+});
+
+test('every elemental book page uses matching large art and stage-specific lore', () => {
+  const g=game();
+  for(const element of ['fire','water','nature'])for(let level=2;level<=5;level++){
+    g.run(`recordElementDiscovery({level:${level},element:'${element}',shiny:true});switchBookElement('${element}');currentBookPage=${level};switchBookTab(1);`);
+    const html=g.nodes.get('bookSpread').innerHTML;
+    assert.ok(html.includes(element+'-'+['wyrmling','young','hearth','elder'][level-2]+'-1.png'));
+    assert.ok(html.includes('width="120"'));
+    assert.ok(html.includes(g.run(`ELEMENT_BOOK['${element}'].lore[${level-2}]`)));
+    assert.ok(html.includes('1.5x base coin rate'));
+  }
+});
+
+test('legacy element discovery recovers board and perches but never guesses lost elements', () => {
+  const g=game();g.run(`state.book={0:true,1:true,2:true,3:true,4:true,5:true};state.coins=1234;
+    state.cells[0]={level:3,count:1,element:'water'};
+    state.perch[0]={level:5,count:1,element:'fire',shiny:true};
+    state.stageCells[0]={level:4,count:1,element:'nature'};
+    delete state.elementBook;delete state.rareElementBook;save();`);
+  game(Object.fromEntries(g.storage)).run(`assert.equal(state.coins,1234);
+    assert.equal(state.book[5],true);assert.equal(state.elementBook.water[3],true);
+    assert.equal(state.rareElementBook.fire[5],true);
+    assert.equal(state.elementBook.nature,undefined);assert.equal(state.elementBook.fire[2],undefined);`);
+});
+
+test('spawn and promotion register the actual element without unlocking other chapters', () => {
+  game().run(`Math.random=()=>0.5;spawn(2,1,0);assert.equal(state.elementBook.water[2],true);
+    state.cells[0]={level:2,count:3,element:'fire',shiny:false};
+    state.cells[1]={level:2,count:2,element:'fire',shiny:false};mergeInto(0,1);
+    assert.equal(state.elementBook.fire[3],true);assert.equal(state.elementBook.water[3],undefined);`);
+});
+
+test('element book preserves arrows, hidden entries, chapter counts and rarity selection', () => {
+  const g=game();g.run(`recordElementDiscovery({level:2,element:'fire'});switchBookElement('fire');`);
+  assert.equal(g.nodes.get('prevPageBtn').disabled,true);
+  assert.match(g.nodes.get('bookSpread').innerHTML,/fire-wyrmling-1.png/);
+  assert.equal(g.nodes.get('countMain').textContent,'1 / 4');
+  g.nodes.get('nextPageBtn').click();
+  assert.match(g.nodes.get('bookSpread').innerHTML,/Discover a Fire Young/);
+  assert.doesNotMatch(g.nodes.get('bookSpread').innerHTML,/<image/);
+  g.run(`switchBookTab(1);assert.equal(currentBookPage,3);switchBookElement('water');`);
+  assert.equal(g.nodes.get('countRare').textContent,'0 / 4');
+  g.run(`currentBookPage=5;renderBook();`);
+  assert.equal(g.nodes.get('nextPageBtn').disabled,true);
+  g.run(`switchBookElement('growth');switchBookTab(0);currentBookPage=0;renderBook();`);
+  assert.equal(g.nodes.get('countMain').textContent,'1 / 2');
+  g.run(`switchBookElement('__proto__');assert.equal(currentBookElement,'growth');`);
+});
+
+test('all 39 elemental sprites and three frames ship as 512px RGBA PNGs', () => {
+  const files=[];
+  for(const element of ['fire','water','nature'])for(const stage of ['wyrmling','young','hearth','elder']){
+    for(let count=1;count<=(stage==='elder'?1:4);count++)files.push('Images/elements/'+element+'-'+stage+'-'+count+'.png');
+    if(stage==='elder')for(let count=2;count<=4;count++)assert.equal(fs.existsSync(path.join(root,'Images/elements/'+element+'-elder-'+count+'.png')),false);
+  }
+  for(const name of ['ember','tide','grove'])files.push('assets/avatar/border_'+name+'_v1.png');
+  assert.equal(files.length,42);
+  for(const file of files){
+    const png=fs.readFileSync(path.join(root,file));
+    assert.equal(png.subarray(1,4).toString(),'PNG',file);
+    assert.equal(png.readUInt32BE(16),512,file);
+    assert.equal(png.readUInt32BE(20),512,file);
+    assert.equal(png[25],6,file+' must contain alpha');
+  }
+});
+
+test('elemental art supports all four growth stages and stack counts without changing neutral art', () => {
+  game({}, {ELEMENTAL_ASSETS_READY:true}).run(`for(const element of ['fire','water','nature'])for(let level=2;level<=5;level++)for(let count=1;count<=4;count++){
+    const html=dragonSvg(level,42,count,false,element);
+    const file=element+'-'+['wyrmling','young','hearth','elder'][level-2]+'-'+(level===5?1:count)+'.png';
+    assert.ok(html.includes(file));
+    assert.ok(html.includes(element+' '+CHAIN[level].name));
+    assert.ok(itemHtml({level,count,element}).includes(file));
+  }
+  assert.ok(dragonSvg(2,42,2,false,'neutral').includes('wyrmling-2.png'));
+  assert.ok(dragonSvg(1,42,2,false,'fire').includes('hatchling-2.png'));
+  assert.ok(dragonSvg(3,42,1,true,'water').includes('drop-shadow'));
+  assert.ok(dragonSvg(3,42,1,false,'unknown').includes('young-1.png'));`);
+});
+
+test('elemental rewards are one-time, charge the right tokens, and equip through the Stash', () => {
+  const g=game({}, {ELEMENTAL_ASSETS_READY:true});g.run(`redeemCosmetic('border_ember');assert.equal(state.stash.border_ember,1);
+    redeemCosmetic('border_ember');assert.equal(state.stash.border_ember,1);
+    redeemCosmetic('border_tide');assert.equal(state.stash.border_tide,undefined);
+    state.contractTokens=2;redeemCosmetic('border_tide');redeemCosmetic('border_grove');
+    assert.equal(state.contractTokens,0);assert.equal(state.stash.border_tide,1);
+    useFromStash('border_tide');assert.equal(state.keeper.equipment.border,'border_tide_v1.png');
+    redeemCosmetic('border_tide');assert.equal(state.contractTokens,0);
+    useFromStash('border_tide');assert.equal(state.stash.border_tide,1);save();`);
+  game(Object.fromEntries(g.storage)).run(`assert.ok(ownsCosmeticReward('border_ember'));
+    const qty=state.stash.border_ember;redeemCosmetic('border_ember');assert.equal(state.stash.border_ember,qty);`);
+});
+
+test('Hatchery upgrades follow discoveries', () => {
   game().run(`assert.equal(gatherLevel(), 0);
     state.book[3] = true; Math.random = () => 0.1; assert.equal(gatherLevel(), 1);
     Math.random = () => 0.5; assert.equal(gatherLevel(), 0);
     state.book[4] = true; assert.equal(gatherLevel(), 1);
     Math.random = () => 0.1; assert.equal(gatherLevel(), 2);
-    gather(true); assert.equal(state.cells.find(Boolean).level, 0);
+    gather(); assert.equal(state.cells.find(Boolean).level, 2);
     assert.equal(state.energy, 4);`);
 });
 
-test('basic egg unlock persists after dragons leave the board and through reload', () => {
-  const g = game();
-  g.run(`render(); assert.equal(document.getElementById('gatherBasicBtn').hidden, true);
-    state.perch[0] = {level:4,count:1}; render();
-    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
-    state.perch[0] = null; state.cells.fill(null); state.book = {0:true}; render();
-    assert.equal(gatherBaseLevel(), 1); assert.equal(shopEggLevel(), 2);
-    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
-    state.mode = 'stage'; render(); assert.equal(document.getElementById('gatherBasicBtn').hidden, true);
-    state.mode = 'home'; render(); assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
-    save();`);
-  game(Object.fromEntries(g.storage)).run(`render();
-    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);`);
+test('weekly contracts scale safely and snapshot difficulty', () => {
+  for(let tier=0;tier<6;tier++)game().run(`state.book[${tier}]=true;state.contracts=null;rollContracts();
+    assert.equal(state.contracts.items.length,5);
+    assert.ok(state.contracts.items.every(c=>c.kind!=='donate'||c.want<highestOwned()));
+    assert.ok(state.contracts.items.every(c=>c.kind!=='trial'));
+    const targets=JSON.stringify(state.contracts.items);state.book[5]=true;rollContracts();
+    assert.equal(JSON.stringify(state.contracts.items),targets);`);
 });
 
-test('legacy Hearth milestone restores basic eggs even without the original dragon', () => {
-  game().run(`state.hearthDone = true; state.book = {0:true}; render();
-    assert.equal(document.getElementById('gatherBasicBtn').hidden, false);
-    assert.equal(gatherBaseLevel(), 1);`);
+test('contracts track successful home actions but not failed gathers or trial merges', () => {
+  game().run(`gather();assert.equal(state.contracts.items[0].progress,1);
+    state.energy=0;gather();assert.equal(state.contracts.items[0].progress,1);
+    state.cells[0]={level:0,count:3};state.cells[1]={level:0,count:2};mergeInto(0,1);
+    assert.equal(state.contracts.items[1].progress,1);
+    state.mode='stage';resetTrail();gather();assert.equal(state.contracts.items[0].progress,1);`);
+});
+
+test('weekly claims and completion token pay only once across reload', () => {
+  const g=game();g.run(`for(let i=0;i<5;i++){state.contracts.items[i].progress=state.contracts.items[i].target;
+    claimContract(i,state.contracts.week);}
+    assert.equal(state.contractTokens,1);const coins=state.coins;
+    claimContract(4,state.contracts.week);assert.equal(state.coins,coins);save();`);
+  game(Object.fromEntries(g.storage)).run(`const coins=state.coins;
+    claimContract(4,state.contracts.week);assert.equal(state.coins,coins);assert.equal(state.contractTokens,1);`);
+});
+
+test('one replacement per week resets progress and cannot replace claimed contracts', () => {
+  game().run(`const week=state.contracts.week;state.contracts.items[0].progress=5;
+    replaceContract(0,week);assert.equal(state.contracts.items[0].kind,'merge');
+    assert.equal(state.contracts.items[0].progress,0);const before=JSON.stringify(state.contracts.items);
+    replaceContract(1,week);assert.equal(JSON.stringify(state.contracts.items),before);`);
+});
+
+test('Monday local calendar reset rejects stale claims and preserves tokens', () => {
+  const g=game();g.run(`state.contractTokens=3;
+    state.contracts.items[0].progress=state.contracts.items[0].target;
+    var oldWeek=state.contracts.week;var nextMonday=contractWeek().next;
+    assert.equal(new Date(nextMonday).getDay(),1);assert.equal(new Date(nextMonday).getHours(),0);`);
+  const delta=g.run('nextMonday-Date.now()');g.advance(delta-1);
+  g.run('assert.equal(contractWeek().key,oldWeek)');
+  g.advance(1);g.run(`claimContract(0,oldWeek);
+    assert.notEqual(state.contracts.week,oldWeek);assert.equal(state.contracts.items[0].progress,0);
+    assert.equal(state.contractTokens,3);assert.equal(state.contracts.replaced,false);assert.equal(state.coins,20);`);
+});
+
+test('donations consume one lower-tier dragon and reject trial-mode claims', () => {
+  game().run(`state.book[4]=true;state.contracts=null;rollContracts();
+    state.cells[0]={level:3,count:2};const week=state.contracts.week;
+    state.mode='stage';claimContract(4,week);assert.equal(state.cells[0].count,2);
+    state.mode='home';claimContract(4,week);assert.equal(state.cells[0].count,1);
+    claimContract(4,week);assert.equal(state.cells[0].count,1);`);
 });
 
 test('décor requires discoveries and grants gradual percentage bonuses', () => {
@@ -87,9 +301,26 @@ test('Sleepy pouch bonus applies to subsequent trials and expires the next day',
     assert.equal(state.trailGathers, TRAIL_GATHERS);`);
 });
 
-test('reload after a quest payout resumes the next request without paying twice', () => {
+test('legacy quest saves migrate without replaying the old reward', () => {
   const g = game({'ember-nest-save':JSON.stringify({questDone:true,quest:0,coins:1234})});
-  g.run('assert.equal(state.quest, 1); assert.equal(state.questDone, false); assert.equal(state.coins, 1234)');
+  g.run('assert.equal(state.questDone, false); assert.equal(state.coins, 1234); assert.equal(state.contracts.items.length, 5)');
+});
+
+test('weekly panel opens with five rows and closes with Escape', () => {
+  const g=game();g.run('openContracts()');
+  assert.ok(g.nodes.get('contractsModal').classList.contains('open'));
+  assert.equal((g.nodes.get('contractsList').innerHTML.match(/class="contract-row"/g)||[]).length,5);
+  g.nodes.get('contractsModal').key('Escape');
+  assert.equal(g.nodes.get('contractsModal').classList.contains('open'),false);
+});
+
+test('weekly Trial progress includes Blitz and replacement use persists after reload', () => {
+  const g=game();g.run(`state.ashTrialCompleted=true;state.contracts=null;rollContracts();
+    assert.equal(state.contracts.items[3].kind,'trial');blitzAshTrial();
+    assert.equal(state.contracts.items[3].progress,1);
+    replaceContract(0,state.contracts.week);save();`);
+  game(Object.fromEntries(g.storage)).run(`assert.equal(state.contracts.replaced,true);
+    assert.equal(state.contracts.items[3].progress,1);`);
 });
 
 test('new players have the full trial pouch and land prices remain bounded', () => {
@@ -276,8 +507,48 @@ test('trial rewards are limited to three daily clears', () => {
   game().run(`state.book = {0:true,1:true,2:true,3:true,4:true,5:true};
     for (let n = 0; n < 3; n++) { state.mode = 'stage'; winStage(); }
     assert.equal(dailyLeft(), 0); const coins = state.coins;
+    const xp = state.xp, level = state.level;
     state.mode = 'stage'; winStage(); assert.equal(state.coins, coins);
+    assert.equal(state.xp, xp); assert.equal(state.level, level);
     assert.equal(state.mode, 'home');`);
+});
+
+test('chests pay once per earned level, persist claims, and cap late-game coins', () => {
+  const g = game();
+  g.run(`state.level=105; const box=document.getElementById('chestBox');
+    box.dataset.level='5'; revealChest(); assert.equal(state.coins,3020);
+    revealChest(); assert.equal(state.coins,3020);
+    box.disabled=false; revealChest(); assert.equal(state.coins,3020);
+    box.dataset.level='110'; revealChest(); assert.equal(state.coins,3020);
+    box.dataset.level='105'; revealChest(); assert.equal(state.coins,12020);
+    save();`);
+  game(Object.fromEntries(g.storage)).run(`const box=document.getElementById('chestBox');
+    box.dataset.level='105';box.disabled=false;const coins=state.coins;
+    revealChest();assert.equal(state.coins,coins);`);
+});
+
+test('collecting the Roost bank preserves partial income ticks and eight-hour capacity', () => {
+  const g = game();
+  g.run(`state.perch[0]={level:1,count:1,element:'neutral'};state.perchAt=Date.now();`);
+  g.advance(90000);g.tick();
+  g.run(`assert.equal(state.perchBank,perchIncome());document.getElementById('dragonBank').click();
+    assert.equal(state.perchBank,0);assert.equal(state.perchAt,160000);`);
+  g.advance(30000);g.tick();
+  g.run(`assert.equal(state.perchBank,perchIncome());`);
+  g.advance(24*60*60*1000);g.tick();
+  g.run(`assert.equal(state.perchBank,perchIncome()*480);`);
+});
+
+test('Roost tuning preserves starter income, rewards upgrades, and never removes banked coins', () => {
+  const g=game();
+  g.run(`assert.equal(getPerchYield({level:0,element:'neutral'},0).total,22);
+    let last=0;for(let level=0;level<6;level++){
+      const ordinary=getPerchYield({level,element:'fire'},0).total;
+      const shiny=getPerchYield({level,element:'fire',shiny:true},0).total;
+      assert.ok(ordinary>last);assert.ok(shiny>ordinary);last=ordinary;
+    }
+    state.perch[0]={level:0,element:'neutral'};state.perchAt=Date.now();state.perchBank=1000000;`);
+  g.advance(60000);g.tick();g.run(`assert.equal(state.perchBank,1000000);`);
 });
 
 test('trial failure opens its message without losing home dragons', () => {

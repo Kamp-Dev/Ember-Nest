@@ -1,0 +1,262 @@
+/* Woodland storybook presentation. Gameplay and dragon geometry stay in style.css. */
+body.storybook {
+  max-width: none;
+  --bg: #e8e8ce;
+  --panel: #faf3df;
+  --border: #bcbea0;
+  --text-main: #364936;
+  --text-muted: #687257;
+  --gold: #8b572f;
+  --ember: #ad573b;
+  --danger: #a34336;
+  color: var(--text-main);
+  background: linear-gradient(#263e3426, #263e3459), url('assets/theme/forest-sanctuary-v1.png') center / cover fixed !important;
+  font-family: 'Montserrat', sans-serif;
+}
+body.storybook #app {
+  width: 100%; max-width: 520px; height: 100dvh;
+  background: #f5f0de;
+  border: 1px solid #fff4d5a6;
+  box-shadow: 0 18px 70px #19352355;
+}
+body.storybook .game-header {
+  background: #fbf5e7f7; border-bottom: 1px solid #c8c6a6;
+  box-shadow: 0 3px 12px #40512d12; padding: 12px 16px !important;
+  gap: 10px; flex-wrap: wrap; flex-shrink: 0;
+}
+body.storybook #title { color: #354c39; font-size: 23px !important; text-shadow: none; letter-spacing: -.6px; }
+body.storybook #title span { color: #b15e40; }
+body.storybook .player-name { color: #697857; font-size: 9px !important; letter-spacing: 1.5px; }
+body.storybook .header-right { gap: 5px !important; flex-wrap: wrap !important; }
+body.storybook .stat-pill {
+  background: #eeecd8 !important; border: 1px solid #c6c5a8 !important;
+  color: #46583b !important; box-shadow: none !important; border-radius: 12px;
+  text-shadow: none; font-size: 10px; padding: 6px 8px;
+}
+body.storybook #energyTimer { color: #657256 !important; }
+body.storybook .view-container { background: #eef0dc; min-height: 0; padding-bottom: 0; }
+body.storybook .view { padding: 20px 16px 28px; color: #364936; box-shadow: none !important; }
+body.storybook #view-board {
+  height: 100%; min-height: 0; max-height: 100% !important;
+  overflow: hidden !important; padding: 0 12px 10px; border: 0;
+  touch-action: auto;
+}
+body.storybook .board-playfield {
+  flex: 1 1 0; min-height: 0; width: 100%; overflow-y: auto;
+  overflow-x: hidden; padding: 12px 2px 8px; box-sizing: border-box;
+  overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin;
+  scrollbar-color: #9baa82 transparent;
+}
+body.storybook #view-board > .action-buttons {
+  flex: 0 0 auto; margin: 0 !important; padding: 12px 0 4px;
+  background: #eef0dc; border-top: 1px solid #bfc8a8; z-index: 10;
+}
+body.storybook #view-board > .hatchery-hint {
+  flex: 0 0 auto; margin: 6px 0 0; font-size: 10px; line-height: 1.4;
+}
+body.storybook .tab-icon { opacity: 1 !important; }
+body.storybook #app[data-theme] #view-board.active,
+body.storybook #view-home, body.storybook #view-roost,
+body.storybook #view-trials, body.storybook #view-nest {
+  background: linear-gradient(#f6f3e3d9, #e7eddcfa), url('assets/theme/forest-sanctuary-v1.png') center top / auto 650px !important;
+}
+body.storybook #app[data-theme='alcove'] { --tile-tint: #dfe8ca; }
+body.storybook #app[data-theme='lamp'] { --tile-tint: #f2e4be; }
+body.storybook #app[data-theme='spring'] { --tile-tint: #dcebe4; }
+body.storybook #app[data-theme='vault'] { --tile-tint: #e6dfc9; }
+body.storybook .section-title {
+  color: #3e543d; text-shadow: none; text-transform: none;
+  font-family: 'Playfair Display', serif; font-size: 23px; letter-spacing: 0;
+  margin: 6px 0 22px; border-color: #c3c7a7;
+}
+body.storybook button {
+  font-family: 'Montserrat', sans-serif;
+  transition: background-color .15s ease, box-shadow .15s ease;
+}
+body.storybook button:focus-visible, body.storybook select:focus-visible,
+body.storybook input:focus-visible { outline: 3px solid #ad573b !important; outline-offset: 3px; }
+body.storybook #app button:not(.tab-btn):not(.stat-pill):not(.book-arrow) {
+  background: #53704f !important; color: #fff9e9 !important;
+  border: 1px solid #415b3e !important; border-radius: 12px !important;
+  box-shadow: 0 3px 0 #344d36, inset 0 1px 0 #ffffff2b !important;
+  text-shadow: none !important; text-transform: none; letter-spacing: 0;
+  min-height: 38px; font-family: 'Montserrat', sans-serif; font-weight: 700;
+}
+body.storybook #app button:hover:not(:disabled):not(.tab-btn):not(.book-arrow) { filter: brightness(1.07); }
+body.storybook #app button:disabled { opacity: .52; cursor: not-allowed; box-shadow: none !important; }
+body.storybook #quest-carousel-container { margin-bottom: 16px !important; }
+body.storybook #quest-carousel .quest-card {
+  background: linear-gradient(100deg, #faf4e4f5, #eef0dbee), url('assets/theme/forest-sanctuary-v1.png') center / cover !important;
+  border: 1px solid #b5b998 !important; border-radius: 18px 6px 18px 6px !important;
+  box-shadow: 0 4px 0 #73805a18; padding: 14px !important;
+  height: auto !important; min-height: 102px;
+}
+body.storybook #quest-carousel .quest-card :is(h2,h3,h4,p,span,small,strong,div) { color: #43513a !important; text-shadow: none !important; }
+body.storybook #quest-dots:empty { display: none; }
+body.storybook .dot { background: #c6c9ac; }
+body.storybook .dot.active { background: #70875e; }
+body.storybook #perchRow { gap: 10px !important; max-width: none; margin-bottom: 20px; }
+body.storybook #perchRow .perch {
+  background: linear-gradient(145deg, #e3e9cc, #cdddbb) !important;
+  border: 1px solid #9daf88 !important; border-bottom: 3px solid #a5b88f !important;
+  border-radius: 16px !important; padding: 0 4px !important;
+  height: 72px !important; max-height: 72px !important; min-height: 72px !important;
+  box-shadow: inset 0 1px 0 #fff9e9 !important; color: #58654d;
+}
+body.storybook #perchRow .perch span { margin-left: 0 !important; }
+body.storybook #perchRow .perch { text-shadow: none !important; }
+body.storybook #perchRow .perch.lock { opacity: .65; background: #dfe2d4 !important; border-style: dashed !important; }
+body.storybook #perchRow .perch.armed { outline: 3px solid #b77047; }
+body.storybook #board { width: 100% !important; max-width: 480px !important; gap: 12px !important; margin: 0 auto 30px !important; }
+body.storybook .cell {
+  background: linear-gradient(145deg, #f9f4e0, var(--tile-tint, #e3e8cf)) !important;
+  border: 1px solid #b4bea0 !important; border-bottom: 3px solid #b4bea0 !important;
+  border-radius: 17px !important;
+  box-shadow: inset 0 2px 0 #fffff5b3, 0 3px 5px #4153300d !important;
+}
+body.storybook .cell:has(.item) { background: linear-gradient(145deg, #fffbed, #ecedd8) !important; border-color: #aaa989 !important; }
+body.storybook .cell.locked { background: #ccd6c3 !important; color: #52654b !important; border-style: dashed !important; font-size: 9px; }
+body.storybook .cell.ash { background: #b6bcae !important; }
+body.storybook .cell.flash { outline: 3px solid #d99655; }
+body.storybook .item svg { filter: drop-shadow(0 3px 2px #3b4f372e) !important; }
+body.storybook .item .lvl { background: #fffaeaf5 !important; color: #4f4b34 !important; text-shadow: none !important; box-shadow: 0 2px 3px #34452d20 !important; }
+body.storybook .action-buttons { gap: 10px !important; margin-top: 0 !important; }
+body.storybook #gather, body.storybook #buyEgg, body.storybook #autoMergeBtn { flex: 1; min-width: 0; height: 48px; padding: 6px !important; font-size: 11px !important; }
+body.storybook #app #gather { background: #a95b40 !important; border-color: #8b4832 !important; box-shadow: 0 3px 0 #85412d !important; }
+body.storybook .hatchery-hint { color: #617051; font-size: 11px; line-height: 1.6; margin: 16px 6px 0; }
+body.storybook #tabBar {
+  position: relative; height: auto; min-height: 65px;
+  background: #faf5e5 !important; border-top: 1px solid #c1c5a4;
+  box-shadow: 0 -4px 18px #354c2910; padding: 6px 8px max(8px, env(safe-area-inset-bottom));
+  gap: 4px; flex-shrink: 0;
+}
+body.storybook #tabBar .tab-btn { background: transparent; border: 0; border-radius: 14px; color: #6a725b; box-shadow: none; min-height: 55px; min-width: 0; width: 0; flex: 1; padding: 5px 0 !important; }
+body.storybook #tabBar .tab-btn.active { background: #e0e7cb !important; color: #395337; box-shadow: inset 0 -3px 0 #8fa377; }
+body.storybook .tab-icon { filter: none !important; font-size: 22px; }
+body.storybook .tab-label { font-size: 10px; font-weight: 700; }
+body.storybook #view-home { padding: 0; }
+body.storybook .keeper-profile {
+  background: linear-gradient(#eef0dd33, #eef0ddf5), url('assets/theme/forest-sanctuary-v1.png') center 40% / cover !important;
+  border-bottom: 1px solid #bcc5a2 !important; padding: 24px 16px !important;
+}
+body.storybook .keeper-name { color: #354e37 !important; text-shadow: 0 1px 0 #fff9e9; }
+body.storybook .keeper-title { color: #626d4e !important; font-size: 11px !important; letter-spacing: 1px; }
+body.storybook .stash-header { border-color: #c2c7a9 !important; }
+body.storybook .stash-header h3 { color: #40573e !important; }
+body.storybook .stash-filter { color: #69745f !important; font-size: 10px !important; }
+body.storybook #stash-grid { gap: 16px !important; }
+body.storybook .stash-slot { border-radius: 13px !important; }
+body.storybook .stash-slot.filled { background: #fff8e8 !important; box-shadow: 0 4px 0 #c9c6a9 !important; }
+body.storybook .stash-slot.empty { background: #ccd0c8 !important; border: 1px dashed #a8afa4 !important; box-shadow: inset 0 2px 4px #58644b10 !important; opacity: .65; }
+body.storybook #view-roost .quest-card { flex: none !important; width: 100% !important; min-width: 0 !important; margin: 0 !important; height: auto !important; padding: 22px 16px !important; }
+body.storybook #view-roost .quest-card, body.storybook #roostPerchContainer > div,
+body.storybook #trialBox, body.storybook #mountain .room, body.storybook .decor,
+body.storybook #sub-decor {
+  background: #fbf5e4ed !important; border-color: #bcc4a4 !important;
+  border-radius: 17px !important; box-shadow: 0 4px 0 #72845e15 !important;
+}
+body.storybook #view-roost :is(h2,h4,p,span), body.storybook #dragonBank div,
+body.storybook #bankTimer, body.storybook #mountain :is(h4,small,span),
+body.storybook #sub-decor p { color: #455b3e !important; text-shadow: none !important; }
+body.storybook #dragonBank { background: #e4ebd2 !important; border-color: #a7b78c !important; box-shadow: none !important; }
+body.storybook #roostPerchContainer > div > div[style*='radial-gradient'] { background: #e8edd7 !important; box-shadow: none !important; }
+body.storybook #roostPerchContainer > div div[style*='rgba(0,0,0,0.'] { background: #e3e8ce !important; box-shadow: none !important; }
+body.storybook #view-trials { height: auto !important; max-height: none !important; min-height: 100% !important; }
+body.storybook #trialBox { padding: 24px 18px !important; max-height: none !important; overflow: visible !important; }
+body.storybook #trialBox .action-buttons { width: auto; }
+body.storybook #mountain .room { height: auto !important; min-height: 96px !important; max-height: none !important; padding: 18px 14px !important; display: flex !important; justify-content: space-between !important; gap: 12px; }
+body.storybook #mountain .room span { margin-left: 0 !important; }
+body.storybook #mountain .room > div { min-width: 0; }
+body.storybook #mountain .room small { font-size: 10px; }
+body.storybook #mountain .room.now { border: 2px solid #78915c !important; background: #e7edcf !important; }
+body.storybook #mountain .room button { font-size: 10px !important; max-width: 120px; }
+body.storybook #app .nest-tab-btn:not(.active), body.storybook #app .customizer-tab:not(.active) { background: #dfe4cd !important; color: #4b6042 !important; box-shadow: none !important; }
+body.storybook .modal { background: #233c31a6 !important; backdrop-filter: blur(5px); }
+body.storybook .modal-content:not(.custom-book-bg), body.storybook #roostPickerModal > div {
+  background: #faf3df !important; color: #435139 !important;
+  border: 1px solid #b4bc99 !important; border-bottom: 4px solid #a9b58c !important;
+  border-radius: 22px !important; box-shadow: 0 20px 70px #18362355 !important;
+  max-height: 85dvh; overflow-y: auto; box-sizing: border-box;
+}
+body.storybook .modal-content:not(.custom-book-bg) :is(h2,h3,h4,p,label,small,strong),
+body.storybook #roostPickerModal :is(h3,span) { color: #415338 !important; text-shadow: none !important; border-color: #c2c7a6 !important; }
+body.storybook .modal-content:not(.custom-book-bg) p { line-height: 1.65; }
+body.storybook .modal input, body.storybook .modal select {
+  background: #fffbed !important; color: #3d5034 !important; border: 1px solid #aeb994 !important;
+  border-radius: 10px !important; box-shadow: none !important; padding: 10px !important;
+}
+body.storybook .contract-row, body.storybook .mastery-card, body.storybook .cosmetic-reward { background: #eeefd9 !important; border-color: #bdc7a1 !important; border-radius: 14px; }
+body.storybook .contracts-content { max-width: 480px !important; }
+body.storybook #roostPickerGrid > div { background: #e8ecd6 !important; border-color: #acbc91 !important; }
+body.storybook #roostPickerGrid > div > div { background: #f9f2df !important; }
+body.storybook .book-controls { background: #faf3df; border: 1px solid #b8bd98; border-radius: 17px; box-shadow: 0 5px 16px #233c3126; }
+body.storybook #bookPageLabel { color: #42553b; }
+body.storybook #book .book-chapter-picker { color: #526449; }
+body.storybook #app #book #bookClose { width: 34px !important; height: 34px !important; min-height: 34px !important; padding: 0 !important; font-size: 20px !important; }
+body.storybook #app #book #nextPageBtn, body.storybook #app #book #prevPageBtn {
+  background: #f6efda !important; color: #46633f !important; border: 1px solid #a6b58d !important;
+  width: 34px !important; height: 42px !important; min-height: 42px !important;
+  padding: 0 !important; box-shadow: 0 3px 0 #7c9168 !important; font-size: 0 !important;
+}
+body.storybook #nextPageBtn::after { content: '›'; font: 32px Georgia; }
+body.storybook #prevPageBtn::after { content: '‹'; font: 32px Georgia; }
+body.storybook #app #resetBookGameBtn { background: transparent !important; color: #934735 !important; box-shadow: none !important; border-color: #c9ad91 !important; font-size: 10px !important; }
+body.storybook #toast { background: #3f5b43 !important; color: #fff8e5 !important; border: 1px solid #9aaa7c; border-radius: 15px; }
+body.storybook #app button:not(.tab-btn):not(.stat-pill):not(.book-arrow) { font-family: 'Montserrat', sans-serif !important; }
+body.storybook #app button.nest-tab-btn:not(.active), body.storybook #app button.customizer-tab:not(.active) { background: #dfe4cd !important; color: #4b6042 !important; box-shadow: none !important; }
+body.storybook #perchRow .perch > span { text-shadow: none !important; }
+body.storybook #contractsClose { position: sticky; bottom: 0; }
+body.storybook #chest .modal-content::before, body.storybook #chest .modal-content::after { display: none; }
+body.storybook .stash-slot.filled > div { color: #615433 !important; text-shadow: none !important; }
+body.storybook #app #book .tab-btn-sub:not(.active) { background: #dfe4cd !important; color: #4b6042 !important; box-shadow: none !important; }
+body.storybook progress { accent-color: #728c59; }
+@media (min-width: 700px) and (min-height: 800px) {
+  body.storybook #app { height: calc(100dvh - 40px); max-height: 1000px; border-radius: 24px; overflow: hidden; }
+}
+@media (max-width: 400px) {
+  body.storybook .game-header { padding: 10px 12px; gap: 8px; }
+  body.storybook .header-right { width: 100%; justify-content: space-between; }
+  body.storybook .view { padding-left: 12px; padding-right: 12px; }
+  body.storybook #board { gap: 10px !important; }
+  body.storybook .cell { border-radius: 12px !important; }
+  body.storybook #gather, body.storybook #buyEgg, body.storybook #autoMergeBtn { font-size: 10px !important; }
+  body.storybook #mountain .room { padding: 14px 10px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.storybook *, body.storybook *::before, body.storybook *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Explicit rows prevent long resource values from crowding the title/tools. */
+body.storybook .game-header {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px !important; padding: 10px 14px !important;
+}
+body.storybook .header-left { min-width: 0; gap: 4px; }
+body.storybook .player-name { overflow: hidden; text-overflow: ellipsis; letter-spacing: .8px; }
+body.storybook .header-tools { display: flex; gap: 6px; align-items: center; }
+body.storybook .header-tools .stat-pill {
+  width: 36px; height: 36px; padding: 0 !important; justify-content: center;
+  flex: none; font-size: 15px !important;
+}
+body.storybook .header-right {
+  grid-column: 1 / -1; display: grid; width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1.3fr);
+  gap: 8px !important;
+}
+body.storybook .header-right .stat-pill {
+  min-width: 0; min-height: 36px; padding: 5px 6px !important;
+  justify-content: center; font-size: 11px !important; box-sizing: border-box;
+}
+body.storybook #coinCount, body.storybook #lvlChip { white-space: normal; overflow-wrap: anywhere; text-align: center; font-variant-numeric: tabular-nums; }
+body.storybook #view-board #perchRow { margin-bottom: 14px; }
+body.storybook #view-board #board { margin-bottom: 12px !important; }
+body.storybook #view-board #quest-carousel-container { margin-bottom: 12px !important; }
+body.storybook #view-board :is(#gather, #buyEgg, #autoMergeBtn) { height: 46px !important; min-height: 46px !important; }
+@media (max-width: 350px) {
+  body.storybook .game-header { padding: 8px 10px !important; gap: 8px !important; }
+  body.storybook #title { font-size: 21px !important; }
+  body.storybook .header-tools { gap: 4px; }
+  body.storybook .header-tools .stat-pill { width: 32px; height: 34px; }
+  body.storybook .header-right { gap: 5px !important; }
+  body.storybook .header-right .stat-pill { font-size: 10px !important; }
+}

@@ -278,11 +278,11 @@ body {
 }
 
 .item svg {
-  /* Forces the SVG to shrink down if the tile is smaller than 52px */
-  max-width: 90% !important; 
-  max-height: 90% !important; 
-  width: 52px !important;
-  height: 52px !important;
+  /* Scale with the tile instead of capping dragons at 52px. The inset
+     leaves room for corner badges and the name pill on small screens. */
+  width: 90% !important;
+  height: 90% !important;
+  flex-shrink: 0;
   
   object-fit: contain !important; /* Keeps the dragon proportions perfect */
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
@@ -1358,6 +1358,12 @@ html.lock-scroll, body.lock-scroll {
 .force-hidden {
   display: none !important;
 }
+
+#view-board .action-buttons > button {
+  min-width: 0;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
 /* ==========================================================================
    10. FANTASY TOME MODALS & TOASTS
    ========================================================================== */
@@ -2069,6 +2075,44 @@ html.lock-scroll, body.lock-scroll {
   70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 60, 60, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 60, 60, 0); }
 }
+
+.contracts-content {
+  width: min(92vw, 520px);
+  max-height: 85vh;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+.contract-row { border-bottom: 1px solid #778da9; padding: 12px 0; }
+.contract-row p, #contractsReset { font-size: 0.8rem; }
+.cosmetic-reward { display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 0; border-top:1px solid #778da9; }
+.cosmetic-reward img { width:120px; height:120px; object-fit:contain; }
+.book-elements { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; max-width:140px; gap:4px; }
+.book-elements figure { margin:0; min-width:0; text-align:center; }
+.book-elements figure:last-child { grid-column:1 / -1; width:calc((100% - 4px) / 2); justify-self:center; }
+.book-elements svg { width:100%; height:auto; aspect-ratio:1; max-width:64px; }
+.book-elements figcaption { font-size:10px; text-transform:capitalize; color:#2b1d14; }
+.book-controls { position:absolute; top:100%; left:50%; transform:translateX(-50%); width:100%; text-align:center; display:flex; flex-direction:column; gap:8px; padding:8px 0; }
+.book-chapter-picker { display:flex; align-items:center; justify-content:center; gap:8px; color:#efd4a0; font-size:0.8rem; }
+.book-chapter-picker select { max-width:75%; padding:6px; background:#21140e; color:#efd4a0; border:1px solid #b78b45; border-radius:6px; }
+#bookPageLabel { color:#efd4a0; font-size:0.75rem; }
+#book .custom-book-bg { margin-bottom:175px; }
+.mastery-content { width:min(92vw,460px) !important; max-width:460px !important; max-height:85dvh; overflow-y:auto; touch-action:pan-y; box-sizing:border-box; }
+.mastery-content > p { font-size:0.8rem; line-height:1.5; }
+.mastery-card { border-top:1px solid #775534; padding:14px 0; }
+.mastery-card h3 { margin:0 0 8px; color:#efd4a0; font-size:1rem !important; }
+.mastery-card p { font-size:0.78rem; line-height:1.5; margin:8px 0; }
+.mastery-card progress { width:100%; accent-color:#ffcf40; }
+.mastery-stages { color:#efd4a0; }
+.mastery-claimed { color:#9cd4ad; font-size:0.8rem; }
+#masteryClose { position:sticky; bottom:0; margin-top:12px; }
+#masteryOpen { align-self:center; padding:7px 14px; font-size:0.8rem; }
+#book .page-left, #book .page-right { min-width:0; padding:6px; }
+.book-portrait { width:100%; max-width:130px; }
+.book-portrait svg { width:100%; height:auto; aspect-ratio:1; }
+.book-unknown { font-size:3rem; opacity:0.4; color:#2b1d14; }
+#book .page-right h3 { color:#2b1d14; margin:0 0 8px; font-family:'Playfair Display',serif; font-size:1.1rem; border-bottom:1px solid #2b1d144d; padding-bottom:4px; }
+#book .page-right p { color:#4a2c17; font-size:0.75rem; font-family:'Montserrat',sans-serif; margin:0; line-height:1.4; }
+.contract-row button { padding: 8px 12px; margin: 4px; font-size: 0.8rem; }
 
 .notify-dot {
   position: relative;

@@ -125,7 +125,7 @@ const defaultState = () => ({
   ash: Array(COLS * ROWS).fill(false),
   stageMerges: 0, trailGathers: TRAIL_GATHERS, ashCleared: false, ashWins: 0,
   lastAshWinAt: 0, ashDayKey: "", ashDayWins: 0,
-  book: { 0: true }, rareBook: {}, gives: 0, maxEnergy: MAX_ENERGY,
+  book: { 0: true }, rareBook: {}, elementBook: {}, rareElementBook: {}, masteryClaims: {}, gives: 0, maxEnergy: MAX_ENERGY,
   hearthDone: false, highestDiscovered: 0, eggsBought: 0, xp: 0, level: 1, pouchBonus: 0,
   perch: [null, null, null], perchBank: 0, theme: "hatchery", perchAt: 0,
   seenGuide: false, muted: false, playerName: "Keeper", nameChanges: 0,
@@ -158,11 +158,8 @@ function load() {
     if (!state.stash) state.stash = {};
     state.maxEnergy = Math.max(MAX_ENERGY, Number(state.maxEnergy) || MAX_ENERGY,
       state.level >= 6 ? 25 : 0, state.hearthDone ? 30 : 0);
-    // A saved completed quest has already paid; resume the next request after reload.
-    if (state.questDone) {
-      state.quest = ((state.quest || 0) + 1) % wishList().length;
-      state.questDone = false;
-    }
+    // Legacy quest counters remain inert; weekly contracts start independently.
+    state.questDone = false;
 
     const gridSize = COLS * ROWS;
     ["cells", "locked", "stageCells", "ash"].forEach(key => {
@@ -243,6 +240,7 @@ function spawn(level, count = 1, at, forceShiny = false) {
   const elements = ["fire", "water", "nature"];
   const element = level >= 2 ? elements[Math.floor(Math.random() * elements.length)] : "neutral";
   cells[index] = { level, count, shiny, element };
+  if (typeof recordElementDiscovery === 'function') recordElementDiscovery(cells[index]);
   return true;
 }
 
@@ -308,6 +306,7 @@ function mergeInto(fromI, toI) {
   if (payout) state.coins += payout;
   if (state.mode !== "stage" && nextLevel === 4) completeHearthGoal();
   if (state.mode !== "stage") addXp(15 + nextLevel * 10);
+  if (state.mode === 'home') contractEvent('merge', produced);
 
   sfx(shiny ? "shiny" : "merge");
   const cellElement = boardEl?.children[toI];
@@ -322,6 +321,7 @@ function mergeInto(fromI, toI) {
     : `${CHAIN[nextLevel].name} hatched!`);
 
   cells[toI] = { level: nextLevel, count: produced, shiny, element };
+  if (typeof recordElementDiscovery === 'function') recordElementDiscovery(cells[toI]);
   if (total > 0) cells[fromI] = { level: source.level, count: total, shiny: source.shiny, element: carriedElement };
 
   if (state.mode === "stage") {
