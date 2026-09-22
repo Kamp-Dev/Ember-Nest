@@ -47,6 +47,41 @@ const STASH_CATALOG = {
   border_obsidian: { name: "Obsidian Frame", rarity: "epic", icon: "🔳", type: "cosmetic", slot: "border", img: "assets/avatar/border_obsidian.png", tokenCost:4, coinCost:75000, mastery:'all' },
 };
 
+// Handcrafted permanent wardrobe rewards; no random rolls or gameplay bonuses.
+const WARDROBE_SETS = [
+  { rarity:'uncommon', name:'Woodland Apprentice', requirements:{head:['level',2], torso:['level',3], legs:['level',5]} },
+  { rarity:'rare', name:'Spring Traveler', requirements:{head:['level',10], torso:['contract',1], legs:['level',15]} },
+  { rarity:'epic', name:'Star Scholar', requirements:{head:['weeks',1], torso:['trial',1], legs:['level',30]} },
+  { rarity:'legendary', name:'Ember Guardian', requirements:{head:['mastery','fire'], torso:['mastery','water'], legs:['mastery','nature']} },
+  { rarity:'mythic', name:'Celestial Warden', requirements:{head:['level',75], torso:['radiant',3], legs:['weeks',8]} },
+];
+// Full image boxes compensate for transparent padding without modifying artwork.
+const WARDROBE_OVERLAYS = {
+  epic_head: [23.965,-6.045,51.904,45.473],
+  epic_legs: [24.575,69.035,50.891,34.522],
+  epic_torso: [28.476,44.192,43.013,40.345],
+  legendary_head: [23.123,-6.497,53.498,50.627],
+  legendary_legs: [27.572,74.018,44.891,27.020],
+  legendary_torso: [28.923,44.727,42.088,39.634],
+  mythic_head: [24.387,-4.935,51.225,43.941],
+  mythic_legs: [25.208,71.945,49.743,30.630],
+  mythic_torso: [28.208,44.559,43.549,39.716],
+  rare_head: [23.788,-6.903,52.425,47.806],
+  rare_legs: [26.731,70.302,46.537,31.757],
+  rare_torso: [28.010,42.855,43.980,42.734],
+  uncommon_head: [24.387,-6.882,51.225,45.792],
+  uncommon_legs: [27.469,72.084,45.133,30.127],
+  uncommon_torso: [27.851,43.775,44.299,40.559],
+};
+const WARDROBE_IDS = [];
+for (const set of WARDROBE_SETS) for (const slot of ['head','torso','legs']) {
+  const id = `wardrobe_${set.rarity}_${slot}`;
+  WARDROBE_IDS.push(id);
+  STASH_CATALOG[id] = {name:`${set.name} ${slot === 'head' ? 'Cap' : slot === 'torso' ? 'Tunic' : 'Legwear'}`,
+    rarity:set.rarity, slot, type:'cosmetic', img:`assets/avatar/clothing_${set.rarity}_${slot}_v1.png`,
+    wardrobe:true, overlay:WARDROBE_OVERLAYS[`${set.rarity}_${slot}`], requirement:set.requirements[slot]};
+}
+
 const CHAIN = [
   { id: "egg", name: "Egg", color: "#6b4a32" },
   { id: "hatch", name: "Hatchling", color: "#8a5a30" },

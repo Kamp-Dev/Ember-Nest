@@ -197,41 +197,8 @@ function renderExpandedModalLayers() {
 function renderExpandedItemGrid(slotType) {
   const modalGrid = document.getElementById('expandedItemGrid'); 
   if (!modalGrid) return;
-  
-  modalGrid.innerHTML = ''; 
-  const stashData = state.stash || {};
-  
-  for (const [itemId, quantity] of Object.entries(stashData)) {
-    if (quantity <= 0) continue;
-    
-    const itemDef = STASH_CATALOG[itemId];
-    if (!itemDef || itemDef.type !== 'cosmetic' || itemDef.slot !== slotType) continue;
-    
-    const slot = document.createElement('div');
-    const itemRarity = itemDef.rarity || 'common'; 
-
-    // Inject rarity class (ensure aspect-ratio is handled by your CSS class .stash-slot)
-    slot.className = `stash-slot filled rarity-${itemRarity}`; 
-    
-    let displayHtml = '';
-    if (itemDef.img) {
-      const cleanImgName = itemDef.img.split('/').pop(); 
-      displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemDef.name}" style="width: 100%; height: 100%; object-fit: cover; transform: scale(2.8) translateY(-10%); pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">`;
-    }
-    
-    slot.innerHTML = `
-      ${displayHtml}
-      <div style="position: absolute; bottom: 3px; right: 5px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.9); pointer-events: none;">x${quantity}</div>
-    `;
-    
-    slot.onclick = () => {
-      window.useFromStash(itemId);
-      renderExpandedModalLayers();
-      renderExpandedItemGrid(slotType);
-    };
-    
-    modalGrid.appendChild(slot);
-  }
+  const entries = stashInventory(slotType);
+  modalGrid.innerHTML = entries.length ? entries.map(stashTileHtml).join('') : '<p class="wardrobe-empty">No clothing for this slot yet. See Wardrobe milestones under The Stash.</p>';
 }
 
 // ==========================================
@@ -298,61 +265,89 @@ document.querySelectorAll('.customizer-tab').forEach(btn => {
 // ==========================================
 // MODULE 5: STASH & KEEPER LOGIC
 // ==========================================
+// --- Permanent wardrobe rewards and shared equipment rendering ---
+function rememberWardrobeContract() {
+  if (state.contracts?.completed || state.contracts?.items?.some(item => item.claimed === true)) state.wardrobeFirstContract = true;
+}
+function wardrobeProgress(id) {
+  const requirement = STASH_CATALOG[id]?.requirement;
+  if (!requirement) return {current:0, target:1, label:'Unavailable'};
+  const [kind, goal] = requirement;
+  if (kind === 'level') return {current:Math.min(state.level || 1, goal), target:goal, label:`Reach keeper level ${goal}`};
+  if (kind === 'contract') return {current:state.wardrobeFirstContract === true || completedWeeksCount() > 0 ? 1 : 0, target:1, label:'Claim your first weekly contract'};
+  if (kind === 'trial') return {current:state.ashTrialCompleted === true ? 1 : 0, target:1, label:'Complete the Ash Trial'};
+  if (kind === 'weeks') return {current:Math.min(completedWeeksCount(), goal), target:goal, label:`Complete ${goal} contract week${goal > 1 ? 's' : ''} (not consecutive)`};
+  if (kind === 'mastery') return {current:state.masteryClaims?.[goal] === true ? 1 : 0, target:1, label:`Claim ${ELEMENT_BOOK[goal].name} mastery in the Dragon Book`};
+  return {current:['fire','water','nature'].filter(e => state.masteryClaims?.[e + '_rare'] === true).length, target:3, label:'Claim all three Radiant elemental masteries'};
+}
+function awardWardrobeMilestones() {
+  rememberWardrobeContract();
+  rememberCompletedWeek();
+  if (!state.wardrobeClaims || typeof state.wardrobeClaims !== 'object' || Array.isArray(state.wardrobeClaims)) state.wardrobeClaims = {};
+  if (!state.stash || typeof state.stash !== 'object' || Array.isArray(state.stash)) state.stash = {};
+  const added = [];
+  let changed = false;
+  for (const id of WARDROBE_IDS) {
+    if (state.wardrobeClaims[id] === true) continue;
+    const owned = ownsCosmeticReward(id);
+    const progress = wardrobeProgress(id);
+    if (!owned && progress.current < progress.target) continue;
+    state.wardrobeClaims[id] = true;
+    changed = true;
+    if (!owned) { state.stash[id] = 1; added.push(id); }
+  }
+  if (changed) save();
+  const announcement = document.getElementById('wardrobeAnnouncement');
+  if (announcement && added.length) announcement.textContent = `${added.length} new wardrobe reward${added.length > 1 ? 's' : ''} added to The Stash!`;
+  return added;
+}
+function renderWardrobeMilestones() {
+  const panel = document.getElementById('wardrobeMilestones');
+  if (!panel) return;
+  panel.innerHTML = WARDROBE_SETS.map(set => `<section class="wardrobe-set rarity-${set.rarity}"><h4>${set.name} <small>${set.rarity}</small></h4>` +
+    ['head','torso','legs'].map(slot => {
+      const id = `wardrobe_${set.rarity}_${slot}`, item = STASH_CATALOG[id], p = wardrobeProgress(id), earned = state.wardrobeClaims?.[id] === true;
+      return `<div class="wardrobe-goal"><img src="${item.img}" alt="" loading="lazy" width="48" height="48"><div><strong>${slot === 'legs' ? 'Legs & boots' : slot === 'head' ? 'Head' : 'Torso'}${earned ? ' · Earned ✓' : ''}</strong><p>${p.label}</p><span>${earned ? 'Permanent · Equip from The Stash' : `${p.current}/${p.target}`}</span></div></div>`;
+    }).join('') + '</section>').join('');
+}
+function fitKeeperLayer(el, file) {
+  if (!el) return;
+  const item = Object.values(STASH_CATALOG).find(def => def.img && def.img.split('/').pop() === file?.split('/').pop());
+  const box = item?.overlay || [0,0,100,100];
+  Object.assign(el.style, {inset:'auto', left:box[0]+'%', top:box[1]+'%', width:box[2]+'%', height:box[3]+'%', objectFit:'fill', transform:'none'});
+  // Hide the base trousers only; retain the hands beside them and restore on unequip.
+  if (file?.split('/').pop() === 'body_base.png') {
+    const wearingLegs = Object.values(STASH_CATALOG).some(def => def.wardrobe && def.slot === 'legs' && def.img.split('/').pop() === state.keeper?.equipment?.legs?.split('/').pop());
+    el.style.clipPath = wearingLegs ? 'polygon(0% 0%,100% 0%,100% 100%,66.7% 100%,66.7% 89%,64% 89%,64% 78%,36% 78%,36% 89%,33.3% 89%,33.3% 100%,0% 100%)' : 'none';
+  }
+}
+function stashInventory(slotType) {
+  const entries = [];
+  for (const [id, item] of Object.entries(STASH_CATALOG)) {
+    if (slotType && (item.type !== 'cosmetic' || item.slot !== slotType)) continue;
+    const equipped = !!item.img && state.keeper?.equipment?.[item.slot]?.split('/').pop() === item.img.split('/').pop();
+    const quantity = Math.max(0, Number(state.stash?.[id]) || 0);
+    if (equipped || quantity > 0) entries.push({itemId:id, quantity:equipped ? 1 : quantity, equipped});
+  }
+  return entries.sort((a,b) => Number(b.equipped) - Number(a.equipped));
+}
+function stashTileHtml({itemId, quantity, equipped}) {
+  const item = STASH_CATALOG[itemId], rarity = item.rarity || 'common';
+  const label = `${item.name} · ${rarity}${equipped ? ' · Equipped. Click again to unequip' : item.type === 'cosmetic' ? ' · Equip' : ' · Use'}`;
+  const particles = ['epic','legendary','mythic'].includes(rarity) ? '<i class="rarity-mote mote-one"></i><i class="rarity-mote mote-two"></i><i class="rarity-mote mote-three"></i>' : '';
+  return `<button type="button" class="stash-slot filled rarity-${rarity}${equipped ? ' is-equipped' : ''}" title="${label}" aria-label="${label}" ${item.type === 'cosmetic' ? `aria-pressed="${equipped}"` : ''} onclick="window.useFromStash('${itemId}'); renderExpandedItemGrid(currentCustomizerSlot)">
+    ${item.img ? `<img src="${item.img}" alt="" loading="lazy" decoding="async">` : `<span class="stash-icon">${item.icon || '❓'}</span>`}
+    <span class="stash-rarity">${rarity}</span>${equipped ? '<span class="stash-equipped">Equipped</span>' : quantity > 1 ? `<span class="stash-quantity">×${quantity}</span>` : ''}
+    <span class="rarity-effects" aria-hidden="true">${particles}</span></button>`;
+}
 // --- STASH RENDERING & INTERACTION ---
 
 function renderStash() {
-  const stashGrid = document.querySelector('.stash-grid');
-  if (!stashGrid) return;
-  
-  stashGrid.innerHTML = ''; 
-  
-  // Convert your object dictionary into an array of entries [itemId, quantity]
-  const equippedEntries = Object.entries(state.keeper?.equipment || {})
-    .map(([slot, equippedImg]) => {
-      const fileName = equippedImg?.split('/').pop();
-      const entry = Object.entries(STASH_CATALOG).find(([_, def]) =>
-        def.slot === slot && def.img && def.img.split('/').pop() === fileName
-      );
-      return entry ? { itemId: entry[0], quantity: 1, equipped: true } : null;
-    })
-    .filter(Boolean);
-  const equippedItemIds = new Set(equippedEntries.map(entry => entry.itemId));
-  const stashEntries = Object.entries(state.stash || {})
-    .filter(([itemId, qty]) => qty > 0 && !equippedItemIds.has(itemId))
-    .map(([itemId, quantity]) => ({ itemId, quantity, equipped: false }));
-  const inventoryEntries = [...equippedEntries, ...stashEntries];
-  const totalSlots = Math.max(20, inventoryEntries.length);
-  
-  let html = ''; 
-  
-  // Keep a tidy 4 × 5 Stash, while allowing it to grow for larger inventories.
-  for (let i = 0; i < totalSlots; i++) {
-    if (i < inventoryEntries.length) {
-      const { itemId, quantity, equipped } = inventoryEntries[i];
-      const itemData = STASH_CATALOG[itemId] || { name: 'Unknown', icon: '❓', type: 'consumable', rarity: 'common' };
-      let displayHtml = '';
-      
-      if (itemData.type === 'cosmetic' && itemData.img) {
-        const cleanImgName = itemData.img.split('/').pop();
-        displayHtml = `<img src="assets/avatar/${cleanImgName}" alt="${itemData.name}" style="width: 92%; height: 92%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">`;
-      } else {
-        displayHtml = `<div style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; font-size: 2.6rem; line-height: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.7));">${itemData.icon || '❓'}</div>`;
-      }
-      
-      html += `
-        <div class="stash-slot filled rarity-${itemData.rarity || 'common'}" onclick="window.useFromStash('${itemId}')">
-          ${displayHtml}
-          ${equipped ? '<div style="position: absolute; top: 3px; left: 4px; font-size: 0.55rem; font-weight: 800; color: #76c893; text-shadow: 0 1px 3px #000; pointer-events: none;">EQUIPPED</div>' : ''}
-          <div style="position: absolute; bottom: 3px; right: 5px; font-size: 0.85rem; font-weight: 800; color: #ffcf40; text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.9); pointer-events: none;">x${quantity}</div>
-        </div>
-      `;
-    } else {
-      html += `<div class="stash-slot empty"></div>`; 
-    }
-  }
-  
-  // Update the DOM exactly once for maximum performance
-  stashGrid.innerHTML = html;
+  const grid = document.querySelector('.stash-grid');
+  if (!grid) return;
+  const entries = stashInventory();
+  const slots = Math.max(20, Math.ceil((entries.length + 4) / 4) * 4);
+  grid.innerHTML = entries.map(stashTileHtml).join('') + '<div class="stash-slot empty" aria-hidden="true"></div>'.repeat(slots - entries.length);
 }
 
 window.handleStashClick = function(stashIndex) {
@@ -388,6 +383,7 @@ window.renderExpandedModalLayers = function() {
       if (eq[slot] || slot === 'body') {
         const fileName = (eq[slot] || 'body_base.png').split('/').pop();
         el.src = `assets/avatar/${fileName}`;
+        fitKeeperLayer(el, fileName);
         el.style.display = 'block';
       } else {
         el.style.display = 'none';
@@ -548,6 +544,8 @@ function renderDragonKingPortrait() {
 // ==========================================
 
 function renderKeeperQuarters() {
+  awardWardrobeMilestones();
+  renderWardrobeMilestones();
   if (!state.keeper) state.keeper = { title: "Novice Breeder", gender: "male" };
   if (!state.keeper.equipment) state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
   
@@ -562,12 +560,14 @@ function renderKeeperQuarters() {
   
   const bodyLayer = document.getElementById('layer-body');
   if (bodyLayer) bodyLayer.src = getCleanPath(eq.body, 'body_base.png');
+  fitKeeperLayer(bodyLayer, eq.body || 'body_base.png');
 
   ['legs', 'torso', 'head'].forEach(layer => {
     const el = document.getElementById(`layer-${layer}`);
     if (el) {
       el.style.display = eq[layer] ? 'block' : 'none';
       if (eq[layer]) el.src = getCleanPath(eq[layer]);
+      fitKeeperLayer(el, eq[layer]);
     }
   });
 
@@ -1765,6 +1765,7 @@ function contractWeek(now = Date.now()) {
   return { key, next: next.getTime() };
 }
 function rollContracts() {
+  rememberWardrobeContract();
   rememberCompletedWeek();
   const week = contractWeek();
   if (state.contracts?.week === week.key) return false;

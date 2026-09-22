@@ -75,7 +75,7 @@ body.storybook button {
 }
 body.storybook button:focus-visible, body.storybook select:focus-visible,
 body.storybook input:focus-visible { outline: 3px solid #ad573b !important; outline-offset: 3px; }
-body.storybook #app button:not(.tab-btn):not(.stat-pill):not(.book-arrow) {
+body.storybook #app button:not(.tab-btn):not(.stat-pill):not(.book-arrow):not(.stash-slot) {
   background: #53704f !important; color: #fff9e9 !important;
   border: 1px solid #415b3e !important; border-radius: 12px !important;
   box-shadow: 0 3px 0 #344d36, inset 0 1px 0 #ffffff2b !important;
@@ -202,7 +202,7 @@ body.storybook #nextPageBtn::after { content: '›'; font: 32px Georgia; }
 body.storybook #prevPageBtn::after { content: '‹'; font: 32px Georgia; }
 body.storybook #app #resetBookGameBtn { background: transparent !important; color: #934735 !important; box-shadow: none !important; border-color: #c9ad91 !important; font-size: 10px !important; }
 body.storybook #toast { background: #3f5b43 !important; color: #fff8e5 !important; border: 1px solid #9aaa7c; border-radius: 15px; }
-body.storybook #app button:not(.tab-btn):not(.stat-pill):not(.book-arrow) { font-family: 'Montserrat', sans-serif !important; }
+body.storybook #app button:not(.tab-btn):not(.stat-pill):not(.book-arrow):not(.stash-slot) { font-family: 'Montserrat', sans-serif !important; }
 body.storybook #app button.nest-tab-btn:not(.active), body.storybook #app button.customizer-tab:not(.active) { background: #dfe4cd !important; color: #4b6042 !important; box-shadow: none !important; }
 body.storybook #perchRow .perch > span { text-shadow: none !important; }
 body.storybook #contractsClose { position: sticky; bottom: 0; }
