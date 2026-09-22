@@ -198,7 +198,7 @@ function renderExpandedItemGrid(slotType) {
   const modalGrid = document.getElementById('expandedItemGrid'); 
   if (!modalGrid) return;
   const entries = stashInventory(slotType);
-  modalGrid.innerHTML = entries.length ? entries.map(stashTileHtml).join('') : '<p class="wardrobe-empty">No clothing for this slot yet. See Wardrobe milestones under The Stash.</p>';
+  updateWardrobeGrid(modalGrid, entries.length ? entries.map(stashTileHtml).join('') : '<p class="wardrobe-empty">No clothing for this slot yet. See Wardrobe milestones under The Stash.</p>');
 }
 
 // ==========================================
@@ -212,6 +212,9 @@ function closeExpandedCustomizer() {
 
 // 1. Open / Close Modal Listeners (Grouped cleanly)
 document.getElementById('avatarFrameBtn')?.addEventListener('click', openExpandedCustomizer);
+document.getElementById('avatarFrameBtn')?.addEventListener('keydown', event => {
+  if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openExpandedCustomizer(); }
+});
 ['closeExpandedModalBtn', 'modalDoneBtn'].forEach(id => {
   document.getElementById(id)?.addEventListener('click', closeExpandedCustomizer);
 });
@@ -304,6 +307,9 @@ function awardWardrobeMilestones() {
 function renderWardrobeMilestones() {
   const panel = document.getElementById('wardrobeMilestones');
   if (!panel) return;
+  const signature = JSON.stringify([state.level,state.ashTrialCompleted,state.wardrobeFirstContract,state.completedContractWeeks,state.masteryClaims,state.wardrobeClaims]);
+  if (panel.wardrobeSignature === signature) return;
+  panel.wardrobeSignature = signature;
   panel.innerHTML = WARDROBE_SETS.map(set => `<section class="wardrobe-set rarity-${set.rarity}"><h4>${set.name} <small>${set.rarity}</small></h4>` +
     ['head','torso','legs'].map(slot => {
       const id = `wardrobe_${set.rarity}_${slot}`, item = STASH_CATALOG[id], p = wardrobeProgress(id), earned = state.wardrobeClaims?.[id] === true;
@@ -335,19 +341,27 @@ function stashTileHtml({itemId, quantity, equipped}) {
   const item = STASH_CATALOG[itemId], rarity = item.rarity || 'common';
   const label = `${item.name} · ${rarity}${equipped ? ' · Equipped. Click again to unequip' : item.type === 'cosmetic' ? ' · Equip' : ' · Use'}`;
   const particles = ['epic','legendary','mythic'].includes(rarity) ? '<i class="rarity-mote mote-one"></i><i class="rarity-mote mote-two"></i><i class="rarity-mote mote-three"></i>' : '';
-  return `<button type="button" class="stash-slot filled rarity-${rarity}${equipped ? ' is-equipped' : ''}" title="${label}" aria-label="${label}" ${item.type === 'cosmetic' ? `aria-pressed="${equipped}"` : ''} onclick="window.useFromStash('${itemId}'); renderExpandedItemGrid(currentCustomizerSlot)">
+  return `<button type="button" data-item-id="${itemId}" class="stash-slot filled rarity-${rarity}${equipped ? ' is-equipped' : ''}" title="${label}" aria-label="${label}" ${item.type === 'cosmetic' ? `aria-pressed="${equipped}"` : ''} onclick="window.useFromStash('${itemId}'); renderExpandedItemGrid(currentCustomizerSlot)">
     ${item.img ? `<img src="${item.img}" alt="" loading="lazy" decoding="async">` : `<span class="stash-icon">${item.icon || '❓'}</span>`}
     <span class="stash-rarity">${rarity}</span>${equipped ? '<span class="stash-equipped">Equipped</span>' : quantity > 1 ? `<span class="stash-quantity">×${quantity}</span>` : ''}
     <span class="rarity-effects" aria-hidden="true">${particles}</span></button>`;
 }
 // --- STASH RENDERING & INTERACTION ---
+function updateWardrobeGrid(grid, html) {
+  // Keep animations and keyboard focus stable during unrelated game renders.
+  if (grid.dataset?.wardrobeHtml === html) return;
+  const focusId = grid.contains?.(document.activeElement) ? document.activeElement?.dataset?.itemId : null;
+  grid.innerHTML = html;
+  if (grid.dataset) grid.dataset.wardrobeHtml = html;
+  if (focusId && Object.prototype.hasOwnProperty.call(STASH_CATALOG, focusId)) grid.querySelector?.(`[data-item-id="${focusId}"]`)?.focus({preventScroll:true});
+}
 
 function renderStash() {
   const grid = document.querySelector('.stash-grid');
   if (!grid) return;
   const entries = stashInventory();
   const slots = Math.max(20, Math.ceil((entries.length + 4) / 4) * 4);
-  grid.innerHTML = entries.map(stashTileHtml).join('') + '<div class="stash-slot empty" aria-hidden="true"></div>'.repeat(slots - entries.length);
+  updateWardrobeGrid(grid, entries.map(stashTileHtml).join('') + '<div class="stash-slot empty" aria-hidden="true"></div>'.repeat(slots - entries.length));
 }
 
 window.handleStashClick = function(stashIndex) {
