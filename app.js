@@ -948,6 +948,15 @@ function eggPrice() {
 
 function shopEggLevel() { return Math.max(0, Math.min(2, highestOwned() - 2)); }
 
+function nextDecorGoal() {
+  return DECOR.find(d => !state.decor?.[d.id] && highestOwned() >= d.needStage) || null;
+}
+function toggleDecorSavings() {
+  if (state.mode !== 'home') return;
+  state.saveForDecor = !state.saveForDecor;
+  save(); render();
+}
+
 function buyEgg() {
   if (state.mode === "stage") {
     toast("Buy eggs at the nest");
@@ -955,6 +964,11 @@ function buyEgg() {
   }
   
   const cost = eggPrice();
+  const reserve = state.saveForDecor ? nextDecorGoal() : null;
+  if (reserve && state.coins - cost < reserve.cost) {
+    toast(`Saving ${reserve.cost} coins for ${reserve.name}. Turn savings off in Nest to spend freely.`);
+    return;
+  }
   if (state.coins < cost) { 
     toast(`Need ${cost} 🪙 for an egg`); 
     return; 
@@ -1584,6 +1598,8 @@ function masteryProgress(id) {
 }
 
 function activeMasteryTitle() {
+  const collectionTitle = SANCTUARY_COLLECTION[state.keeper?.collectionTitle];
+  if (collectionTitle?.kind === 'title' && state.collectionOwned?.[state.keeper.collectionTitle] === true) return collectionTitle.name;
   const id = state.keeper?.masteryTitle;
   return Object.prototype.hasOwnProperty.call(MASTERY_REWARDS,id) && state.masteryClaims?.[id] === true
     ? MASTERY_REWARDS[id].title : '';
@@ -1606,6 +1622,7 @@ function equipMasteryTitle(id) {
   if (id && (!Object.prototype.hasOwnProperty.call(MASTERY_REWARDS,id) || state.masteryClaims?.[id] !== true)) return;
   state.keeper = state.keeper || {title:'Novice Breeder'};
   state.keeper.masteryTitle = id || null;
+  state.keeper.collectionTitle = null;
   save(); renderKeeperQuarters(); renderMastery();
 }
 
@@ -1748,6 +1765,7 @@ function contractWeek(now = Date.now()) {
   return { key, next: next.getTime() };
 }
 function rollContracts() {
+  rememberCompletedWeek();
   const week = contractWeek();
   if (state.contracts?.week === week.key) return false;
   const tier = highestOwned();
@@ -1788,6 +1806,7 @@ function claimContract(index, week) {
   state.coins += item.reward;
   if (state.contracts.items.every(c => c.claimed) && !state.contracts.completed) {
     state.contracts.completed = true;
+    rememberCompletedWeek();
     state.coins += 500;
     state.contractTokens = (state.contractTokens || 0) + 1;
     toast('Week complete! +500 coins and 1 cosmetic token saved for cosmetic rewards.');
@@ -1831,9 +1850,12 @@ function redeemCosmetic(id) {
   if (!ELEMENTAL_ASSETS_READY) return;
   const item = STASH_CATALOG[id];
   if (state.mode !== 'home' || !item || !Number.isInteger(item.tokenCost) || ownsCosmeticReward(id)) return;
+  if (!masteryGateMet(item.mastery)) { toast('Claim the required elemental mastery first.'); return; }
   const tokens = state.contractTokens || 0;
   if (tokens < item.tokenCost) { toast('Earn cosmetic tokens by completing weekly contracts.'); return; }
+  if (state.coins < (item.coinCost || 0)) { toast('More coins are needed for this frame.'); return; }
   state.contractTokens = tokens - item.tokenCost;
+  state.coins -= item.coinCost || 0;
   state.redeemedCosmetics = state.redeemedCosmetics || {};
   state.redeemedCosmetics[id] = true;
   state.stash = state.stash || {};
@@ -1847,8 +1869,63 @@ function renderCosmeticShop() {
   if (!ELEMENTAL_ASSETS_READY) { target.innerHTML = '<p>Elemental frames are being prepared. Your tokens remain saved.</p>'; return; }
   target.innerHTML = Object.entries(STASH_CATALOG).filter(([,item]) => Number.isInteger(item.tokenCost)).map(([id,item]) =>
     `<section class="cosmetic-reward"><img src="${item.img}" alt="${item.name} portrait frame"><strong>${item.name}</strong>
-      <button onclick="redeemCosmetic('${id}')" ${ownsCosmeticReward(id) || state.mode !== 'home' || (state.contractTokens || 0) < item.tokenCost ? 'disabled' : ''}>
-      ${ownsCosmeticReward(id) ? 'Owned ✓' : item.tokenCost ? item.tokenCost + ' cosmetic token' : 'Claim free'}</button></section>`).join('');
+      ${item.mastery ? '<p>Requires all three Main mastery rewards claimed.</p>' : ''}
+      <button onclick="redeemCosmetic('${id}')" ${ownsCosmeticReward(id) || state.mode !== 'home' || !masteryGateMet(item.mastery) || state.coins < (item.coinCost || 0) || (state.contractTokens || 0) < item.tokenCost ? 'disabled' : ''}>
+      ${ownsCosmeticReward(id) ? 'Owned ✓' : item.tokenCost ? item.tokenCost + ' cosmetic tokens' + (item.coinCost ? ' + ' + item.coinCost.toLocaleString() + ' coins' : '') : 'Claim free'}</button></section>`).join('');
+}
+
+function rememberCompletedWeek() {
+  if (!state.contracts?.completed || !/^\d{4}-\d{1,2}-\d{1,2}$/.test(state.contracts.week)) return;
+  if (!state.completedContractWeeks || typeof state.completedContractWeeks !== 'object' || Array.isArray(state.completedContractWeeks)) state.completedContractWeeks = {};
+  state.completedContractWeeks[state.contracts.week] = true;
+}
+function completedWeeksCount() {
+  return Object.entries(state.completedContractWeeks || {}).filter(([week,done]) => /^\d{4}-\d{1,2}-\d{1,2}$/.test(week) && done === true).length;
+}
+function masteryGateMet(gate) {
+  return !gate || (gate === 'all' ? ['fire','water','nature'].every(e => state.masteryClaims?.[e] === true) : state.masteryClaims?.[gate] === true);
+}
+function collectionAvailable(item) {
+  return masteryGateMet(item.mastery) && completedWeeksCount() >= (item.weeks || 0);
+}
+function claimCollection(id) {
+  if (state.mode !== 'home' || !Object.prototype.hasOwnProperty.call(SANCTUARY_COLLECTION,id)) return;
+  rememberCompletedWeek();
+  const item = SANCTUARY_COLLECTION[id];
+  if (state.collectionOwned?.[id] === true || !collectionAvailable(item)) return;
+  if (state.coins < item.coins || (state.contractTokens || 0) < item.tokens) { toast('Earn more coins or cosmetic tokens first.'); return; }
+  if (!state.collectionOwned || typeof state.collectionOwned !== 'object' || Array.isArray(state.collectionOwned)) state.collectionOwned = {};
+  state.coins -= item.coins;
+  state.contractTokens = (state.contractTokens || 0) - item.tokens;
+  state.collectionOwned[id] = true;
+  save(); render(); toast(item.name + ' unlocked permanently. Select Equip to use it.');
+}
+function equipCollection(id) {
+  if (state.mode !== 'home' || !Object.prototype.hasOwnProperty.call(SANCTUARY_COLLECTION,id) || state.collectionOwned?.[id] !== true) return;
+  const item = SANCTUARY_COLLECTION[id];
+  state.keeper = state.keeper || {title:'Novice Breeder'};
+  if (item.kind === 'title') {
+    state.keeper.collectionTitle = state.keeper.collectionTitle === id ? null : id;
+    state.keeper.masteryTitle = null;
+  } else state.sanctuaryStyle = state.sanctuaryStyle === id ? null : id;
+  save(); render();
+}
+function renderCollection() {
+  rememberCompletedWeek();
+  const equipped = SANCTUARY_COLLECTION[state.sanctuaryStyle];
+  const element = equipped?.kind === 'sanctuary' && state.collectionOwned?.[state.sanctuaryStyle] === true ? equipped.element : '';
+  document.getElementById('app')?.setAttribute('data-sanctuary', element);
+  setSafeText('sanctuaryBadge', element ? equipped.icon + ' ' + equipped.name : '');
+  setSafeText('collectionSummary', `${Object.keys(SANCTUARY_COLLECTION).filter(id => state.collectionOwned?.[id] === true).length}/${Object.keys(SANCTUARY_COLLECTION).length} collected · ${completedWeeksCount()}/4 weeks for Steadfast Keeper · ${state.contractTokens || 0} tokens`);
+  const target = document.getElementById('sanctuaryCollection');
+  if (!target) return;
+  target.innerHTML = Object.entries(SANCTUARY_COLLECTION).map(([id,item]) => {
+    const owned = state.collectionOwned?.[id] === true;
+    const active = item.kind === 'title' ? state.keeper?.collectionTitle === id : state.sanctuaryStyle === id;
+    const ready = collectionAvailable(item);
+    const requirement = item.weeks ? `Complete ${item.weeks} weekly sets (${completedWeeksCount()}/${item.weeks})` : item.mastery === 'all' ? 'Claim all three Main mastery rewards' : `Claim ${ELEMENT_BOOK[item.mastery].name} Main mastery`;
+    return `<section class="collection-card"><div class="collection-emblem ${item.element || ''}" aria-hidden="true">${item.icon}</div><h3>${item.name}</h3><p>${item.kind === 'title' ? 'Keeper title' : 'Sanctuary style'} · ${requirement}</p><p>${item.coins.toLocaleString()} coins${item.tokens ? ' + '+item.tokens+' cosmetic tokens' : ''}</p><button onclick="${owned ? 'equipCollection' : 'claimCollection'}('${id}')" ${state.mode !== 'home' || !owned && (!ready || state.coins < item.coins || (state.contractTokens || 0) < item.tokens) ? 'disabled' : ''}>${owned ? active ? 'Equipped · remove' : 'Equip' : !ready ? 'Locked' : 'Unlock'}</button></section>`;
+  }).join('');
 }
 function openContracts() {
   rollContracts(); save(); renderContractsPanel();
@@ -2361,6 +2438,10 @@ function render() {
   }
 
   // --- 3. MODULAR RENDERS ---
+  const savingsGoal = nextDecorGoal();
+  setText('savingsStatus', savingsGoal ? `Next upgrade: ${savingsGoal.name} · ${Math.min(state.coins, savingsGoal.cost)}/${savingsGoal.cost} coins. Savings protects this amount from dragon purchases only.` : 'Discover more dragons to unlock upgrades, or enjoy your completed Nest.');
+  setText('savingsToggle', state.saveForDecor ? 'Upgrade savings: On' : 'Upgrade savings: Off');
+  document.getElementById('savingsToggle')?.setAttribute('aria-pressed', String(!!state.saveForDecor));
   setText('hatcheryHint', state.mode === 'stage' ? `First ${ASH_GRACE} merges are safe • ${TRAIL_GATHERS + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0)} starting gathers`
     : highestOwned() >= 4 ? 'Hatchery: 80% Hatchling / 20% Wyrmling • 1 energy per gather'
     : highestOwned() >= 3 ? 'Hatchery: 80% Egg / 20% Hatchling • discover Hearth for the next upgrade'
@@ -2371,6 +2452,7 @@ function render() {
   renderRoost();
   renderKeeperQuarters();
   tickEnergy();
+  renderCollection();
 
   // --- 4. DECOR & MOUNTAIN ROOMS ---
   const nestEl = document.getElementById("nest");
@@ -2478,11 +2560,13 @@ function render() {
       const flashed = state._flash && state._flash.includes(i);
       cell.className = "cell" + (isLocked(i) ? " locked" : "") + (isAsh(i) ? " ash" : "") + (flashed ? " flash" : "");
       cell.dataset.i = i;
-      if (isLocked(i)) cell.innerHTML = `fog • ${unlockCost()} 🪙`;
+      cell.setAttribute('aria-label', isLocked(i) ? `Locked tile. Open for ${unlockCost()} coins` : isAsh(i) ? 'Ash tile. Clear with a nearby promotion' : cells[i] ? `${CHAIN[cells[i].level].name}, ${cells[i].count} dragons${cells[i].shiny ? ', shiny' : ''}` : 'Empty tile');
+      if (isLocked(i)) cell.innerHTML = `🔒 Open<br>${unlockCost()} 🪙`;
       else if (isAsh(i)) cell.innerHTML = ashSvg();
       else if (cells[i]) cell.innerHTML = itemHtml(cells[i]);
       boardEl.appendChild(cell);
     }
+    updateBoardFeedback();
   }
   
   if (state.mode === "stage") checkTrailStuck();
@@ -2560,6 +2644,28 @@ function cellFromPoint(x, y) {
   return cell ? +cell.dataset.i : null;
 }
 
+let selectedCell = -1;
+function boardFeedback(index = selectedCell) {
+  const cells = board();
+  const item = cells[index];
+  const free = cells.filter((c,i) => !c && !isLocked(i) && !isAsh(i)).length;
+  if (!item) return free ? `${free} open tiles · drag matching stages together; five grow into one.`
+    : 'Board full · combine stacks, perch a dragon, or open land to gather again.';
+  if (item.level === 5) return 'Elder selected · final stage. Move it or place it in the Roost.';
+  const total = cells.reduce((n,c,i) => n + (c?.level === item.level && !isLocked(i) && !isAsh(i) ? c.count : 0), 0);
+  return `${CHAIN[item.level].name} ×${item.count} selected · ${total}/5 on board${total >= 5 ? ' · ready to grow!' : ` · need ${5-total} more`}`;
+}
+function updateBoardFeedback(index = selectedCell) {
+  selectedCell = board()[index] && !isLocked(index) && !isAsh(index) ? index : -1;
+  const item = board()[selectedCell];
+  document.querySelectorAll('#board .cell').forEach(cell => {
+    const i = +cell.dataset.i;
+    cell.classList.toggle('selected-dragon', i === selectedCell);
+    cell.classList.toggle('matching-dragon', !!item && item.level < 5 && i !== selectedCell && board()[i]?.level === item.level && !isLocked(i) && !isAsh(i));
+  });
+  setSafeText('boardStatus', boardFeedback());
+}
+
 // --- DRAG START ---
 boardEl?.addEventListener("pointerdown", (e) => {
   const cell = e.target.closest(".cell");
@@ -2611,6 +2717,7 @@ boardEl?.addEventListener("pointerdown", (e) => {
   if (!currentBoard[i]) return;
   
   drag = { from: i };
+  updateBoardFeedback(i);
   
   ghost = document.createElement("div");
   ghost.className = "ghost";
@@ -2652,7 +2759,7 @@ boardEl?.addEventListener("pointermove", (e) => {
     const b = board()[over];
     
     // Highlight if dropping on a valid matching dragon or an empty cell
-    if (over !== drag.from && a && ((b && a.level === b.level) || !b)) {
+    if (over !== drag.from && a && ((b && a.level === b.level && a.level < 5) || !b)) {
       cell.classList.add("valid");
     }
   }
@@ -2721,6 +2828,7 @@ function endDrag(e) {
   }
 
   drag = null;
+  selectedCell = cellEl ? +cellEl.dataset.i : -1;
   
   // Release the pointer capture cleanly
   if (typeof boardEl !== 'undefined' && e.pointerId) {
@@ -2961,10 +3069,7 @@ function initGame() {
   });
   bindClose("sleepyGuideClose", "sleepyGuide");
 
-  // --- DEV CHEAT: Instant Level Up ---
-  document.querySelector(".level-pill")?.addEventListener("click", () => {
-    addXp(xpNeed(state.level || 1)); 
-  });
+  // Level is informational; production UI must not award XP on a stat click.
 
   // --- TAB SWITCHING (NEST) ---
   document.querySelectorAll(".nest-tab-btn").forEach(btn => {
@@ -2995,6 +3100,7 @@ function initGame() {
 // ==========================================
 
 function executeTabSwitch(targetTab, viewId) {
+  selectedCell = -1;
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   

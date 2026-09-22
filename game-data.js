@@ -44,7 +44,7 @@ const STASH_CATALOG = {
   breeder_tunic: { name: "Apprentice Tunic", rarity: "uncommon", icon: "🧥", type: "cosmetic", slot: "torso", img: "assets/avatar/torso_tunic.png" },
   rare_tunic: { name: "Adept Tunic", rarity: "rare", icon: "🧥", type: "cosmetic", slot: "torso", img: "assets/avatar/torso_tunic_rare.png" },
   epic_tunic: { name: "Master Tunic", rarity: "epic", icon: "🧥", type: "cosmetic", slot: "torso", img: "assets/avatar/torso_tunic_epic.png" },
-  border_obsidian: { name: "Obsidian Frame", rarity: "epic", icon: "🔳", type: "cosmetic", slot: "border", img: "assets/avatar/border_obsidian.png" },
+  border_obsidian: { name: "Obsidian Frame", rarity: "epic", icon: "🔳", type: "cosmetic", slot: "border", img: "assets/avatar/border_obsidian.png", tokenCost:4, coinCost:75000, mastery:'all' },
 };
 
 const CHAIN = [
@@ -98,6 +98,15 @@ const ROOMS = [
   { id: "spring", name: "Spring hall", need: "pool", art: "♨️" },
   { id: "vault", name: "Tea vault", need: "hoard", art: "🫖" },
 ];
+
+// Permanent, purely visual endgame rewards. No timed exclusivity or power boosts.
+const SANCTUARY_COLLECTION = {
+  ember_garden: {name:'Ember Garden', kind:'sanctuary', element:'fire', icon:'🔥', tokens:2, coins:25000, mastery:'fire'},
+  moon_pool: {name:'Moon Pool', kind:'sanctuary', element:'water', icon:'💧', tokens:2, coins:25000, mastery:'water'},
+  grove_canopy: {name:'Grove Canopy', kind:'sanctuary', element:'nature', icon:'🌿', tokens:2, coins:25000, mastery:'nature'},
+  guardian_title: {name:'Sanctuary Guardian', kind:'title', icon:'🏵️', tokens:0, coins:100000, mastery:'all'},
+  steadfast_title: {name:'Steadfast Keeper', kind:'title', icon:'🌙', tokens:0, coins:50000, weeks:4},
+};
 
 const DECOR = [
   { id: "moss", name: "Moss bed", art: "🌿", cost: 600, bonus: 0.1, needStage: 1 },

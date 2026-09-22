@@ -291,7 +291,7 @@ function mergeInto(fromI, toI) {
   total %= 5;
 
   if (!produced) {
-    cells[toI] = { level: source.level, count: total, shiny: source.shiny, element: carriedElement };
+    cells[toI] = { level: source.level, count: total, shiny: !!(source.shiny || target.shiny), element: carriedElement };
     return true;
   }
 

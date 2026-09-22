@@ -15,7 +15,7 @@
     // Restore appearance before paint; keep this separate from game progress.
     try { document.documentElement.dataset.appearance = localStorage.getItem('ember-nest-appearance') === 'dark' ? 'dark' : 'light'; } catch (_) {}
   </script>
-  <link rel="stylesheet" href="storybook.css?v=3">
+  <link rel="stylesheet" href="storybook.css?v=4">
   <link rel="stylesheet" href="moonlight.css?v=1">
   
   <style>
@@ -101,6 +101,7 @@
 
             <h2 class="keeper-name" id="keeper-name-display" style="margin: 0; font-size: 1.6rem; color: #ffffff; letter-spacing: 0.5px; font-family: 'Playfair Display', serif;">Keeper</h2>
             <span class="keeper-title" id="keeper-title-display" style="font-size: 0.85rem; color: #a0a0b5; margin-top: 0.4rem; text-transform: uppercase; font-weight: 600;">Novice Breeder</span>
+            <span id="sanctuaryBadge" class="sanctuary-badge"></span>
         </div>
 
         <!-- The Stash -->
@@ -148,6 +149,7 @@
         </div>
         
         <!-- ACTION BUTTONS -->
+        <p id="boardStatus" class="board-status" role="status" aria-live="polite"></p>
         <div class="action-buttons" style="display: flex; justify-content: space-between; gap: 8px; width: 100%; margin-top: 15px; box-sizing: border-box;">
           <button id="gather">Gather egg 🥚</button>
           <button id="buyEgg" onclick="buyEgg()">Buy Egg</button>          
@@ -208,11 +210,16 @@
       <!-- === VIEW 5: THE NEST === -->
       <div id="view-nest" class="view">
         <div class="section-title">Mountain Rooms & Decor</div>
+        <section class="savings-panel">
+          <p id="savingsStatus"></p>
+          <button id="savingsToggle" aria-pressed="false" onclick="toggleDecorSavings()">Upgrade savings: Off</button>
+        </section>
 
         <!-- Sub-Tabs Navigation -->
         <div class="nest-sub-tabs" style="display: flex; gap: 8px; margin-bottom: 16px; justify-content: center;">
           <button class="nest-tab-btn active" data-subtab="sub-rooms" style="background: #415a77; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600;">Rooms</button>
           <button class="nest-tab-btn" data-subtab="sub-decor" style="background: #1b263b; border: 1px solid #778da9; color: #e0e1dd; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600;">Decor</button>
+          <button class="nest-tab-btn" data-subtab="sub-collection">Collection</button>
         </div>
 
         <!-- Sub-Tab Content: Rooms -->
@@ -223,7 +230,13 @@
         <!-- Sub-Tab Content: Decor -->
         <div id="sub-decor" class="nest-sub-view" style="display: none; padding: 20px; text-align: center; background: rgba(27, 38, 59, 0.4); border-radius: 8px; border: 1px dashed #778da9;">
           <div id="nest"></div>
-          <p style="color: #e0e1dd; font-size: 0.9rem; margin-top: 16px;">More decor and customization items coming soon.</p>
+          <p style="color: #e0e1dd; font-size: 0.9rem; margin-top: 16px;">Explore Collection for permanent mastery and weekly-contract cosmetics.</p>
+        </div>
+        <div id="sub-collection" class="nest-sub-view" style="display:none;width:100%">
+          <p id="collectionSummary" class="collection-summary"></p>
+          <p class="collection-summary">Sanctuary styles decorate your board and keeper profile. Titles appear on Home. All rewards are permanent and cosmetic only. Weeks need not be consecutive.</p>
+          <div id="sanctuaryCollection"></div>
+          <button onclick="openContracts()">Frames & weekly contracts</button>
         </div>
       </div>
 
@@ -508,8 +521,8 @@
   </div> <!-- This is your existing closing div for <div id="app"> -->
 
   <!-- Your scripts remain at the very bottom -->
-  <script src="game-data.js?v=1"></script>
-  <script src="game-core.js?v=1"></script>
-  <script src="app.js"></script>
+  <script src="game-data.js?v=2"></script>
+  <script src="game-core.js?v=2"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

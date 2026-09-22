@@ -1,6 +1,7 @@
 // Reward-inclusive policy benchmarks. No real browser saves or human timing claims.
 const { game } = require('../tests/support/game-harness.cjs');
 const results = [];
+const reserveDecor = process.argv.includes('--reserve-decor');
 for (const scenario of ['fresh', 'mid', 'advanced']) for (const shop of [false, true]) {
   const runs = [];
   for (let seed = 1; seed <= 30; seed++) {
@@ -51,6 +52,7 @@ for (const scenario of ['fresh', 'mid', 'advanced']) for (const shop of [false, 
         state.perchAt=Date.now();
       }
       state.contracts=null;rollContracts();
+      state.saveForDecor=${reserveDecor};
       const startingCoins=state.coins;
       // Optimistic assumption: one earned Trial victory at minute five, then the
       // remaining daily rewards via production Blitz. Trial-solving is benchmarked separately.
@@ -71,7 +73,7 @@ for (const scenario of ['fresh', 'mid', 'advanced']) for (const shop of [false, 
     runs.push(JSON.parse(g.run(`JSON.stringify({hearthAt,elderAt,decorAt,coins:state.coins,startingCoins,level:state.level,chestCount,gifts:state.gives,ledger})`)));
   }
   const median = values => {const v=values.filter(x=>x!==null).sort((a,b)=>a-b);return v.length?v[Math.floor(v.length/2)]:null;};
-  results.push({scenario,shop,samples:runs.length,minutes:180,
+  results.push({scenario,shop,reserveDecor,samples:runs.length,minutes:180,
     medians:Object.fromEntries(['hearthAt','elderAt','decorAt','coins','level','chestCount','gifts'].map(k=>[k,median(runs.map(r=>r[k]))])),
     elderRuns:runs.filter(r=>r.elderAt!==null).length,
     allDecorRuns:runs.filter(r=>r.decorAt!==null).length,

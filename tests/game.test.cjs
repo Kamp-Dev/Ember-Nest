@@ -5,6 +5,74 @@ const path = require('node:path');
 const { game } = require('./support/game-harness.cjs');
 const root = path.resolve(__dirname, '..');
 
+test('four actual weekly claim cycles unlock the return title without duplicate week credit', () => {
+  const g=game();
+  for (let week=0;week<4;week++) {
+    g.run(`rollContracts();for(const c of state.contracts.items)c.progress=c.target;
+      for(let i=0;i<5;i++)claimContract(i,state.contracts.week);
+      claimContract(4,state.contracts.week);rememberCompletedWeek();`);
+    g.run(`assert.equal(completedWeeksCount(),${week+1})`);
+    g.advance(14*24*60*60*1000);
+  }
+  g.run(`state.coins=50000;claimCollection('steadfast_title');assert.equal(state.collectionOwned.steadfast_title,true);assert.equal(state.coins,0);`);
+});
+test('collection rejects unaffordable, unknown, unowned and trial actions', () => {
+  const g=game();g.run(`state.masteryClaims={fire:true,water:true,nature:true};state.coins=24999;state.contractTokens=10;
+    claimCollection('ember_garden');assert.equal(state.coins,24999);assert.equal(state.contractTokens,10);
+    state.coins=100000;state.contractTokens=1;claimCollection('ember_garden');assert.equal(state.coins,100000);
+    equipCollection('ember_garden');assert.equal(state.sanctuaryStyle,undefined);
+    claimCollection('__proto__');equipCollection('missing');assert.equal(state.coins,100000);
+    state.mode='stage';state.contractTokens=10;claimCollection('guardian_title');assert.equal(state.coins,100000);`);
+});
+
+test('collection unlocks charge once, require mastery and never change income', () => {
+  const g=game();g.run(`state.coins=200000;state.contractTokens=10;const originalBonus=bonus();
+    claimCollection('ember_garden');assert.equal(state.coins,200000);
+    state.masteryClaims.fire=true;claimCollection('ember_garden');assert.equal(state.coins,175000);assert.equal(state.contractTokens,8);
+    claimCollection('ember_garden');assert.equal(state.coins,175000);
+    equipCollection('ember_garden');assert.equal(state.sanctuaryStyle,'ember_garden');assert.equal(bonus(),originalBonus);
+    equipCollection('ember_garden');assert.equal(state.sanctuaryStyle,null);
+    state.mode='stage';claimCollection('moon_pool');equipCollection('ember_garden');assert.equal(state.sanctuaryStyle,null);
+    state.mode='home';state.masteryClaims.water=true;state.masteryClaims.nature=true;
+    claimCollection('guardian_title');equipCollection('guardian_title');assert.equal(activeMasteryTitle(),'Sanctuary Guardian');
+    equipMasteryTitle('fire');assert.equal(activeMasteryTitle(),'Fire Keeper');
+    equipCollection('guardian_title');save();load();assert.equal(activeMasteryTitle(),'Sanctuary Guardian');
+    assert.equal(state.collectionOwned.ember_garden,true);`);
+});
+test('weekly collection history is idempotent, nonconsecutive and survives reset', () => {
+  const g=game();g.run(`state.completedContractWeeks={};state.contracts.completed=true;const firstWeek=state.contracts.week;
+    rememberCompletedWeek();rememberCompletedWeek();assert.equal(completedWeeksCount(),1);
+    state.contracts.week='2026-9-7';rollContracts();assert.equal(completedWeeksCount(),2);
+    state.completedContractWeeks['2026-8-3']=true;state.completedContractWeeks['2026-7-6']=true;
+    assert.equal(completedWeeksCount(),4);state.coins=50000;claimCollection('steadfast_title');assert.equal(state.coins,0);
+    claimCollection('steadfast_title');assert.equal(state.coins,0);save();load();assert.equal(completedWeeksCount(),4);`);
+});
+test('Obsidian frame costs coins and tokens after all Main masteries; existing ownership is preserved', () => {
+  const g=game();g.run(`state.coins=100000;state.contractTokens=8;redeemCosmetic('border_obsidian');assert.equal(state.coins,100000);
+    state.masteryClaims={fire:true,water:true,nature:true};redeemCosmetic('border_obsidian');
+    assert.equal(state.coins,25000);assert.equal(state.contractTokens,4);assert.equal(state.stash.border_obsidian,1);
+    redeemCosmetic('border_obsidian');assert.equal(state.coins,25000);assert.equal(state.stash.border_obsidian,1);`);
+});
+
+test('optional decor savings protects upgrades without changing default shop behavior', () => {
+  const g=game();g.run(`state.book={0:true,1:true};state.coins=700;state.saveForDecor=true;
+    assert.equal(nextDecorGoal().id,'moss');buyEgg();assert.equal(state.coins,700);
+    state.saveForDecor=false;buyEgg();assert.equal(state.coins,450);
+    state.saveForDecor=true;save();load();assert.equal(state.saveForDecor,true);
+    state.decor=Object.fromEntries(DECOR.map(d=>[d.id,true]));assert.equal(nextDecorGoal(),null);`);
+});
+
+test('board feedback explains matching stacks, final Elders and full boards', () => {
+  const g=game();g.run(`state.cells=Array(25).fill(null);state.cells[0]={level:2,count:3};state.cells[1]={level:2,count:2};
+    assert.match(boardFeedback(0), /ready to grow/);state.cells[1]=null;assert.match(boardFeedback(0), /need 2 more/);
+    state.cells[0]={level:5,count:1};assert.match(boardFeedback(0), /final stage/);
+    state.cells=Array.from({length:25},()=>({level:5,count:1}));assert.match(boardFeedback(-1), /Board full/);`);
+});
+test('consolidating a stack never loses a shiny target', () => {
+  const g=game();g.run(`state.cells[0]={level:1,count:1,shiny:false};state.cells[1]={level:1,count:1,shiny:true};
+    assert.equal(mergeInto(0,1),true);assert.equal(state.cells[1].shiny,true);assert.equal(state.cells[1].count,2);`);
+});
+
 test('appearance toggles, persists and stays independent of room and game progression', () => {
   const g = game();
   const button = g.nodes.get('appearanceBtn');

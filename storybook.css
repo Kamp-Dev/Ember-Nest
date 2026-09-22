@@ -227,6 +227,37 @@ body.storybook progress { accent-color: #728c59; }
 }
 
 /* Explicit rows prevent long resource values from crowding the title/tools. */
+.board-status { flex: 0 0 auto; width: 100%; margin: 0; padding: 7px 2px; font-size: 10px; line-height: 1.4; color: var(--text-main); box-sizing: border-box; }
+.savings-panel { width: 100%; padding: 12px; box-sizing: border-box; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.savings-panel p { font-size: 11px; line-height: 1.6; margin: 0 0 10px; }
+.collection-summary { font-size: 12px; line-height: 1.6; }
+body.storybook .nest-sub-tabs { width: 100%; }
+body.storybook #app #view-nest .nest-tab-btn { flex: 1; min-width: 0; padding: 8px 6px !important; font-size: 11px !important; }
+body.storybook #app #view-nest .nest-tab-btn:not(.active) { background: #dfe4cd !important; color: #4b6042 !important; box-shadow: none !important; }
+html[data-appearance='dark'] body.storybook #app #view-nest .nest-tab-btn:not(.active) { background: #293f48 !important; color: #bccbc1 !important; }
+.collection-card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin: 0 0 14px; text-align: center; }
+.collection-card h3 { font-family: 'Playfair Display', serif; margin: 10px 0; }
+.collection-card p { font-size: 12px; line-height: 1.6; }
+.collection-emblem { font-size: 32px; width: 64px; height: 64px; line-height: 64px; margin: auto; border: 2px solid var(--border); border-radius: 50%; }
+.collection-emblem.fire { background: #b9653726; border-color: #bf7e50; }
+.collection-emblem.water { background: #458ab526; border-color: #659db8; }
+.collection-emblem.nature { background: #57874826; border-color: #83a36c; }
+.sanctuary-badge { margin-top: 10px; font-size: 11px; color: var(--text-main); }
+.sanctuary-badge:empty { display: none; }
+body.storybook #app[data-sanctuary='fire'] { --sanctuary-accent: #d98e54; --sanctuary-glow: #df89332e; }
+body.storybook #app[data-sanctuary='water'] { --sanctuary-accent: #73b7d6; --sanctuary-glow: #5098d42e; }
+body.storybook #app[data-sanctuary='nature'] { --sanctuary-accent: #98b879; --sanctuary-glow: #76a7462e; }
+body.storybook #app[data-sanctuary]:not([data-sanctuary='']) #board {
+  border: 2px solid var(--sanctuary-accent); border-radius: 20px; padding: 7px !important;
+  background: var(--sanctuary-glow); box-shadow: 0 0 16px var(--sanctuary-glow);
+}
+body.storybook #app[data-sanctuary]:not([data-sanctuary='']) .keeper-profile { box-shadow: inset 0 -5px 0 var(--sanctuary-accent), inset 0 -50px 65px var(--sanctuary-glow) !important; }
+body.storybook #board .cell.selected-dragon { outline: 3px solid #ad573b; outline-offset: -3px; }
+body.storybook #board .cell.matching-dragon { outline: 2px dashed #53704f; outline-offset: -3px; }
+body.storybook #board .cell.valid { outline: 4px solid #bc722e; outline-offset: -4px; }
+html[data-appearance='dark'] body.storybook #board .cell.selected-dragon,
+html[data-appearance='dark'] body.storybook #board .cell.valid { outline-color: #f2c384; }
+html[data-appearance='dark'] body.storybook #board .cell.matching-dragon { outline-color: #a6d3b1; }
 body.storybook .game-header {
   display: grid; grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px 12px !important; padding: 10px 14px !important;
