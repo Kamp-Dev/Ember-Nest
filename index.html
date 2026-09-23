@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="moonlight.css?v=2">
   <link rel="stylesheet" href="wardrobe.css?v=21">
   <link rel="stylesheet" href="keeper-header.css?v=5">
+  <link rel="stylesheet" href="dragon-motion.css?v=2">
   
   <style>
     .coin-icon {
@@ -48,7 +49,7 @@
       <div id="keeperSettings" class="header-tools" popover="auto" aria-label="Keeper settings" ontoggle="document.getElementById('headerKeeperBtn').setAttribute('aria-expanded',String(event.newState === 'open'))">
         <button id="appearanceBtn" class="stat-pill" aria-label="Switch to dark theme" aria-pressed="false" title="Switch to dark theme">☾</button>
         <button id="muteBtn" class="stat-pill sound-pill" aria-label="Toggle Sound" title="Toggle Sound">🔊</button>
-        <button id="tileMotionBtn" class="stat-pill" aria-label="Animated tiles: On" aria-pressed="true" title="Tile-only motion; turn off for static backgrounds">✦</button>
+        <button id="tileMotionBtn" class="stat-pill" aria-label="Dragon &amp; tile motion" aria-pressed="false" title="Turn On to animate dragons and tiles, even when your device requests reduced motion. Off keeps them still.">✦</button>
         <button id="guideBtn" class="stat-pill" aria-label="How to play" title="How to play" onclick="document.getElementById('keeperSettings').hidePopover()">?</button>
       </div>
       <div class="header-right" aria-label="Player resources">
@@ -349,7 +350,7 @@
         </ol>
         <p><strong>Roost:</strong> Place dragons on perches to earn coins each minute. Visit the Dragon Bank to collect them. More rooms unlock more perches.</p>
         <p><strong>Nest:</strong> Buy décor to increase merge coin rewards and unlock rooms. Select an unlocked room to change your nest theme.</p>
-        <p><strong>Ash Trial:</strong> Start with 13 gathers and two safe merges. Merge beside ash to burn it; Young and Hearth dragons clear a row, and Elders clear a row and column. Clear 8 ash to win. After two merges, each promotion adds 2 ash. Reaching 10 ash, having no room for new ash, or exhausting your pouch with no five-merge available ends the run. Your home dragons stay safe.</p>
+        <p><strong>Ash Trial:</strong> Each run shuffles its starting dragons and 8 ash tiles. Start with 13 gathers, plus earned pouch bonuses. Only the first promotion is safe; from the second promotion onward, each adds 2 ash. Combining stacks without promoting does not add ash. Choose your landing tile beside ash to burn it; Young and Hearth dragons clear a row, and Elders clear a row and column. Clear 10 ash in total to win, including ash created during play. Reaching 10 live ash, having no room for new ash, or exhausting your pouch with no five-merge available ends the run. Your home dragons stay safe.</p>
         <p><strong>Hatchery upgrades:</strong> Discover Young for a 20% chance of gathering a Hatchling. After Hearth, gathers give Hatchlings with a 20% chance of a Wyrmling. Each gather costs 1 energy. Energy refills every 8 seconds, even while away, up to your capacity.</p>
         <p><strong>Weekly contracts:</strong> Five goals replace the old nest quests and five-gift milestone. They reset Monday at midnight in your local time. Each week's difficulty is fixed when generated. Replace one unclaimed contract per week for free (its progress is lost). Claim all five for +500 coins and a cosmetic token. In the contracts panel, claim Ember Crown free or spend one token each on Tide Crown and Grove Crown. Equip or unequip these frames from The Stash. Sleepy Dragon remains a separate daily offering.</p>
         <p><strong>Shopping:</strong> New décor unlocks with dragon discoveries and adds percentage bonuses. Each room purchase opens one fog tile. Shop prices rise gently for the first ten purchases each day, then stop rising; the next day resets prices.</p>
@@ -592,8 +593,8 @@
     <p>Motion follows your <strong>Animated tiles</strong> setting in the portrait menu. Samples cannot be equipped or consumed.</p>
   </dialog>
   <div id="wardrobeDialog" class="wardrobe-dialog" role="dialog" aria-modal="true" aria-labelledby="wardrobeDialogTitle" hidden></div>
-  <script src="game-data.js?v=11"></script>
-  <script src="game-core.js?v=9"></script>
-  <script src="app.js?v=28"></script>
+  <script src="game-data.js?v=13"></script>
+  <script src="game-core.js?v=10"></script>
+  <script src="app.js?v=31"></script>
 </body>
 </html>

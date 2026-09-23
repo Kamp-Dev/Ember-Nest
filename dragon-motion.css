@@ -1,0 +1,37 @@
+/* 2.5D idle motion for existing flat art. Only the art moves: badges, names,
+   SVG sizing and drag/drop hitboxes remain stable. No JS animation loop. */
+.dragon-motion {
+  transform-box:view-box;
+  transform-origin:50% 78%;
+  pointer-events:none;
+  --dragon-tempo:5.2s;
+  animation:none;
+}
+/* An explicit On choice must outrank the global reduced-motion UI reset. */
+html[data-tile-motion="on"] body.storybook .dragon-motion {
+  animation:var(--dragon-animation,dragon-idle) var(--dragon-tempo) ease-in-out var(--dragon-delay,0s) infinite!important;
+}
+.dragon-motion--fire { --dragon-tempo:4.4s; }
+.dragon-motion--water { --dragon-tempo:6.2s; --dragon-animation:dragon-drift; }
+.dragon-motion--nature { --dragon-tempo:6.8s; }
+.dragon-motion--elder { --dragon-tempo:7.4s; }
+.cell:nth-child(3n+1) .dragon-motion { --dragon-delay:-1.7s; }
+.cell:nth-child(3n+2) .dragon-motion { --dragon-delay:-3.1s; }
+.perch:nth-child(2) .dragon-motion { --dragon-delay:-2s; }
+.perch:nth-child(3) .dragon-motion { --dragon-delay:-4s; }
+@keyframes dragon-idle {
+  0%,100% { transform:perspective(180px) rotateY(-5deg) rotateX(1deg) translateY(0) scale(1); }
+  50% { transform:perspective(180px) rotateY(5deg) rotateX(-2deg) translateY(-.5px) scale(1.012,1.025); }
+}
+@keyframes dragon-drift {
+  0%,100% { transform:perspective(180px) rotateY(-5deg) rotateZ(-1deg) translateY(0); }
+  50% { transform:perspective(180px) rotateY(5deg) rotateZ(1deg) translateY(-.7px) scale(1.015); }
+}
+/* Still sprites while dragging or when motion is disabled. */
+html[data-tile-motion="on"] body.storybook .ghost .dragon-motion,
+html[data-tile-motion="off"] .dragon-motion { animation:none!important; transform:none!important; }
+html[data-tile-motion="on"] body.storybook .view:not(.active) .dragon-motion,
+html[data-tile-motion="on"] body.page-hidden.storybook .dragon-motion { animation-play-state:paused!important; }
+@media (prefers-reduced-motion:reduce) {
+  html:not([data-tile-motion="on"]) .dragon-motion { animation:none!important; transform:none!important; }
+}

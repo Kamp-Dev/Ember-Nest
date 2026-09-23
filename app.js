@@ -60,16 +60,17 @@ document.getElementById('appearanceBtn')?.addEventListener('click', () => {
   setAppearance(document.documentElement.dataset.appearance === 'dark' ? 'light' : 'dark');
 });
 
-// Explicit tile-only motion preference; other UI still follows reduced motion.
+// Default to the device preference; an explicit in-game choice takes priority
+// for dragon/tile effects. Other UI still follows reduced motion.
 function setTileMotion(value, persist = true) {
   const mode = value === 'off' ? 'off' : 'on';
   document.documentElement.dataset.tileMotion = mode;
   const button = document.getElementById('tileMotionBtn');
-  if (button) { button.setAttribute('aria-pressed',String(mode === 'on')); button.setAttribute('aria-label',`Animated tiles: ${mode === 'on' ? 'On' : 'Off'}`); }
+  if (button) { button.setAttribute('aria-pressed',String(mode === 'on')); button.setAttribute('aria-label',`Dragon & tile motion: ${mode === 'on' ? 'On' : 'Off'}`); }
   if (persist) { try { localStorage.setItem('ember-nest-tile-motion',mode); } catch (_) {} }
 }
-let initialTileMotion = 'on';
-try { initialTileMotion = localStorage.getItem('ember-nest-tile-motion') || 'on'; } catch (_) {}
+let initialTileMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'off' : 'on';
+try { initialTileMotion = localStorage.getItem('ember-nest-tile-motion') || initialTileMotion; } catch (_) {}
 setTileMotion(initialTileMotion,false);
 document.getElementById('tileMotionBtn')?.addEventListener('click',()=>setTileMotion(document.documentElement.dataset.tileMotion === 'on' ? 'off' : 'on'));
 
@@ -1461,17 +1462,19 @@ function dragonSvg(level, size = 42, count = 1, shiny = false, element = 'neutra
     const stage = ['wyrmling','young','hearth','elder'][level - 2];
     const suffix = level === 5 ? 1 : n;
     return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" role="img" aria-label="${element} ${CHAIN[level].name}, ${count || 1}${shiny ? ', shiny' : ''}" ${filterStyle}>
+      <g class="dragon-motion dragon-motion--${element}${level === 5 ? ' dragon-motion--elder' : ''}">
       <image href="${IMG_DIR}elements/${art}-${stage}-${suffix}.png" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="pointer-events:none;user-select:none" />
+      </g>
       </svg>`;
   }
 
   // Clean mapping for Levels 1-5 to replace the massive if/else chains
   const spriteMap = {
-    1: { base: "hatchling", anim: "breathe", speed: 1.4 },
-    2: { base: "wyrmling", anim: "breathe", speed: 1.5 },
-    3: { base: "young", anim: "breathe", speed: 1.6 },
-    4: { base: "hearth", anim: "breathe", speed: 2.0 },
-    5: { base: "elder", anim: "float", speed: 4.0, singleImg: true } 
+    1: { base: "hatchling" },
+    2: { base: "wyrmling" },
+    3: { base: "young" },
+    4: { base: "hearth" },
+    5: { base: "elder", singleImg: true }
   };
 
   const config = spriteMap[level];
@@ -1481,8 +1484,8 @@ function dragonSvg(level, size = 42, count = 1, shiny = false, element = 'neutra
     const suffix = config.singleImg ? 1 : n; // Elder only uses elder-1.png
     const currentImg = `${IMG_DIR}${config.base}-${suffix}.png`;
     
-    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" ${filterStyle}>
-      <g style="animation: ${config.anim} ${config.speed}s infinite ease-in-out; transform-origin: 16px 16px;">
+    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" role="img" aria-label="${CHAIN[level].name}, ${count || 1}${shiny ? ', shiny' : ''}" ${filterStyle}>
+      <g class="dragon-motion dragon-motion--neutral${level === 5 ? ' dragon-motion--elder' : ''}">
         <image href="${currentImg}" x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet" style="-webkit-user-drag: none; user-select: none; pointer-events: none;" />
       </g>
     </svg>`;
@@ -2990,6 +2993,30 @@ function compactCoinBalance(value) {
     }
   }
 }
+function renderStableMarkup(target, html) {
+  if (!target || target._renderedMarkup === html) return;
+  target.innerHTML = html;
+  target._renderedMarkup = html;
+}
+function renderBoardCells(target, cells) {
+  // Keep tile nodes (and unchanged animated SVGs) alive across game renders.
+  if (target.children.length !== cells.length) {
+    target.innerHTML = '';
+    for (let i=0;i<cells.length;i++) target.appendChild(document.createElement('div'));
+  }
+  for (let i=0;i<cells.length;i++) {
+    const cell=target.children[i], locked=isLocked(i), ash=isAsh(i);
+    const flashed=!!state._flash?.includes(i);
+    cell.classList.add('cell');
+    cell.classList.toggle('locked',locked);
+    cell.classList.toggle('ash',ash);
+    cell.classList.toggle('flash',flashed);
+    cell.dataset.i=i;
+    cell.setAttribute('aria-label',locked ? `Locked tile. Open for ${unlockCost()} coins` : ash ? 'Ash tile. Clear with a nearby promotion' : cells[i] ? `${CHAIN[cells[i].level].name}, ${cells[i].count} dragons${cells[i].shiny ? ', shiny' : ''}` : 'Empty tile');
+    const html=locked ? `🔒 Open<br>${unlockCost()} 🪙` : ash ? ashSvg() : cells[i] ? itemHtml(cells[i]) : '';
+    renderStableMarkup(cell,html);
+  }
+}
 function render() {
   rollDaily();
 
@@ -3193,26 +3220,15 @@ function render() {
       return `<div class="perch ${armed ? "armed" : ""}" data-perch="${i}"><span style="font-size: 0.65rem; font-weight: 700;">Empty Perch</span></div>`;
     }).join("");
 
-    if (pr) pr.innerHTML = perchHTML;
-    if (prNest) prNest.innerHTML = perchHTML;
+    renderStableMarkup(pr,perchHTML);
+    renderStableMarkup(prNest,perchHTML);
   }
   
   // --- 6. RENDER THE BOARD ---
   const cells = board();
   const boardEl = document.getElementById("board");
   if (boardEl) {
-    boardEl.innerHTML = "";
-    for (let i = 0; i < cells.length; i++) {
-      const cell = document.createElement("div");
-      const flashed = state._flash && state._flash.includes(i);
-      cell.className = "cell" + (isLocked(i) ? " locked" : "") + (isAsh(i) ? " ash" : "") + (flashed ? " flash" : "");
-      cell.dataset.i = i;
-      cell.setAttribute('aria-label', isLocked(i) ? `Locked tile. Open for ${unlockCost()} coins` : isAsh(i) ? 'Ash tile. Clear with a nearby promotion' : cells[i] ? `${CHAIN[cells[i].level].name}, ${cells[i].count} dragons${cells[i].shiny ? ', shiny' : ''}` : 'Empty tile');
-      if (isLocked(i)) cell.innerHTML = `🔒 Open<br>${unlockCost()} 🪙`;
-      else if (isAsh(i)) cell.innerHTML = ashSvg();
-      else if (cells[i]) cell.innerHTML = itemHtml(cells[i]);
-      boardEl.appendChild(cell);
-    }
+    renderBoardCells(boardEl,cells);
     updateBoardFeedback();
   }
   

@@ -476,7 +476,7 @@ test('weekly Trial progress includes Blitz and replacement use persists after re
 
 test('new players have the full trial pouch and land prices remain bounded', () => {
   game().run(`resetTrail(); assert.equal(state.trailGathers, 13);
-    assert.equal(ASH_GRACE, 2); assert.equal(unlockCost(), 250);
+    assert.equal(ASH_GRACE, 1); assert.equal(unlockCost(), 250);
     state.coins = 10000; unlock(20); assert.equal(state.coins, 9750);
     assert.equal(unlockCost(), 500);`);
 });

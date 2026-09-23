@@ -57,9 +57,19 @@ function generateTrail() {
 
   // Sample free cells without replacement so generation always terminates.
   const free = state.stageCells.map((cell, i) => cell ? -1 : i).filter(i => i >= 0);
-  for (let n = 0; n < ASH_GOAL && free.length; n++) {
+  for (let n = 0; n < ASH_START && free.length; n++) {
     const index = free.splice(Math.floor(Math.random() * free.length), 1)[0];
     state.ash[index] = true;
+  }
+  // Ash used to occupy the same eight leftover cells on every run. Shuffle
+  // complete tile records so ash and starting dragons move together without
+  // changing the opening resources or overlapping dragons with ash.
+  if (state.trialKind !== 'surge') {
+    for (let i = state.stageCells.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [state.stageCells[i], state.stageCells[j]] = [state.stageCells[j], state.stageCells[i]];
+      [state.ash[i], state.ash[j]] = [state.ash[j], state.ash[i]];
+    }
   }
 }
 

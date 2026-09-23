@@ -1,5 +1,29 @@
 # Ember Nest: content-expansion checkpoint
 
+## Dragon animation continuity
+
+Board rendering now reuses its 25 tile nodes and only replaces a tile's inner markup when its displayed contents change. Unchanged perch markup is retained too. This prevents gathers, purchases and unrelated full renders from restarting every dragon's idle animation. State labels and locked/ash/flash classes are still refreshed. No rules, currencies or saves changed.
+
+162 tests pass, including unchanged-tile write counts, element/removal updates, Trial transitions and perch caching. A memory-only browser check exercised gathering with motion enabled, confirmed animated dragon transforms afterward, and reported no console errors. This is not a frame-rate benchmark or a substitute for real-phone testing.
+
+## Ash randomized-opening follow-up — supersedes the calibration below
+
+Player feedback found the one-promotion adjustment insufficient. Confirmed root cause of repeated ash placement: the fixed 17-dragon opening left exactly eight empty cells, and all eight became ash. Sampling their order never changed the visible layout.
+
+Ash now Fisher–Yates shuffles paired dragon/ash tile records across all 25 positions on each generated opening. Starting resources remain the same (17 dragons, eight ash); target is now ten total cleared, including newly generated ash. One safe promotion and the ten-live-ash failure limit remain. `ASH_START` separates opening count from victory target. Surge retains its existing layout and rules. Independent random runs may occasionally repeat; no guarantee that every random board is solvable is claimed.
+
+Updated `audit-ash-difficulty.cjs` tests shuffled targets 8/10/12 over 100 seeds each, two policies and three pouch bonuses (1,800 runs). At the selected target ten, the one-step aimed policy clears 13/100 with the base pouch and 27/100 with +6 or +11; first-pair merging clears 0/100. Target twelve had 0/100 base-pouch aimed clears and was rejected. These limited policies neither relocate stacks to empty landing tiles nor search future moves, so these are diagnostic results, not player win-rate estimates. Difficulty needs further human feedback.
+
+156 tests pass. New coverage checks opening resource preservation, ash across all 25 board positions, more than 90 distinct ash layouts in 100 seeded runs, no dragon/ash overlaps, and victory at ten rather than eight clears. Refresh the app and start a new run to load these rules.
+
+## Ash Trial calibration — September 22
+
+Ash now has one safe opening promotion instead of two. Beginning with promotion two, two new ash spawn after warmth resolves; plain stack consolidation still creates no ash. The target (8 cleared), failure threshold (10 live), starting pouch (13 plus all earned bonuses), warmth coverage, rewards and Ember Surge rules are unchanged. The guide and existing dynamic Board hint describe the opening allowance.
+
+`node scripts/audit-ash-difficulty.cjs` compares 100 deterministic boards per rule/pouch/policy combination (1,800 runs). The one-step aimed policy clears 42→53 with no pouch bonus and 83→53 with +6 or +11. First-pair merging clears 28→29 with no bonus and 50→29 with upgraded pouches. Earlier ash creates both pressure and reachable warmth targets, so difficulty does not increase uniformly. Increasing the target to nine instead reduced base-pouch aimed clears to 11/100 and was rejected. This is a moderate calibration aimed at upgraded play, not a guaranteed challenge for experts or a measured player win rate. Policies merge before gathering and do not search future moves; human feedback remains necessary.
+
+154 automated tests pass, including promotion-versus-consolidation pressure timing and preservation of pouch bonuses, rewards, and Surge rules. Replays are free; no existing permanent progress is reset.
+
 ## Responsive browser check — September 22
 
 Memory-only late-game fixture checked at 320×568 and 390×844. Board Gather/Buy/Auto Merge controls and bottom navigation remain visible; gathering was exercised at 320×568 and added a dragon. Home equipment and Stash category controls were inspected at the compact size. Nest rooms and scrolling panels were inspected in light mode, and Collection/expedition content in dark mode. This was a desktop browser viewport check, not actual mobile hardware testing or a complete interaction audit.
