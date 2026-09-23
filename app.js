@@ -1991,6 +1991,8 @@ function masteryProgress(id) {
 }
 
 function activeMasteryTitle() {
+  const battleTitle=DragonBattle.regions.find(r=>r.id===state.battleTitle&&r.ids.every(id=>state.battleClears?.[id]));
+  if(battleTitle)return battleTitle.title;
   const collectionTitle = SANCTUARY_COLLECTION[state.keeper?.collectionTitle];
   if (collectionTitle?.kind === 'title' && state.collectionOwned?.[state.keeper.collectionTitle] === true) return collectionTitle.name;
   const id = state.keeper?.masteryTitle;
@@ -2015,6 +2017,7 @@ function equipMasteryTitle(id) {
   if (id && (!Object.prototype.hasOwnProperty.call(MASTERY_REWARDS,id) || state.masteryClaims?.[id] !== true)) return;
   state.keeper = state.keeper || {title:'Novice Breeder'};
   state.keeper.masteryTitle = id || null;
+  state.battleTitle = null;
   state.keeper.collectionTitle = null;
   save(); renderKeeperQuarters(); renderMastery();
 }
@@ -2518,6 +2521,7 @@ function equipCollection(id) {
   const item = SANCTUARY_COLLECTION[id];
   state.keeper = state.keeper || {title:'Novice Breeder'};
   if (item.kind === 'title') {
+    state.battleTitle = null;
     state.keeper.collectionTitle = state.keeper.collectionTitle === id ? null : id;
     state.keeper.masteryTitle = null;
   } else state.sanctuaryStyle = state.sanctuaryStyle === id ? null : id;

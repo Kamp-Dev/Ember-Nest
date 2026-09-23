@@ -124,7 +124,7 @@ const defaultState = () => ({
   sleepyDone: false, sleepyStreak: 0, questTab: 0, tributes: 0,
   keeper: { title: 'Novice Breeder', equipment: { body: 'body_base.png', torso: null, head: null, legs: null } },
   stash: {}, rewardInbox: [], elderReserve: [], elderReserveNextId: 1, bonusSeals: 0, collectionGoal: null, saveForDecor: true, sanctuaryRank: 0,
-  battleRoster: [], battleNextId: 1, battleClears: {},
+  battleRoster: [], battleNextId: 1, battleClears: {}, battleTeam: [], battleSupplies: 0, battleSupplyClaims: {}, battleTitle: null, battleWeekly: {start:0,claims:{}},
 });
 
 let state = defaultState();

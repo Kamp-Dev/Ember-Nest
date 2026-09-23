@@ -12,8 +12,8 @@ function play(d,id,smart=true){
   }
   return b;
 }
-test('PvE has eight fixed encounters, stage gates, separate training levels and capped XP',()=>{
-  assert.equal(B.encounters.length,8);
+test('PvE preserves eight encounters and adds four campaign bosses with stage gates and capped XP',()=>{
+  assert.equal(B.encounters.length,12);assert.equal(B.encounters.filter(e=>!e.boss).length,8);
   assert.equal(B.create(dragon(1),'inferno'),null);
   assert.equal(B.create(dragon(0),'meadow'),null);
   assert.equal(B.create(dragon(),'__proto__'),null);
@@ -56,7 +56,7 @@ test('Elder Renewal unlocks at training 3, heals only to max and cannot be spamm
   B.resolve(b,'special');assert.ok(b.player.hp>10);assert.ok(b.player.hp<=b.player.maxHp);assert.equal(B.legal(b,'special'),false);
 });
 test('all encounters are winnable at recommended training with an appropriate build',()=>{
-  for(const e of B.encounters){
+  for(const e of B.encounters.filter(e=>!e.boss)){
     const outcomes=B.elements.flatMap(el=>['burst','mend'].map(s=>play(dragon(e.stage,el,e.rank,s),e.id)));
     assert.ok(outcomes.some(b=>b.phase==='won'),e.id+' must be beatable');
     assert.ok(outcomes.every(b=>b.round<=41));
@@ -120,7 +120,7 @@ test('loading blocks attacks and late asset completion cannot resurrect a cancel
   const g=game();g.run(`render=()=>{};renderBattleLodge=()=>{};state.cells[0]={level:1,count:1};enlistBattleDragon(0);pveSelected=1;let pending=[];Image=function(){pending.push(this)};let tasks=[];setTimeout=fn=>{tasks.push(fn);return tasks.length};startPve('meadow');assert.equal(pveLoading,true);pveMove('strike');assert.equal(pveRun.round,1);closeBattleLodge();assert.equal(pveRun,null);pending[0].onload();tasks.forEach(fn=>fn());assert.equal(pveRun,null);assert.equal(state.battleRoster[0].training.xp,0);`);
 });
 test('failed scenery and duplicate image events complete loading once with a fallback',()=>{
-  const g=game();g.run(`renderBattleLodge=()=>{};state.cells[0]={level:1,count:1};enlistBattleDragon(0);pveSelected=1;let pending=[];Image=function(){pending.push(this)};let tasks=[];setTimeout=fn=>{tasks.push(fn);return tasks.length};startPve('meadow');pending[0].onerror();pending[0].onload();assert.equal(tasks.length,2);tasks.at(-1)();assert.equal(pveLoading,false);assert.equal(pveBusy,false);assert.equal(pveRun.round,1);`);
+  const g=game();g.run(`renderBattleLodge=()=>{};state.cells[0]={level:1,count:1};enlistBattleDragon(0);pveSelected=1;let pending=[];Image=function(){pending.push(this)};let tasks=[];setTimeout=fn=>{tasks.push(fn);return tasks.length};startPve('meadow');assert.equal(pending.length,2);pending[0].onerror();pending[0].onload();assert.equal(tasks.length,1);pending[1].onerror();pending[1].onload();assert.equal(tasks.length,2);assert.ok(pveAssetFailures.has('assets/battle/hatchling-poses-v1.png'));tasks.at(-1)();assert.equal(pveLoading,false);assert.equal(pveBusy,false);assert.equal(pveRun.round,1);`);
 });
 test('all elemental status events carry independent snapshots and healing numbers',()=>{
   for(const element of ['fire','water','nature']){
@@ -138,5 +138,5 @@ test('replay cannot discard active or unclaimed victories and starts a fresh hea
   const g=game();g.run(`renderBattleLodge=()=>{};state.cells[0]={level:1,count:1};enlistBattleDragon(0);pveSelected=1;pveRun=DragonBattle.create(state.battleRoster[0],'meadow');const original=pveRun;pveReplay('meadow');assert.equal(pveRun,original);pveRun.phase='won';pveReplay('meadow');assert.equal(pveRun,original);settleBattleReward(pveRun);pveReplay('meadow');assert.notEqual(pveRun,original);assert.equal(pveLoading,true);assert.equal(pveRun.player.hp,pveRun.player.maxHp);assert.equal(state.battleRoster[0].training.xp,22);`);
 });
 test('failed Elder pose loading keeps the original sprite instead of showing a broken image',()=>{
-  const g=game();g.run(`renderBattleLodge=()=>{};state.cells[0]={level:5,count:1,element:'water'};enlistBattleDragon(0);pveSelected=1;let images=[];Image=function(){images.push(this)};startPve('sentinel');images.forEach(image=>image.onerror());assert.ok(pveAssetFailures.has('assets/battle/water-elder-attack-v1.png'));assert.ok(!pveArt(state.battleRoster[0],true).includes('pve-attack-pose'));`);
+  const g=game();g.run(`renderBattleLodge=()=>{};state.battleClears.thicket=true;state.cells[0]={level:5,count:1,element:'water'};enlistBattleDragon(0);pveSelected=1;let images=[];Image=function(){images.push(this)};startPve('sentinel');images.forEach(image=>image.onerror());assert.ok(pveAssetFailures.has('assets/battle/water-elder-attack-v1.png'));assert.ok(!pveArt(state.battleRoster[0],true).includes('pve-attack-pose'));`);
 });
