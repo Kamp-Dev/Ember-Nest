@@ -2983,6 +2983,14 @@ document.getElementById("closePickerBtn")?.addEventListener("click", closePicker
 // MODULE 21: MASTER RENDER LOOP
 // ==========================================
 
+function renderCoinDetails() {
+  setSafeText('coinExactBalance',Math.max(0,Math.floor(Number(state.coins)||0)).toLocaleString('en-US') + ' coins');
+  const goal=nextDecorGoal();
+  const description=!state.saveForDecor ? 'Upgrade savings is Off. Dragon purchases can use your available coins.' : goal
+    ? `Upgrade savings is On: dragon purchases must leave ${goal.cost.toLocaleString('en-US')} coins for ${goal.name}. You still need ${Math.max(0,goal.cost-state.coins).toLocaleString('en-US')} coins to afford it. This does not block other spending.`
+    : 'Upgrade savings is On, but no eligible unowned décor upgrade is available to reserve coins for.';
+  setSafeText('coinSavingsDetails',description);
+}
 function compactCoinBalance(value) {
   const coins = Math.max(0, Math.floor(Number(value) || 0));
   if (coins < 10000) return String(coins);
@@ -3040,6 +3048,7 @@ function render() {
   setText("muteBtn", state.muted ? "🔇" : "🔊");
   setText("lvlChip", `Lv ${state.level || 1} • ${state.xp || 0}/${xpNeed(state.level || 1)}`);
   setText("coinCount", compactCoinBalance(state.coins));
+  renderCoinDetails();
   const coinLabel = document.getElementById('coinCount');
   if (coinLabel) {
     const exact = Math.floor(state.coins).toLocaleString('en-US') + ' coins';

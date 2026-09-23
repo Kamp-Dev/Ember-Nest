@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="storybook.css?v=11">
   <link rel="stylesheet" href="moonlight.css?v=2">
   <link rel="stylesheet" href="wardrobe.css?v=21">
-  <link rel="stylesheet" href="keeper-header.css?v=5">
+  <link rel="stylesheet" href="keeper-header.css?v=6">
   <link rel="stylesheet" href="dragon-motion.css?v=2">
   
   <style>
@@ -57,7 +57,7 @@
       </div>
       <div class="header-right" aria-label="Player resources">
         <button id="bookBtn" class="stat-pill book-pill" aria-label="Dragon Book" title="Dragon Book">📖</button>
-        <div class="stat-pill coin-pill" aria-label="Coins"><span class="resource-icon" aria-hidden="true">🪙</span><span id="coinCount">0</span></div>
+        <button id="coinDetailsBtn" class="stat-pill coin-pill" aria-label="View exact coin balance" popovertarget="coinDetails" aria-controls="coinDetails" aria-expanded="false" onclick="renderCoinDetails()"><span class="resource-icon" aria-hidden="true">🪙</span><span id="coinCount">0</span></button>
         <!-- Updated Energy Pill with Stacked Timer -->
         <div class="stat-pill energy-pill" style="display: flex; align-items: center; gap: 6px;">
           <span class="resource-icon" aria-hidden="true">⚡</span>
@@ -67,6 +67,14 @@
           </div>
         </div>
       </div>
+      <section id="coinDetails" popover="auto" role="dialog" aria-labelledby="coinDetailsTitle" ontoggle="document.getElementById('coinDetailsBtn').setAttribute('aria-expanded',String(event.newState === 'open'))">
+        <h2 id="coinDetailsTitle">Your coins</h2>
+        <p id="coinExactBalance" class="coin-exact-balance"></p>
+        <p>Available to spend. Stored Roost income is separate until collected.</p>
+        <p id="coinSavingsDetails"></p>
+        <p class="coin-details-note">K = thousand · M = million · B = billion · T = trillion. The header abbreviates your balance; purchases always use the exact amount.</p>
+        <button popovertarget="coinDetails" popovertargetaction="hide" autofocus>Close</button>
+      </section>
     </header>
 
     <!-- === SCROLLABLE VIEWS CONTAINER === -->
@@ -598,6 +606,6 @@
   <div id="wardrobeDialog" class="wardrobe-dialog" role="dialog" aria-modal="true" aria-labelledby="wardrobeDialogTitle" hidden></div>
   <script src="game-data.js?v=13"></script>
   <script src="game-core.js?v=10"></script>
-  <script src="app.js?v=31"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>

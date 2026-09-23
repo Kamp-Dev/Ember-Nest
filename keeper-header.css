@@ -31,6 +31,19 @@ body.storybook #app #keeperSettings { display:none; position:fixed; inset:78px a
 body.storybook #app #keeperSettings:popover-open { display:grid; gap:8px; }
 body.storybook #app #keeperSettings .stat-pill { width:100%; height:42px; padding:8px!important; font-size:18px; border-radius:8px; justify-content:flex-start; gap:10px; }
 #keeperSettings .stat-pill::after { content:attr(aria-label); font-size:12px; }
+body.storybook #app #coinDetailsBtn { cursor:pointer; text-transform:none; letter-spacing:normal; }
+body.storybook #app #coinDetails {
+  position:fixed; inset:90px auto auto max(12px,calc(50% - 210px)); margin:0;
+  box-sizing:border-box; width:min(420px,calc(100vw - 24px)); max-height:calc(100dvh - 110px);
+  overflow-y:auto; padding:20px; border:2px solid #a5b18c; border-radius:18px;
+  background:#f6f0dc; color:#354a38; box-shadow:0 10px 35px #0005;
+}
+#coinDetails h2 { margin:0 0 8px; font-size:20px; }
+#coinDetails p { line-height:1.5; font-size:13px; overflow-wrap:anywhere; }
+#coinDetails .coin-exact-balance { font-size:26px; font-weight:700; margin:8px 0; font-variant-numeric:tabular-nums; }
+#coinDetails .coin-details-note { font-size:11px; }
+body.storybook #app #coinDetails button { min-height:44px; width:100%; }
+html[data-appearance="dark"] body.storybook #app #coinDetails { background:#20363d; color:#f4e9ce; border-color:#698b84; }
 html[data-appearance="dark"] body.storybook #app #keeperSettings { background:#20363d; color:#f4e9ce; }
 @media(min-width:450px) {
  body.storybook #app .header-right .stat-pill { font-size:15px!important; }
