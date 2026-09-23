@@ -60,6 +60,19 @@ document.getElementById('appearanceBtn')?.addEventListener('click', () => {
   setAppearance(document.documentElement.dataset.appearance === 'dark' ? 'light' : 'dark');
 });
 
+// Explicit tile-only motion preference; other UI still follows reduced motion.
+function setTileMotion(value, persist = true) {
+  const mode = value === 'off' ? 'off' : 'on';
+  document.documentElement.dataset.tileMotion = mode;
+  const button = document.getElementById('tileMotionBtn');
+  if (button) { button.setAttribute('aria-pressed',String(mode === 'on')); button.setAttribute('aria-label',`Animated tiles: ${mode === 'on' ? 'On' : 'Off'}`); }
+  if (persist) { try { localStorage.setItem('ember-nest-tile-motion',mode); } catch (_) {} }
+}
+let initialTileMotion = 'on';
+try { initialTileMotion = localStorage.getItem('ember-nest-tile-motion') || 'on'; } catch (_) {}
+setTileMotion(initialTileMotion,false);
+document.getElementById('tileMotionBtn')?.addEventListener('click',()=>setTileMotion(document.documentElement.dataset.tileMotion === 'on' ? 'off' : 'on'));
+
 function closeGuide() {
   document.getElementById("guide")?.classList.remove("open");
   state.seenGuide = true;
@@ -299,11 +312,120 @@ function awardWardrobeMilestones() {
     changed = true;
     if (!owned) { state.stash[id] = 1; added.push(id); }
   }
+  if (added.length) state.wardrobePending = [...new Set([...pendingWardrobeRewards(), ...added])];
   if (changed) save();
   const announcement = document.getElementById('wardrobeAnnouncement');
   if (announcement && added.length) announcement.textContent = `${added.length} new wardrobe reward${added.length > 1 ? 's' : ''} added to The Stash!`;
   return added;
 }
+// Rewards are already owned when revealed. This queue never pays out a second time.
+let wardrobeDialogKind = null;
+let wardrobeDialogItem = null;
+let wardrobeReturnFocus = null;
+function pendingWardrobeRewards() {
+  return [...new Set(Array.isArray(state.wardrobePending) ? state.wardrobePending : [])]
+    .filter(id => WARDROBE_IDS.includes(id) && state.wardrobeClaims?.[id] === true && ownsCosmeticReward(id));
+}
+function renderWardrobeInbox() {
+  const button = document.getElementById('wardrobeInbox');
+  if (!button) return;
+  const count = pendingWardrobeRewards().length;
+  button.hidden = !count;
+  button.textContent = `Reveal new rewards (${count})`;
+}
+function openWardrobeReward() {
+  const id = pendingWardrobeRewards()[0];
+  if (!id) return;
+  showWardrobeDialog('reward', id);
+}
+function showWardrobeDialog(kind, id) {
+  const modal = document.getElementById('wardrobeDialog');
+  const item = STASH_CATALOG[id];
+  if (!modal || !item || !ownsCosmeticReward(id)) return;
+  if (!wardrobeDialogKind) wardrobeReturnFocus = document.activeElement;
+  wardrobeDialogKind = kind; wardrobeDialogItem = id;
+  const progress = item.requirement ? wardrobeProgress(id).label : item.type === 'consumable' ? (id === 'rare_egg' ? 'Hatches a shiny egg into an open board tile.' : 'Adds one hour of current Roost income, up to bank capacity.') : Number.isInteger(item.tokenCost) ? 'Collected from the weekly contract cosmetic shop.' : 'Collected keeper clothing.';
+  const worn = !!item.img && state.keeper?.equipment?.[item.slot]?.split('/').pop() === item.img.split('/').pop();
+  const currentEntry = item.type === 'cosmetic' ? stashInventory(item.slot).find(entry => entry.equipped) : null;
+  const current = currentEntry && currentEntry.itemId !== id ? STASH_CATALOG[currentEntry.itemId] : null;
+  modal.innerHTML = `<section class="wardrobe-dialog-card ${kind === 'details' ? 'item-detail-card' : ''} rarity-${item.rarity}" tabindex="-1">
+    <button class="wardrobe-dialog-close" aria-label="Close reward details" onclick="closeWardrobeDialog()">×</button>
+    <p class="wardrobe-eyebrow">${kind === 'reward' ? 'Milestone reached · ' + pendingWardrobeRewards().length + ' new' : worn ? 'Currently equipped' : 'Selected item'}</p>
+    <h2 id="wardrobeDialogTitle">${item.name}</h2>
+    <div class="wardrobe-reveal-art">${item.img ? `<img src="${item.img}" alt="${item.name}">` : `<span class="wardrobe-consumable-icon">${item.icon}</span>`}<span aria-hidden="true">✦</span></div>
+    <p class="wardrobe-eyebrow">${item.rarity} · ${item.slot || 'Consumable'}</p><p>${progress}</p>
+    <p class="item-purpose">${item.type === 'cosmetic' ? 'Permanent cosmetic · No stat bonuses' : 'Single-use item · Home board only'}${worn ? ' · Equipped' : ''}</p>
+    <p class="item-owned">Owned: ${Math.max(0,Number(state.stash?.[id]) || 0) + (worn ? 1 : 0)}</p>
+    ${kind === 'details' && current ? `<div class="equipment-comparison rarity-${current.rarity}"><img src="${current.img}" alt=""><div><small>Currently equipped · ${current.rarity}</small><strong>${current.name}</strong><p>Replacing returns this item to The Stash.</p></div></div>` : ''}
+    <div class="wardrobe-dialog-actions">${kind === 'reward' ? '<button onclick="finishWardrobeReward(true)">Equip now</button><button onclick="finishWardrobeReward(false)">Keep in Stash</button>' : `<button onclick="useInspectedItem()">${item.type === 'cosmetic' ? worn ? 'Unequip' : current ? 'Replace' : 'Equip' : 'Use item'}</button><button onclick="closeWardrobeDialog()">Close</button>`}</div>
+    ${kind === 'reward' && pendingWardrobeRewards().length > 1 ? '<button class="wardrobe-quiet" onclick="keepAllWardrobeRewards()">Keep all in Stash</button>' : ''}</section>`;
+  modal.hidden = false;
+  modal.querySelector?.('.wardrobe-dialog-card')?.focus();
+}
+function closeWardrobeDialog() {
+  const modal = document.getElementById('wardrobeDialog');
+  if (modal) modal.hidden = true;
+  wardrobeDialogKind = null; wardrobeDialogItem = null;
+  if (wardrobeReturnFocus?.isConnected) wardrobeReturnFocus.focus({preventScroll:true});
+  else document.getElementById('avatarFrameBtn')?.focus();
+  wardrobeReturnFocus = null;
+  renderWardrobeInbox();
+}
+function finishWardrobeReward(equip) {
+  const id = wardrobeDialogItem;
+  if (wardrobeDialogKind !== 'reward' || !pendingWardrobeRewards().includes(id)) return;
+  state.wardrobePending = pendingWardrobeRewards().filter(item => item !== id);
+  save();
+  const item = STASH_CATALOG[id];
+  const worn = state.keeper?.equipment?.[item.slot]?.split('/').pop() === item.img.split('/').pop();
+  if (equip && !worn) window.useFromStash(id);
+  renderWardrobeInbox();
+  if (pendingWardrobeRewards().length) openWardrobeReward(); else closeWardrobeDialog();
+}
+function keepAllWardrobeRewards() {
+  if (wardrobeDialogKind !== 'reward') return;
+  state.wardrobePending = []; save(); closeWardrobeDialog();
+}
+let stashFilter = 'all';
+let stashSort = 'equipped';
+let stashInspect = true;
+function setStashBrowse(kind, value) {
+  if (kind === 'filter' && ['all','cosmetic','clothing','head','torso','legs','border','consumable'].includes(value)) stashFilter = value;
+  if (kind === 'sort' && ['equipped','rarity','name'].includes(value)) stashSort = value;
+  if (kind === 'inspect') stashInspect = value === 'inspect';
+  const category = document.getElementById('stashCategory');
+  if (category) category.value = stashFilter;
+  document.querySelectorAll?.('[data-stash-filter]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.stashFilter === stashFilter)));
+  renderStash(); renderExpandedItemGrid(currentCustomizerSlot);
+}
+function browsedStash() {
+  const rank = {common:0,uncommon:1,rare:2,epic:3,legendary:4,mythic:5};
+  return stashInventory().filter(entry => {
+    const item = STASH_CATALOG[entry.itemId];
+    return stashFilter === 'all' || (stashFilter === 'clothing' && ['head','torso','legs'].includes(item.slot)) || item.slot === stashFilter || item.type === stashFilter;
+  }).sort((a,b) => {
+    const x=STASH_CATALOG[a.itemId], y=STASH_CATALOG[b.itemId];
+    return (stashSort === 'equipped' ? Number(b.equipped)-Number(a.equipped) : stashSort === 'rarity' ? (rank[y.rarity] || 0)-(rank[x.rarity] || 0) : 0) || x.name.localeCompare(y.name);
+  });
+}
+function activateStashItem(id) {
+  if (stashInspect) showWardrobeDialog('details',id);
+  else { window.useFromStash(id); renderExpandedItemGrid(currentCustomizerSlot); }
+}
+function useInspectedItem() {
+  if (wardrobeDialogKind !== 'details' || !ownsCosmeticReward(wardrobeDialogItem)) return;
+  const id = wardrobeDialogItem;
+  closeWardrobeDialog(); window.useFromStash(id); renderExpandedItemGrid(currentCustomizerSlot);
+}
+document.getElementById('wardrobeDialog')?.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.preventDefault(); closeWardrobeDialog(); }
+  if (event.key === 'Tab') {
+    const buttons = [...document.getElementById('wardrobeDialog').querySelectorAll('button:not(:disabled)')];
+    const first = buttons[0], last = buttons[buttons.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !buttons.includes(document.activeElement))) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }
+});
 function renderWardrobeMilestones() {
   const panel = document.getElementById('wardrobeMilestones');
   if (!panel) return;
@@ -316,13 +438,50 @@ function renderWardrobeMilestones() {
       return `<div class="wardrobe-goal"><img src="${item.img}" alt="" loading="lazy" width="48" height="48"><div><strong>${slot === 'legs' ? 'Legs & boots' : slot === 'head' ? 'Head' : 'Torso'}${earned ? ' · Earned ✓' : ''}</strong><p>${p.label}</p><span>${earned ? 'Permanent · Equip from The Stash' : `${p.current}/${p.target}`}</span></div></div>`;
     }).join('') + '</section>').join('');
 }
+function nextWardrobeReward() {
+  return WARDROBE_IDS.filter(id => state.wardrobeClaims?.[id] !== true).map(id => ({id,...wardrobeProgress(id)}))
+    .sort((a,b) => b.current/b.target - a.current/a.target || WARDROBE_IDS.indexOf(a.id)-WARDROBE_IDS.indexOf(b.id))[0] || null;
+}
+function renderNextWardrobeReward() {
+  const panel = document.getElementById('nextWardrobeReward');
+  if (!panel) return;
+  const next = nextWardrobeReward();
+  if (!next) { panel.innerHTML = '<strong>Wardrobe complete ✦</strong><p>All 15 milestone pieces earned. Mix your favorites in The Stash!</p>'; return; }
+  const item=STASH_CATALOG[next.id];
+  const html=`<img src="${item.img}" alt="" width="62" height="62"><div><small>Next wardrobe reward · ${item.rarity}</small><strong>${item.name}</strong><p>${next.label}</p><progress max="${next.target}" value="${next.current}" aria-label="${item.name} milestone progress"></progress><span>${next.current}/${next.target}</span><button onclick="openWardrobeMilestones()">View milestones</button></div>`;
+  if (panel.wardrobeHtml !== html) { panel.innerHTML=html; panel.wardrobeHtml=html; }
+}
+function openWardrobeMilestones() {
+  const journal = document.querySelector('.wardrobe-journal');
+  if (journal) { journal.open=true; journal.querySelector('summary')?.focus(); journal.scrollIntoView({block:'nearest'}); }
+}
 function fitKeeperLayer(el, file) {
   if (!el) return;
   const item = Object.values(STASH_CATALOG).find(def => def.img && def.img.split('/').pop() === file?.split('/').pop());
-  const box = item?.overlay || [0,0,100,100];
+  // Inventory identities stay stable; fitted worn art is separate from loose-item icons.
+  const box = item?.wornOverlay || item?.overlay || [0,0,100,100];
+  if (item?.wornImg) el.src = item.wornImg;
   Object.assign(el.style, {inset:'auto', left:box[0]+'%', top:box[1]+'%', width:box[2]+'%', height:box[3]+'%', objectFit:'fill', transform:'none'});
+  // The neck is in front of the rear collar, not behind the entire garment.
+  // Work in body-canvas coordinates, using the same fitted box as the shirt.
+  // This keeps all eight collars consistent without modifying inventory art.
+  if (item?.slot === 'torso') {
+    const neckMask = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box.join(' ')}" preserveAspectRatio="none"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" fill="white"/><path fill="black" d="M45.4 50 L54.6 50 L54.6 52.6 Q50 56.4 45.4 52.6 Z"/></svg>`;
+    el.style.maskImage = 'url("data:image/svg+xml,' + encodeURIComponent(neckMask) + '")';
+    el.style.maskMode = 'luminance';
+    el.style.maskSize = '100% 100%';
+  } else {
+    el.style.maskImage = 'none';
+  }
   // Hide the base trousers only; retain the hands beside them and restore on unequip.
   if (file?.split('/').pop() === 'body_base.png') {
+    const wearingTorso = Object.values(STASH_CATALOG).some(def => def.slot === 'torso' && def.img?.split('/').pop() === state.keeper?.equipment?.torso?.split('/').pop());
+    // Remove the base gray shirt, not the neck or bare arms. SVG coordinates use
+    // the original square body canvas so this mask scales identically in every view.
+    const shirtMask = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><rect width="100" height="100" fill="white"/><path fill="black" d="M43.4 51.8 Q50 58.3 56.6 51.8 L63 53 L67.5 61.2 L60.9 65.2 L63 77.8 Q50 80 37 77.8 L39.1 65.2 L32.6 61.2 L35 53 Z"/></svg>';
+    el.style.maskImage = wearingTorso ? 'url("data:image/svg+xml,' + encodeURIComponent(shirtMask) + '")' : 'none';
+    el.style.maskMode = 'luminance';
+    el.style.maskSize = '100% 100%';
     const wearingLegs = Object.values(STASH_CATALOG).some(def => def.wardrobe && def.slot === 'legs' && def.img.split('/').pop() === state.keeper?.equipment?.legs?.split('/').pop());
     el.style.clipPath = wearingLegs ? 'polygon(0% 0%,100% 0%,100% 100%,66.7% 100%,66.7% 89%,64% 89%,64% 78%,36% 78%,36% 89%,33.3% 89%,33.3% 100%,0% 100%)' : 'none';
   }
@@ -339,9 +498,9 @@ function stashInventory(slotType) {
 }
 function stashTileHtml({itemId, quantity, equipped}) {
   const item = STASH_CATALOG[itemId], rarity = item.rarity || 'common';
-  const label = `${item.name} · ${rarity}${equipped ? ' · Equipped. Click again to unequip' : item.type === 'cosmetic' ? ' · Equip' : ' · Use'}`;
+  const label = `${item.name} · ${rarity}${stashInspect ? ' · Inspect details' : equipped ? ' · Equipped. Click again to unequip' : item.type === 'cosmetic' ? ' · Equip' : ' · Use'}`;
   const particles = ['epic','legendary','mythic'].includes(rarity) ? '<i class="rarity-mote mote-one"></i><i class="rarity-mote mote-two"></i><i class="rarity-mote mote-three"></i>' : '';
-  return `<button type="button" data-item-id="${itemId}" class="stash-slot filled rarity-${rarity}${equipped ? ' is-equipped' : ''}" title="${label}" aria-label="${label}" ${item.type === 'cosmetic' ? `aria-pressed="${equipped}"` : ''} onclick="window.useFromStash('${itemId}'); renderExpandedItemGrid(currentCustomizerSlot)">
+  return `<button type="button" data-item-id="${itemId}" class="stash-slot filled rarity-${rarity}${equipped ? ' is-equipped' : ''}" title="${label}" aria-label="${label}" ${item.type === 'cosmetic' ? `aria-pressed="${equipped}"` : ''} onclick="activateStashItem('${itemId}')">
     ${item.img ? `<img src="${item.img}" alt="" loading="lazy" decoding="async">` : `<span class="stash-icon">${item.icon || '❓'}</span>`}
     <span class="stash-rarity">${rarity}</span>${equipped ? '<span class="stash-equipped">Equipped</span>' : quantity > 1 ? `<span class="stash-quantity">×${quantity}</span>` : ''}
     <span class="rarity-effects" aria-hidden="true">${particles}</span></button>`;
@@ -357,11 +516,31 @@ function updateWardrobeGrid(grid, html) {
 }
 
 function renderStash() {
+  renderKeeperEquipment();
   const grid = document.querySelector('.stash-grid');
   if (!grid) return;
-  const entries = stashInventory();
+  const entries = browsedStash();
+  const count = document.getElementById('stashResults');
+  if (count) count.textContent = entries.length ? `${entries.length} item${entries.length === 1 ? '' : 's'} · ${stashInspect ? 'Tap an item for details.' : 'Tap to equip or use; tap equipped again to remove.'}` : 'No items in this category yet. Try All or check the milestones above.';
   const slots = Math.max(20, Math.ceil((entries.length + 4) / 4) * 4);
   updateWardrobeGrid(grid, entries.map(stashTileHtml).join('') + '<div class="stash-slot empty" aria-hidden="true"></div>'.repeat(slots - entries.length));
+}
+function renderKeeperEquipment() {
+  const panel = document.getElementById('keeperEquipment');
+  if (!panel) return;
+  const html = ['head','torso','legs'].map(slot => {
+    const entry = stashInventory(slot).find(entry => entry.equipped);
+    const item = entry && STASH_CATALOG[entry.itemId];
+    return `<button class="keeper-gear rarity-${item?.rarity || 'common'}" onclick="${item ? `showWardrobeDialog('details','${entry.itemId}')` : `browseKeeperSlot('${slot}')`}" aria-label="${slot}: ${item ? item.name + ', equipped. View details' : 'Empty. Browse items'}">${item ? `<img src="${item.img}" alt="">` : '<span aria-hidden="true">＋</span>'}<small>${slot}</small></button>`;
+  }).join('');
+  updateWardrobeGrid(panel,html);
+}
+function browseKeeperSlot(slot) {
+  setStashBrowse('filter',slot);
+  const options = document.querySelector('.stash-options');
+  if (options) options.open = true;
+  const select = document.getElementById('stashCategory');
+  if (select) { select.value=slot; select.focus(); select.scrollIntoView?.({block:'nearest'}); }
 }
 
 window.handleStashClick = function(stashIndex) {
@@ -534,7 +713,6 @@ window.useFromStash = function(itemId) {
 // --- BORDER PORTRAIT RENDER ---
 function renderDragonKingPortrait() {
   const borderImg = document.getElementById('dk-border');
-  const avatarFrame = document.getElementById('avatarFrameBtn'); 
   if (!borderImg) return;
   
   const equippedBorder = state.keeper?.equipment?.border; 
@@ -546,10 +724,8 @@ function renderDragonKingPortrait() {
   if (borderItem?.img) {
      borderImg.src = borderItem.img;
      borderImg.style.display = 'block';
-     if (avatarFrame) avatarFrame.style.borderRadius = '12px'; // Square for borders
   } else {
      borderImg.style.display = 'none'; 
-     if (avatarFrame) avatarFrame.style.borderRadius = '50%'; // Circle default
   }
 }
 
@@ -557,9 +733,22 @@ function renderDragonKingPortrait() {
 // MODULE 6: HOME SCREEN & STASH RENDERING
 // ==========================================
 
+function renderHeaderPortrait() {
+  const eq=state.keeper?.equipment || {};
+  for (const slot of ['body','torso','head']) {
+    const el=document.getElementById(`header-${slot}`);
+    if (!el) continue;
+    const file=eq[slot] || (slot === 'body' ? 'body_base.png' : null);
+    el.hidden=!file;
+    if (file) { el.src=getCleanPath(file); fitKeeperLayer(el,file); }
+  }
+}
 function renderKeeperQuarters() {
+  renderHeaderPortrait();
   awardWardrobeMilestones();
+  renderWardrobeInbox();
   renderWardrobeMilestones();
+  renderNextWardrobeReward();
   if (!state.keeper) state.keeper = { title: "Novice Breeder", gender: "male" };
   if (!state.keeper.equipment) state.keeper.equipment = { body: "body_base.png", torso: null, head: null, legs: null };
   
@@ -797,10 +986,11 @@ function revealChest() {
   const lines = [`🪙 ${coins} ember coins`, `${eggs} eggs ➔ nest`];
   
   // 4. Spawning Loot
-  for (let i = 0; i < eggs; i++) spawn(0, 1);
-  if (tier >= 2) { spawn(1, 1); spawn(1, 1); lines.push("2 hatchlings ➔ nest"); }
-  if (tier >= 3) { spawn(2, 1); lines.push("1 wyrmling ➔ nest"); }
-  if (tier >= 5) { spawn(3, 1); lines.push("1 Young ➔ nest"); }
+  grantDragonReward(0, eggs);
+  if (tier >= 2) { grantDragonReward(1, 2); lines.push("2 hatchlings ➔ nest"); }
+  if (tier >= 3) { grantDragonReward(2); lines.push("1 wyrmling ➔ nest"); }
+  if (tier >= 5) { grantDragonReward(3); lines.push("1 Young ➔ nest"); }
+  if (rewardInboxCount()) lines.push('Board full: undelivered dragons are saved in your Nest reward inbox.');
   
   // 5. Trigger the Second Modal
   setTimeout(() => {
@@ -945,7 +1135,8 @@ function highestOwned() {
     ...Object.keys(state.book || {}).filter(key => state.book[key]).map(Number),
     ...Object.keys(state.rareBook || {}).filter(key => state.rareBook[key]).map(Number),
     ...(state.cells || []).map(c => c?.level),
-    ...(state.perch || []).map(c => c?.level)];
+    ...(state.perch || []).map(c => c?.level),
+    ...(state.elderReserve || []).map(entry => entry.dragon?.level)];
   state.highestDiscovered = Math.max(0, ...levels.filter(level =>
     Number.isInteger(level) && level >= 0 && level < CHAIN.length));
   return state.highestDiscovered;
@@ -969,6 +1160,12 @@ function toggleDecorSavings() {
   if (state.mode !== 'home') return;
   state.saveForDecor = !state.saveForDecor;
   save(); render();
+}
+function collectRewardInbox() {
+  if (state.mode !== 'home') return;
+  const delivered = deliverRewardInbox();
+  save(); render();
+  toast(delivered ? delivered + ' reward dragons delivered. Remaining rewards stay saved.' : 'Make room on the board; your rewards remain saved.');
 }
 
 function buyEgg() {
@@ -1382,8 +1579,9 @@ function winStage() {
   const lines = [];
   if (paid) {
     state.coins += pay;
-    spawn(gift, 1);
-    if (first) spawn(0, 1);
+    grantDragonReward(gift);
+    if (first) grantDragonReward(0);
+    if (rewardInboxCount()) lines.push('Undelivered dragons are saved in your Nest reward inbox.');
     lines.push(`${dragonSvg(gift, 24)} ${CHAIN[gift].name} ➔ nest`);
     lines.push(`🪙 ${pay} ember coins`);
     if (first) lines.push("🥚 Egg ➔ nest (first clear bonus)");
@@ -1522,7 +1720,7 @@ function recordElementDiscovery(item) {
 
 function recoverElementDiscoveries() {
   // Old saves have no element history: recover verified owned dragons only.
-  [...(state.cells || []), ...(state.perch || []),
+  [...(state.cells || []), ...(state.perch || []), ...(state.elderReserve || []).map(entry => entry.dragon),
     ...(state.mode === 'stage' ? state.stageCells || [] : [])].forEach(recordElementDiscovery);
 }
 
@@ -1627,7 +1825,7 @@ function claimMastery(id) {
   if (!state.masteryClaims || typeof state.masteryClaims !== 'object' || Array.isArray(state.masteryClaims)) state.masteryClaims = {};
   state.masteryClaims[id] = true;
   state.contractTokens = (state.contractTokens || 0) + reward.tokens;
-  save(); renderMastery(); renderBook();
+  save(); renderMastery(); renderBook(); renderProgressionGoals();
   toast(reward.title + ' unlocked! +' + reward.tokens + ' cosmetic token' + (reward.tokens === 1 ? '' : 's'));
 }
 
@@ -1782,26 +1980,54 @@ function rollContracts() {
   rememberWardrobeContract();
   rememberCompletedWeek();
   const week = contractWeek();
-  if (state.contracts?.week === week.key) return false;
+  if (state.contracts?.week === week.key) { ensureBonusContracts(); return false; }
   const tier = highestOwned();
-  const make = (kind, target, want = null) => ({kind, target, want, progress: 0, claimed: false, reward: 200 + tier * 100});
+  const make = (kind, target, want = null) => {
+    const effort = {gather:1,merge:1.25,roost:.75,nurture:1.25,trial:1.5,donate:1.5,earn:1};
+    return {kind, target, want, progress:0, claimed:false, reward:Math.round((200 + tier * 100) * effort[kind])};
+  };
   const rotation = Math.abs(Math.floor(new Date(week.next).getTime() / 86400000)) % 3;
-  state.contracts = {week: week.key, replaced: false, completed: false, selectedTier: tier, items: [
-    make('gather', 40 + tier * 10 + rotation * 5),
-    make('merge', 10 + tier * 3),
-    make('gather', 80 + tier * 20),
-    state.ashTrialCompleted ? make('trial', 1 + rotation % 2) : make('merge', 20 + tier * 4),
-    tier > 0 ? make('donate', 1, tier - 1) : make('gather', 25),
+  state.contracts = {version:2, week: week.key, replaced: false, completed: false, selectedTier: tier, items: [
+    make('gather', 60 + tier * 16 + rotation * 5),
+    make('merge', 15 + tier * 5),
+    make('roost', 150 + tier * tier * 150),
+    state.ashTrialCompleted ? make('trial', 2 + rotation % 2) : make('nurture', 3 + tier, Math.max(1,Math.min(3,tier))),
+    tier > 0 ? make('donate', 1, tier - 1) : make('earn', 1000),
   ]};
   save();
   return true;
 }
-function contractEvent(kind, count = 1) {
+function contractEvent(kind, count = 1, level = null) {
   rollContracts();
-  for (const item of state.contracts.items) if (!item.claimed && item.kind === kind)
+  if (kind !== 'trial' && state.mode !== 'home') return;
+  if (!Number.isFinite(count) || count <= 0) return;
+  for (const item of state.contracts.items) if (!item.claimed && item.kind === kind && (kind !== 'nurture' || item.want === level))
     item.progress = Math.min(item.target, item.progress + count);
+  for (const item of state.contracts.bonus || []) {
+    if (item.claimed || item.kind !== kind) continue;
+    item.progress = Math.min(item.target, item.progress + count);
+    if (item.progress >= item.target) {
+      item.claimed = true;
+      state.contractTokens = (state.contractTokens || 0) + 1;
+      state.bonusSeals = (state.bonusSeals || 0) + 1;
+      toast('Bonus complete! +1 cosmetic token and 1 permanent collection seal.');
+    }
+  }
+  save();
 }
+function ensureBonusContracts() {
+  if (!state.contracts?.completed || !state.contracts.items.every(item => item.claimed) || state.contracts.bonus) return;
+  const tier = Math.max(0, Math.min(5, Number(state.contracts.selectedTier) || 0));
+  state.contracts.bonus = [
+    {kind:'gather',target:60+tier*10,progress:0,claimed:false},
+    {kind:'merge',target:15+tier*3,progress:0,claimed:false},
+  ];
+}
+function bonusSealCount() { return Math.max(0, Math.floor(Number(state.bonusSeals) || 0)); }
 function contractTitle(item) {
+  if (item.kind === 'roost') return 'Collect coins from the Roost';
+  if (item.kind === 'earn') return 'Earn coins by promoting dragons';
+  if (item.kind === 'nurture') return 'Raise ' + CHAIN[item.want].name + ' dragons';
   if (item.kind === 'donate') return 'Donate one ' + CHAIN[item.want].name;
   if (item.kind === 'trial') return 'Clear Ash Trials';
   if (item.kind === 'merge') return 'Promote dragons at the nest';
@@ -1824,6 +2050,7 @@ function claimContract(index, week) {
     rememberCompletedWeek();
     state.coins += 500;
     state.contractTokens = (state.contractTokens || 0) + 1;
+    ensureBonusContracts();
     toast('Week complete! +500 coins and 1 cosmetic token saved for cosmetic rewards.');
   } else toast('Contract complete! +' + item.reward + ' coins');
   save(); render(); renderContractsPanel();
@@ -1850,6 +2077,8 @@ function renderContractsPanel() {
       <button ${item.claimed || !ready || state.mode !== 'home' ? 'disabled' : ''} onclick="claimContract(${i}, '${weekly.week}')">${item.claimed ? 'Claimed ✓' : item.kind === 'donate' ? 'Donate & claim' : 'Claim'}</button>
       <button ${item.claimed || weekly.replaced || state.mode !== 'home' ? 'disabled' : ''} onclick="replaceContract(${i}, '${weekly.week}')">Replace</button></section>`;
   }).join('');
+  panel.innerHTML += '<section class="savings-panel contract-bonus"><strong>Optional weekly bonuses</strong><p>After all five claims: two extra goals, one cosmetic token and one permanent collection seal each. Rewards bank automatically. Unfinished bonus progress resets Monday; seals never expire. No daily streak.</p>' +
+    (weekly.bonus ? weekly.bonus.map(item => '<p>' + contractTitle(item) + ' · ' + item.progress + '/' + item.target + (item.claimed ? ' · Reward banked ✓' : ' · +1 token / +1 seal') + '</p>').join('') : '<p>Complete and claim the five contracts to unlock.</p>') + '</section>';
   const resetLabel = document.getElementById('contractsReset');
   if (resetLabel) resetLabel.textContent = 'Resets Monday: ' + new Date(contractWeek().next).toLocaleString() + ' · ' +
     (weekly.replaced ? 'Replacement used' : '1 free replacement; replaces current progress') +
@@ -1859,7 +2088,7 @@ function renderContractsPanel() {
 function ownsCosmeticReward(id) {
   const item = STASH_CATALOG[id];
   return !!item && (!!state.redeemedCosmetics?.[id] || (state.stash?.[id] || 0) > 0 ||
-    state.keeper?.equipment?.[item.slot]?.split('/').pop() === item.img?.split('/').pop());
+    (!!item.img && state.keeper?.equipment?.[item.slot]?.split('/').pop() === item.img.split('/').pop()));
 }
 function redeemCosmetic(id) {
   if (!ELEMENTAL_ASSETS_READY) return;
@@ -1901,7 +2130,130 @@ function masteryGateMet(gate) {
   return !gate || (gate === 'all' ? ['fire','water','nature'].every(e => state.masteryClaims?.[e] === true) : state.masteryClaims?.[gate] === true);
 }
 function collectionAvailable(item) {
-  return masteryGateMet(item.mastery) && completedWeeksCount() >= (item.weeks || 0);
+  return masteryGateMet(item.mastery) && completedWeeksCount() >= (item.weeks || 0) &&
+    bonusSealCount() >= (item.seals || 0) &&
+    sanctuaryProjectRank() >= (item.projectRank || 0);
+}
+function trackCollection(id) {
+  if (state.mode !== 'home' || !Object.prototype.hasOwnProperty.call(SANCTUARY_COLLECTION,id)) return;
+  state.collectionGoal = state.collectionGoal === id ? null : id;
+  save(); render();
+}
+function sanctuaryProjectRank() {
+  return Math.max(0, Math.min(10, Math.floor(Number(state.sanctuaryRank) || 0)));
+}
+function sanctuaryProjectCost() { return 50000 * (sanctuaryProjectRank() + 1); }
+function sanctuaryProjectOpen() {
+  return highestOwned() >= 5 && DECOR.every(d => state.decor?.[d.id]);
+}
+function contributeSanctuary() {
+  if (state.mode !== 'home' || !sanctuaryProjectOpen() || sanctuaryProjectRank() >= 10) return;
+  const cost = sanctuaryProjectCost();
+  if (state.coins < cost) { toast('Keep saving for the next Sanctuary project.'); return; }
+  state.coins -= cost;
+  state.sanctuaryRank = sanctuaryProjectRank() + 1;
+  save(); render();
+  toast('Sanctuary project ' + state.sanctuaryRank + '/10 complete. Titles unlock at 1, 5 and 10.');
+}
+let elderReservePage = 0;
+function storeElder(index) {
+  if (state.mode !== 'home' || !Number.isInteger(index) || state.locked[index]) return false;
+  const dragon = state.cells[index];
+  if (!dragon || dragon.level !== 5 || !Number.isSafeInteger(dragon.count) || dragon.count < 1) return false;
+  highestOwned();
+  state.elderReserve.push({id: state.elderReserveNextId++, dragon: {...dragon}});
+  state.cells[index] = null;
+  selectedCell = -1;
+  save(); render();
+  toast('Elder safely stored. Return it from Nest whenever a board tile is free.');
+  return true;
+}
+function restoreElder(id) {
+  if (state.mode !== 'home') return false;
+  const index = state.elderReserve.findIndex(entry => entry.id === id);
+  if (index < 0) return false;
+  const free = emptyOpen();
+  if (!free.length) { toast('Free one board tile before returning this Elder.'); return false; }
+  state.cells[free[0]] = {...state.elderReserve[index].dragon};
+  state.elderReserve.splice(index, 1);
+  save(); render();
+  toast('Elder returned to the Board.');
+  return true;
+}
+function reserveDragonLabel(dragon) {
+  const element = ({fire:'Fire',water:'Water',nature:'Nature'})[dragon.element] || 'Neutral';
+  return (dragon.shiny ? 'Shiny ' : '') + element + ' Elder' + (dragon.count > 1 ? ' ×' + dragon.count : '');
+}
+function changeReservePage(delta) {
+  elderReservePage += delta;
+  renderElderReserve();
+}
+function renderElderReserve() {
+  const target = document.getElementById('elderReserveList');
+  if (!target) return;
+  const pages = Math.max(1, Math.ceil(state.elderReserve.length / 8));
+  elderReservePage = Math.max(0, Math.min(pages - 1, elderReservePage));
+  const blocked = state.mode !== 'home';
+  const rows = state.cells.map((dragon,index) => dragon?.level === 5 && !state.locked[index] ?
+    '<div class="reserve-row"><span>' + reserveDragonLabel(dragon) + ' · tile ' + (index+1) + '</span><button onclick="storeElder(' + index + ')" ' + (blocked ? 'disabled' : '') + '>Store</button></div>' : '').join('');
+  const html = '<h4>On the Board</h4>' + (rows || '<p>No Elders on the Board.</p>') + '<h4>In reserve · ' + state.elderReserve.length + ' stacks</h4>' +
+    (state.elderReserve.slice(elderReservePage*8, elderReservePage*8+8).map(entry =>
+      '<div class="reserve-row"><span>' + reserveDragonLabel(entry.dragon) + '</span><button onclick="restoreElder(' + entry.id + ')" ' + (blocked || !emptyOpen().length ? 'disabled' : '') + '>Return</button></div>').join('') || '<p>Your reserve is empty.</p>') +
+    (pages > 1 ? '<div class="reserve-pages"><button onclick="changeReservePage(-1)" ' + (!elderReservePage ? 'disabled' : '') + '>Previous</button><span>' + (elderReservePage+1) + '/' + pages + '</span><button onclick="changeReservePage(1)" ' + (elderReservePage+1 >= pages ? 'disabled' : '') + '>Next</button></div>' : '');
+  if (target.innerHTML !== html) target.innerHTML = html;
+}
+function nextProgressionGoal() {
+  if (state.mode !== 'home') return null;
+  const free = emptyOpen().length;
+  if (free < 3 && state.cells.some(dragon => dragon?.level === 5))
+    return {text:'Make room: safely store an Elder.', target:'reserve'};
+  if (rewardInboxCount()) return {text:rewardInboxCount() + ' rewards waiting' + (free ? ' — collect in Nest.' : ' — merge to free a tile.'), target:free ? 'inbox' : 'book'};
+  if (Object.keys(MASTERY_REWARDS).some(id => masteryProgress(id) === 4 && !state.masteryClaims?.[id]))
+    return {text:'A mastery reward is ready to claim.', target:'mastery'};
+  if (state.contracts?.items?.some(item => !item.claimed && item.progress >= item.target))
+    return {text:'A weekly contract reward is ready.', target:'contracts'};
+  const decor = nextDecorGoal();
+  const tracked = SANCTUARY_COLLECTION[state.collectionGoal];
+  if (tracked && !state.collectionOwned?.[state.collectionGoal]) return {text:'Collect ' + tracked.name + ' · ' + (collectionAvailable(tracked) ? Math.max(0,tracked.coins-state.coins).toLocaleString() + ' coins / ' + Math.max(0,tracked.tokens-(state.contractTokens||0)) + ' tokens left.' : tracked.seals ? bonusSealCount() + '/' + tracked.seals + ' collection seals.' : 'View unlock requirements.'), target:'collection'};
+  if (decor) return {text:decor.name + (state.coins >= decor.cost ? ' is ready to unlock.' : ' · ' + (decor.cost-state.coins).toLocaleString() + ' coins to go.'), target:'decor'};
+  if (sanctuaryProjectOpen() && sanctuaryProjectRank() < 10)
+    return {text:'Sanctuary project ' + (sanctuaryProjectRank()+1) + '/10 · ' + Math.max(0,sanctuaryProjectCost()-state.coins).toLocaleString() + ' coins to go.', target:'collection'};
+  if (highestOwned() < 5) return {text:'Discover your next dragon stage in the Dragon Book.', target:'book'};
+  if (Object.keys(MASTERY_REWARDS).some(id => !state.masteryClaims?.[id]))
+    return {text:'Complete elemental and shiny mastery collections.', target:'mastery'};
+  if (state.contracts?.bonus?.some(item => !item.claimed)) return {text:'Optional weekly bonuses earn cosmetic tokens and collection seals.', target:'contracts'};
+  return {text:'Grow your cosmetic collection and weekly rewards.', target:'collection'};
+}
+function openNextGoal() {
+  const goal = nextProgressionGoal();
+  if (!goal) return;
+  if (goal.target === 'mastery') { openMastery(); return; }
+  if (goal.target === 'contracts') { openContracts(); return; }
+  if (goal.target === 'book') { document.getElementById('bookBtn')?.click(); return; }
+  document.querySelector('[data-tab="view-nest"]')?.click();
+  const subtab = goal.target === 'decor' ? 'sub-decor' : 'sub-collection';
+  if (goal.target === 'decor' || goal.target === 'collection') document.querySelector('[data-subtab="' + subtab + '"]')?.click();
+  const target = document.getElementById(goal.target === 'reserve' ? 'elderReservePanel' : goal.target === 'inbox' ? 'collectRewardInbox' : subtab);
+  if (goal.target === 'reserve' && target) target.open = true;
+  target?.scrollIntoView?.({block:'nearest'});
+  target?.focus?.();
+}
+function renderProgressionGoals() {
+  renderElderReserve();
+  const goal = nextProgressionGoal();
+  const prompt = document.getElementById('savingsBoardHint');
+  if (prompt) { prompt.hidden = !goal; prompt.textContent = goal ? 'Next goal: ' + goal.text + ' ›' : ''; }
+  const pending = rewardInboxCount();
+  setSafeText('rewardInboxStatus', pending ? pending + ' dragon rewards saved. Make board space, then collect; nothing expires.' : 'No waiting rewards. Full-board chest and Trial gifts are saved here.');
+  const inbox = document.getElementById('collectRewardInbox');
+  if (inbox) { inbox.disabled = state.mode !== 'home' || !pending || !emptyOpen().length; inbox.textContent = 'Collect saved dragons (' + pending + ')'; }
+  const rank = sanctuaryProjectRank();
+  const cost = sanctuaryProjectCost();
+  setSafeText('sanctuaryProjectStatus', rank >= 10 ? '10/10 Sanctuary projects complete. All project titles unlocked.' :
+    !sanctuaryProjectOpen() ? 'Discover Elder and complete all five decor upgrades to unlock optional Sanctuary projects.' :
+    'Project ' + (rank + 1) + '/10 · ' + Math.min(state.coins,cost).toLocaleString() + '/' + cost.toLocaleString() + ' coins · ' + Math.max(0,cost-state.coins).toLocaleString() + ' left. Permanent titles at 1, 5 and 10; no power bonuses or deadlines.');
+  const project = document.getElementById('sanctuaryProjectBtn');
+  if (project) { project.disabled = state.mode !== 'home' || rank >= 10 || !sanctuaryProjectOpen() || state.coins < cost; project.textContent = rank >= 10 ? 'Projects complete' : 'Fund next project · ' + cost.toLocaleString() + ' coins'; }
 }
 function claimCollection(id) {
   if (state.mode !== 'home' || !Object.prototype.hasOwnProperty.call(SANCTUARY_COLLECTION,id)) return;
@@ -1931,15 +2283,15 @@ function renderCollection() {
   const element = equipped?.kind === 'sanctuary' && state.collectionOwned?.[state.sanctuaryStyle] === true ? equipped.element : '';
   document.getElementById('app')?.setAttribute('data-sanctuary', element);
   setSafeText('sanctuaryBadge', element ? equipped.icon + ' ' + equipped.name : '');
-  setSafeText('collectionSummary', `${Object.keys(SANCTUARY_COLLECTION).filter(id => state.collectionOwned?.[id] === true).length}/${Object.keys(SANCTUARY_COLLECTION).length} collected · ${completedWeeksCount()}/4 weeks for Steadfast Keeper · ${state.contractTokens || 0} tokens`);
+  setSafeText('collectionSummary', `${Object.keys(SANCTUARY_COLLECTION).filter(id => state.collectionOwned?.[id] === true).length}/${Object.keys(SANCTUARY_COLLECTION).length} collected · ${completedWeeksCount()} completed weeks · ${state.contractTokens || 0} tokens · ${bonusSealCount()} permanent seals. Track a reward to guide your next goal. Seals are milestones, not spent currency.`);
   const target = document.getElementById('sanctuaryCollection');
   if (!target) return;
   target.innerHTML = Object.entries(SANCTUARY_COLLECTION).map(([id,item]) => {
     const owned = state.collectionOwned?.[id] === true;
     const active = item.kind === 'title' ? state.keeper?.collectionTitle === id : state.sanctuaryStyle === id;
     const ready = collectionAvailable(item);
-    const requirement = item.weeks ? `Complete ${item.weeks} weekly sets (${completedWeeksCount()}/${item.weeks})` : item.mastery === 'all' ? 'Claim all three Main mastery rewards' : `Claim ${ELEMENT_BOOK[item.mastery].name} Main mastery`;
-    return `<section class="collection-card"><div class="collection-emblem ${item.element || ''}" aria-hidden="true">${item.icon}</div><h3>${item.name}</h3><p>${item.kind === 'title' ? 'Keeper title' : 'Sanctuary style'} · ${requirement}</p><p>${item.coins.toLocaleString()} coins${item.tokens ? ' + '+item.tokens+' cosmetic tokens' : ''}</p><button onclick="${owned ? 'equipCollection' : 'claimCollection'}('${id}')" ${state.mode !== 'home' || !owned && (!ready || state.coins < item.coins || (state.contractTokens || 0) < item.tokens) ? 'disabled' : ''}>${owned ? active ? 'Equipped · remove' : 'Equip' : !ready ? 'Locked' : 'Unlock'}</button></section>`;
+    const requirement = item.seals ? `Earn ${item.seals} bonus seals (${bonusSealCount()}/${item.seals}); at most two per week, no consecutive-week requirement` : item.projectRank ? `Complete ${item.projectRank} Sanctuary projects (${sanctuaryProjectRank()}/${item.projectRank})` : item.weeks ? `Complete ${item.weeks} weekly sets (${completedWeeksCount()}/${item.weeks})` : item.mastery === 'all' ? 'Claim all three Main mastery rewards' : `Claim ${ELEMENT_BOOK[item.mastery].name} Main mastery`;
+    return `<section class="collection-card"><div class="collection-emblem ${item.element || ''}" aria-hidden="true">${item.icon}</div><h3>${item.name}</h3><p>${item.kind === 'title' ? 'Keeper title' : 'Sanctuary style'} · ${requirement}</p><p>${item.coins.toLocaleString()} coins${item.tokens ? ' + '+item.tokens+' cosmetic tokens' : ''}</p><button onclick="${owned ? 'equipCollection' : 'claimCollection'}('${id}')" ${state.mode !== 'home' || !owned && (!ready || state.coins < item.coins || (state.contractTokens || 0) < item.tokens) ? 'disabled' : ''}>${owned ? active ? 'Equipped · remove' : 'Equip' : !ready ? 'Locked' : 'Unlock'}</button>${!owned ? `<button onclick="trackCollection('${id}')" aria-pressed="${state.collectionGoal === id}" ${state.mode !== 'home' ? 'disabled' : ''}>${state.collectionGoal === id ? 'Tracking · stop' : 'Track goal'}</button>` : ''}</section>`;
   }).join('');
 }
 function openContracts() {
@@ -2100,7 +2452,7 @@ function renderQuest() {
   const hasSleepy = !state.sleepyDone && state.level >= 3;
   rollContracts();
   const done = state.contracts.items.filter(item => item.claimed).length;
-  const normalQuestHTML = `<div style="flex:1"><strong>Weekly contracts · ${done}/5</strong>
+  const normalQuestHTML = `<div class="board-contract-summary" style="flex:1"><strong>Weekly contracts · ${done}/5</strong>
     <p style="font-size:0.75rem;margin:4px 0">Five goals · Monday reset · Complete all for a cosmetic token</p>
     <button id="contractsOpen" onclick="openContracts()">View contracts</button></div>`;
 
@@ -2392,6 +2744,9 @@ function render() {
   setText("muteBtn", state.muted ? "🔇" : "🔊");
   setText("lvlChip", `Lv ${state.level || 1} • ${state.xp || 0}/${xpNeed(state.level || 1)}`);
   setText("coinCount", state.coins);
+  setText('headerLevel', state.level || 1);
+  const xpBar = document.getElementById('headerXp');
+  if (xpBar) { xpBar.max=xpNeed(state.level || 1); xpBar.value=state.xp || 0; xpBar.title=`${state.xp || 0}/${xpBar.max} XP`; }
   setText("bonus", bonus());
   setText("roomCount", roomsOpen());
   setText("tributeBtn", `Mountain Tribute: ${tributeCost()} 🪙 (+5% bonus, max 10)`);
@@ -2401,7 +2756,7 @@ function render() {
   );
   
   const nl = document.getElementById("nameLine");
-  if (nl) nl.textContent = (state.playerName || "Keeper") + (state.nameChanges ? "" : " • tap to name");
+  if (nl) nl.textContent = state.playerName || "Keeper";
 
   // --- 2. BUTTON TOGGLES & STATES ---
   const exitBtn = document.getElementById("exitTrialBtn");
@@ -2454,7 +2809,8 @@ function render() {
 
   // --- 3. MODULAR RENDERS ---
   const savingsGoal = nextDecorGoal();
-  setText('savingsStatus', savingsGoal ? `Next upgrade: ${savingsGoal.name} · ${Math.min(state.coins, savingsGoal.cost)}/${savingsGoal.cost} coins. Savings protects this amount from dragon purchases only.` : 'Discover more dragons to unlock upgrades, or enjoy your completed Nest.');
+  renderProgressionGoals();
+  setText('savingsStatus', savingsGoal ? `Next upgrade: ${savingsGoal.name} · ${Math.min(state.coins, savingsGoal.cost)}/${savingsGoal.cost} coins. Savings protects this amount from dragon purchases only.` : DECOR.every(d => state.decor?.[d.id]) ? 'Decor complete! Explore Collection for mastery rewards and optional Sanctuary projects.' : 'Discover more dragons to unlock the next Nest upgrade.');
   setText('savingsToggle', state.saveForDecor ? 'Upgrade savings: On' : 'Upgrade savings: Off');
   document.getElementById('savingsToggle')?.setAttribute('aria-pressed', String(!!state.saveForDecor));
   setText('hatcheryHint', state.mode === 'stage' ? `First ${ASH_GRACE} merges are safe • ${TRAIL_GATHERS + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0)} starting gathers`
@@ -2912,6 +3268,7 @@ function initGame() {
       toast(`Collected ${bankValue} 🪙 from the Dragon Bank!`);
       
       state.perchBank = 0;
+      contractEvent('roost', bankValue);
       // Collecting does not discard progress toward the next income tick.
       
       sfx("gather");
@@ -3121,6 +3478,8 @@ function executeTabSwitch(targetTab, viewId) {
   
   targetTab?.classList.add("active");
   document.getElementById(viewId)?.classList.add("active");
+  if (viewId === 'view-home' && !wardrobeDialogKind && pendingWardrobeRewards().length &&
+      !document.querySelector('.modal.open, .modal[style*="display: flex"]')) openWardrobeReward();
 
   // Dynamic Scroll Lock (locking both html and body)
   if (viewId === "view-board") {

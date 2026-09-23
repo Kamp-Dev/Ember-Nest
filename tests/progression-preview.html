@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><base href="../"><script>
+const fixtureStorage=new Map(Object.entries({"ember-nest-save":"{\"coins\":65000,\"energy\":5,\"cells\":[{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},{\"level\":1,\"count\":1,\"element\":\"neutral\"},null,null,null,null,null,null],\"locked\":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true],\"decor\":{\"moss\":true,\"lamp\":true,\"pool\":true,\"hoard\":true,\"roost\":true},\"quest\":0,\"questDone\":false,\"nextEnergyAt\":108000,\"mode\":\"home\",\"stageCells\":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],\"ash\":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],\"stageMerges\":0,\"trailGathers\":13,\"ashCleared\":false,\"ashWins\":0,\"lastAshWinAt\":0,\"ashDayKey\":\"2026-09-22\",\"ashDayWins\":0,\"book\":{\"0\":true,\"1\":true,\"2\":true,\"3\":true,\"4\":true,\"5\":true},\"rareBook\":{},\"elementBook\":{},\"rareElementBook\":{},\"masteryClaims\":{},\"gives\":0,\"maxEnergy\":20,\"hearthDone\":true,\"highestDiscovered\":5,\"eggsBought\":0,\"xp\":0,\"level\":25,\"pouchBonus\":0,\"perch\":[null,null,null],\"perchBank\":800,\"theme\":\"hatchery\",\"perchAt\":0,\"seenGuide\":true,\"muted\":false,\"playerName\":\"Keeper\",\"nameChanges\":0,\"sleepyDone\":false,\"sleepyStreak\":0,\"questTab\":0,\"tributes\":0,\"keeper\":{\"title\":\"Novice Breeder\",\"equipment\":{\"body\":\"body_base.png\",\"torso\":null,\"head\":null,\"legs\":null}},\"stash\":{\"wardrobe_uncommon_head\":1,\"wardrobe_uncommon_torso\":1,\"wardrobe_uncommon_legs\":1,\"wardrobe_rare_head\":1,\"wardrobe_rare_legs\":1,\"wardrobe_epic_torso\":1},\"rewardInbox\":[{\"level\":2,\"quantity\":3}],\"saveForDecor\":true,\"sanctuaryRank\":0,\"dailyEggsBought\":0,\"dailyPouchBonus\":0,\"wardrobeClaims\":{\"wardrobe_uncommon_head\":true,\"wardrobe_uncommon_torso\":true,\"wardrobe_uncommon_legs\":true,\"wardrobe_rare_head\":true,\"wardrobe_rare_legs\":true,\"wardrobe_epic_torso\":true},\"contracts\":{\"version\":2,\"week\":\"1969-12-29\",\"replaced\":false,\"completed\":false,\"selectedTier\":5,\"items\":[{\"kind\":\"gather\",\"target\":290,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":700},{\"kind\":\"merge\",\"target\":50,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":875},{\"kind\":\"roost\",\"target\":3900,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":525},{\"kind\":\"trial\",\"target\":3,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":1050},{\"kind\":\"donate\",\"target\":1,\"want\":4,\"progress\":0,\"claimed\":false,\"reward\":1050}]},\"ashTrialCompleted\":true,\"wardrobePending\":[]}","ember-nest-appearance":"light"}));
+Object.defineProperty(window,'localStorage',{value:{getItem:k=>fixtureStorage.get(k)??null,setItem:(k,v)=>fixtureStorage.set(k,String(v)),removeItem:k=>fixtureStorage.delete(k)}});
+</script>
   <!-- Google Fonts: Playfair Display & Montserrat -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -8,14 +11,14 @@
   
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ember Nest</title>
+  <title>Progression QA · Memory-only save</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css?v=4">
   <script>
     // Restore appearance before paint; keep this separate from game progress.
     try { document.documentElement.dataset.appearance = localStorage.getItem('ember-nest-appearance') === 'dark' ? 'dark' : 'light'; } catch (_) {}
   </script>
-  <link rel="stylesheet" href="storybook.css?v=7">
+  <link rel="stylesheet" href="storybook.css?v=6">
   <link rel="stylesheet" href="moonlight.css?v=2">
   <link rel="stylesheet" href="wardrobe.css?v=20">
   <link rel="stylesheet" href="keeper-header.css?v=4">
@@ -173,7 +176,7 @@
           <button id="autoMergeBtn">Auto Merge (Lv. 5)</button>
         </div>
         <p id="hatcheryHint" class="hatchery-hint" aria-live="polite"></p>
-        <button id="savingsBoardHint" class="hatchery-hint next-goal" onclick="openNextGoal()" aria-live="polite"></button>
+        <p id="savingsBoardHint" class="hatchery-hint" aria-live="polite"></p>
       </div>
 
       <!-- === VIEW 3: THE ROOST === -->
@@ -236,12 +239,6 @@
           <p id="savingsStatus"></p>
           <button id="savingsToggle" aria-pressed="false" onclick="toggleDecorSavings()">Upgrade savings: Off</button>
         </section>
-
-        <details id="elderReservePanel" class="savings-panel" tabindex="-1">
-          <summary>Elder reserve · store &amp; return dragons</summary>
-          <p>Free board space without losing your Elders. Element, shiny status and stacks are preserved. No fees, expiry or passive income; Roost earnings stay unchanged. Return requires a free board tile. Unavailable during Trials.</p>
-          <div id="elderReserveList"></div>
-        </details>
 
         <!-- Sub-Tabs Navigation -->
         <div class="nest-sub-tabs" style="display: flex; gap: 8px; margin-bottom: 16px; justify-content: center;">
@@ -568,8 +565,8 @@
     <p>Motion follows your <strong>Animated tiles</strong> setting in the portrait menu. Samples cannot be equipped or consumed.</p>
   </dialog>
   <div id="wardrobeDialog" class="wardrobe-dialog" role="dialog" aria-modal="true" aria-labelledby="wardrobeDialogTitle" hidden></div>
-  <script src="game-data.js?v=8"></script>
-  <script src="game-core.js?v=5"></script>
-  <script src="app.js?v=17"></script>
+  <script src="game-data.js?v=5"></script>
+  <script src="game-core.js?v=3"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

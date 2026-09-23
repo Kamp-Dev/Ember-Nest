@@ -131,7 +131,7 @@ const defaultState = () => ({
   seenGuide: false, muted: false, playerName: "Keeper", nameChanges: 0,
   sleepyDone: false, sleepyStreak: 0, questTab: 0, tributes: 0,
   keeper: { title: 'Novice Breeder', equipment: { body: 'body_base.png', torso: null, head: null, legs: null } },
-  stash: {},
+  stash: {}, rewardInbox: [], elderReserve: [], elderReserveNextId: 1, bonusSeals: 0, collectionGoal: null, saveForDecor: true, sanctuaryRank: 0,
 });
 
 let state = defaultState();
@@ -147,7 +147,19 @@ function load() {
     }
     if (!raw) return;
 
-    state = { ...defaultState(), ...JSON.parse(raw) };
+    const saved = JSON.parse(raw);
+    state = { ...defaultState(), ...saved };
+    state.bonusSeals = Number.isSafeInteger(saved.bonusSeals) && saved.bonusSeals >= 0 ? saved.bonusSeals : 0;
+    state.elderReserve = Array.isArray(saved.elderReserve) ? saved.elderReserve.filter(entry =>
+      entry?.dragon?.level === 5 && Number.isSafeInteger(entry.dragon.count) && entry.dragon.count > 0) : [];
+    // Reassign IDs on load to repair malformed/duplicate IDs without losing dragons.
+    state.elderReserve.forEach((entry, index) => { entry.id = index + 1; });
+    state.elderReserveNextId = state.elderReserve.length + 1;
+    // Existing players keep their purchase preference; new games start protected.
+    state.saveForDecor = saved.saveForDecor === true;
+    state.rewardInbox = Array.isArray(saved.rewardInbox) ? saved.rewardInbox.filter(r =>
+      r && Number.isInteger(r.level) && r.level >= 0 && r.level < CHAIN.length &&
+      Number.isSafeInteger(r.quantity) && r.quantity > 0) : [];
     if (!state.keeper) {
       state.keeper = {
         name: "Keeper",
@@ -248,6 +260,33 @@ function findLevel(level) {
   return state.cells.findIndex(cell => cell && cell.level === level);
 }
 
+// Reward-only delivery. Paid purchases/consumables continue to fail without charge.
+function grantDragonReward(level, quantity = 1) {
+  if (!Number.isInteger(level) || level < 0 || level >= CHAIN.length ||
+      !Number.isSafeInteger(quantity) || quantity <= 0) return;
+  state.rewardInbox = state.rewardInbox || [];
+  const pending = state.rewardInbox.find(r => r.level === level);
+  if (pending) pending.quantity += quantity;
+  else state.rewardInbox.push({level, quantity});
+  deliverRewardInbox();
+}
+function deliverRewardInbox() {
+  if (state.mode !== 'home') return 0;
+  let delivered = 0;
+  const queue = state.rewardInbox || [];
+  while (queue.length && emptyOpen().length) {
+    const reward = queue[0];
+    if (!spawn(reward.level, 1)) break;
+    reward.quantity--;
+    delivered++;
+    if (!reward.quantity) queue.shift();
+  }
+  return delivered;
+}
+function rewardInboxCount() {
+  return (state.rewardInbox || []).reduce((n,r) => n + r.quantity, 0);
+}
+
 function consumeOne(level) {
   const index = findLevel(level);
   if (index < 0) return false;
@@ -306,7 +345,11 @@ function mergeInto(fromI, toI) {
   if (payout) state.coins += payout;
   if (state.mode !== "stage" && nextLevel === 4) completeHearthGoal();
   if (state.mode !== "stage") addXp(15 + nextLevel * 10);
-  if (state.mode === 'home') contractEvent('merge', produced);
+  if (state.mode === 'home') {
+    contractEvent('merge', produced);
+    contractEvent('nurture', produced, nextLevel);
+    contractEvent('earn', payout);
+  }
 
   sfx(shiny ? "shiny" : "merge");
   const cellElement = boardEl?.children[toI];

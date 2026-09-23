@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><base href="../"><script>
+    const auditStorage=new Map(Object.entries({"ember-nest-save":"{\"coins\":20,\"energy\":5,\"cells\":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],\"locked\":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true],\"decor\":{},\"quest\":0,\"questDone\":false,\"nextEnergyAt\":108000,\"mode\":\"home\",\"stageCells\":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],\"ash\":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],\"stageMerges\":0,\"trailGathers\":13,\"ashCleared\":false,\"ashWins\":0,\"lastAshWinAt\":0,\"ashDayKey\":\"2026-09-22\",\"ashDayWins\":0,\"book\":{\"0\":true},\"rareBook\":{},\"elementBook\":{},\"rareElementBook\":{},\"masteryClaims\":{},\"gives\":0,\"maxEnergy\":20,\"hearthDone\":false,\"highestDiscovered\":0,\"eggsBought\":0,\"xp\":0,\"level\":1,\"pouchBonus\":0,\"perch\":[null,null,null],\"perchBank\":0,\"theme\":\"hatchery\",\"perchAt\":0,\"seenGuide\":true,\"muted\":false,\"playerName\":\"Keeper\",\"nameChanges\":0,\"sleepyDone\":false,\"sleepyStreak\":0,\"questTab\":0,\"tributes\":0,\"keeper\":{\"title\":\"Novice Breeder\",\"equipment\":{\"body\":\"body_base.png\",\"torso\":null,\"head\":null,\"legs\":null}},\"stash\":{},\"rewardInbox\":[],\"elderReserve\":[],\"elderReserveNextId\":1,\"bonusSeals\":0,\"collectionGoal\":null,\"saveForDecor\":true,\"sanctuaryRank\":0,\"dailyEggsBought\":0,\"dailyPouchBonus\":0,\"wardrobeClaims\":{},\"contracts\":{\"version\":2,\"week\":\"1969-12-29\",\"replaced\":false,\"completed\":false,\"selectedTier\":0,\"items\":[{\"kind\":\"gather\",\"target\":65,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":200},{\"kind\":\"merge\",\"target\":15,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":250},{\"kind\":\"roost\",\"target\":150,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":150},{\"kind\":\"nurture\",\"target\":3,\"want\":1,\"progress\":0,\"claimed\":false,\"reward\":250},{\"kind\":\"earn\",\"target\":1000,\"want\":null,\"progress\":0,\"claimed\":false,\"reward\":200}]},\"wardrobePending\":[]}"}));
+    Object.defineProperty(window,'localStorage',{value:{getItem:k=>auditStorage.get(k)??null,setItem:(k,v)=>auditStorage.set(k,String(v)),removeItem:k=>auditStorage.delete(k)}});
+    </script>
   <!-- Google Fonts: Playfair Display & Montserrat -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -8,7 +11,7 @@
   
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ember Nest</title>
+  <title>fresh progression audit · Memory-only save</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css?v=4">
   <script>

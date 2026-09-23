@@ -1,0 +1,39 @@
+/* Portrait-led resource bar; no premium currency until an economy exists. */
+body.storybook #app .game-header { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:4px 10px!important; padding:8px 12px!important; align-items:center; }
+body.storybook #app .header-left { display:flex; flex-direction:row; align-items:center; gap:8px; min-width:0; grid-column:1; grid-row:1; }
+body.storybook #app #title { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+body.storybook #app #headerKeeperBtn { flex:none; position:relative; width:54px; height:54px; padding:0!important; border:2px solid #ae8c44!important; border-radius:12px!important; background:#ebc872!important; box-shadow:0 3px 0 #5d503d55!important; cursor:pointer; }
+.header-portrait { position:absolute; inset:0; overflow:hidden; border-radius:10px; }
+.header-portrait > span { position:absolute; inset:0; transform:scale(1.8); transform-origin:center 8%; }
+.header-portrait img { position:absolute; width:100%; height:100%; object-fit:contain; }
+.header-portrait img[hidden] { display:none!important; }
+body.storybook #app #headerKeeperBtn { overflow:visible!important; }
+#headerKeeperBtn .header-portrait-border { position:absolute; width:148%; height:148%; max-width:none; left:-24%; top:-24%; object-fit:contain; pointer-events:none; z-index:2; }
+body.storybook #app #headerKeeperBtn:has(.header-portrait-border[style*="block"]) { border-color:transparent!important; background:transparent!important; box-shadow:none!important; }
+body.storybook #app .game-header { padding:13px 16px!important; }
+body.storybook #app .header-left { gap:14px; }
+#headerKeeperBtn #headerLevel { z-index:3; }
+#headerLevel { position:absolute; left:-5px; bottom:-5px; min-width:22px; padding:2px 4px; background:#263c3e; border:1px solid #dfc585; border-radius:7px; color:#fff5d6; font-size:12px; font-weight:800; }
+.header-identity { min-width:0; flex:1; }
+body.storybook #app #nameLine { display:block; width:100%; min-height:0!important; padding:0!important; margin:0 0 6px; text-align:left; border:0!important; border-radius:0!important; background:transparent!important; box-shadow:none!important; color:var(--text-main)!important; font-size:12px!important; line-height:1.2; letter-spacing:0!important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#headerXp { display:block; width:100%; height:8px; border:1px solid #526448; border-radius:8px; overflow:hidden; accent-color:#7dbb64; background:#283c35; }
+#headerXp::-webkit-progress-bar { background:#283c35; }
+#headerXp::-webkit-progress-value { background:linear-gradient(90deg,#65a647,#b4d875); border-radius:8px; }
+.header-xp-label { display:block; font-size:8px; margin-top:4px; white-space:nowrap; }
+body.storybook #app .header-right { grid-column:2; grid-row:1; display:grid; grid-template-columns:28px minmax(0,1fr) minmax(0,1fr); gap:7px!important; width:100%; }
+body.storybook #app .header-right .stat-pill { position:relative; min-height:34px; padding:4px 4px 4px 14px!important; border:0!important; background:#344b48!important; color:#fff5da!important; border-radius:8px; font-size:12px!important; }
+body.storybook #app .resource-icon { position:absolute; left:-7px; top:50%; transform:translateY(-50%); font-size:25px; line-height:1; filter:drop-shadow(0 2px 1px #0005); }
+body.storybook #app #coinCount { font-size:12px; overflow-wrap:anywhere; }
+body.storybook #app :is(#coinCount,#energyCount) { color:#fff5da!important; text-shadow:0 1px 2px #0008; }
+body.storybook #app #energyTimer { color:#c8dabb!important; font-size:8px!important; }
+body.storybook #app #bookBtn { width:28px; height:36px; padding:0!important; font-size:19px!important; }
+body.storybook #app #keeperSettings { display:none; position:fixed; inset:78px auto auto max(12px, calc(50% - 248px)); margin:0; padding:10px; width:220px; border:1px solid #a5b18c; border-radius:14px; background:#f6f0dc; color:#354a38; box-shadow:0 8px 30px #0005; }
+body.storybook #app #keeperSettings:popover-open { display:grid; gap:8px; }
+body.storybook #app #keeperSettings .stat-pill { width:100%; height:42px; padding:8px!important; font-size:18px; border-radius:8px; justify-content:flex-start; gap:10px; }
+#keeperSettings .stat-pill::after { content:attr(aria-label); font-size:12px; }
+html[data-appearance="dark"] body.storybook #app #keeperSettings { background:#20363d; color:#f4e9ce; }
+@media(min-width:450px) {
+ body.storybook #app .header-right .stat-pill { font-size:15px!important; }
+ body.storybook #app #coinCount { font-size:15px; }
+ body.storybook #app #headerKeeperBtn { width:60px; height:60px; }
+}

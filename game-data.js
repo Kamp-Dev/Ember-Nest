@@ -73,13 +73,35 @@ const WARDROBE_OVERLAYS = {
   uncommon_legs: [27.469,72.084,45.133,30.127],
   uncommon_torso: [27.851,43.775,44.299,40.559],
 };
+const WORN_HAT_OVERLAYS = {
+  uncommon: [24.304,-7.973,51.351,48.590],
+  rare: [24.261,-8.105,51.478,48.808],
+  epic: [24.006,-5.942,51.947,44.847],
+  legendary: [24.554,-5.940,50.852,46.511],
+  mythic: [24.387,-5.943,51.225,46.181],
+};
 const WARDROBE_IDS = [];
+const WORN_TORSO_OVERLAYS = {
+  uncommon:[26.226,47.592,47.509,35.042],
+  rare:[29.018,46.449,41.929,36.214],
+  epic:[29.185,47.871,41.629,33.736],
+  legendary:[29.692,49.017,41.009,32.302],
+  mythic:[28.256,47.194,43.558,34.833],
+};
+STASH_CATALOG.breeder_tunic.wornImg='assets/avatar/torso_tunic_worn_v2.png';
+STASH_CATALOG.breeder_tunic.wornOverlay=[22.825,42.534,54.35,44.615];
+STASH_CATALOG.rare_tunic.wornImg='assets/avatar/torso_tunic_rare_worn_v2.png';
+STASH_CATALOG.rare_tunic.wornOverlay=[24.086,41.835,51.829,44.558];
+STASH_CATALOG.epic_tunic.wornImg='assets/avatar/torso_tunic_epic_worn_v2.png';
+STASH_CATALOG.epic_tunic.wornOverlay=[22.754,42.852,54.579,44.446];
 for (const set of WARDROBE_SETS) for (const slot of ['head','torso','legs']) {
   const id = `wardrobe_${set.rarity}_${slot}`;
   WARDROBE_IDS.push(id);
   STASH_CATALOG[id] = {name:`${set.name} ${slot === 'head' ? 'Cap' : slot === 'torso' ? 'Tunic' : 'Legwear'}`,
     rarity:set.rarity, slot, type:'cosmetic', img:`assets/avatar/clothing_${set.rarity}_${slot}_v1.png`,
-    wardrobe:true, overlay:WARDROBE_OVERLAYS[`${set.rarity}_${slot}`], requirement:set.requirements[slot]};
+    wardrobe:true, overlay:WARDROBE_OVERLAYS[`${set.rarity}_${slot}`], requirement:set.requirements[slot],
+    ...(slot === 'head' ? {wornImg:`assets/avatar/clothing_${set.rarity}_head_worn_v2.png`, wornOverlay:WORN_HAT_OVERLAYS[set.rarity]} : {}),
+    ...(slot === 'torso' && WORN_TORSO_OVERLAYS[set.rarity] ? {wornImg:`assets/avatar/clothing_${set.rarity}_torso_worn_v${set.rarity === 'rare' ? 3 : 2}.png`, wornOverlay:WORN_TORSO_OVERLAYS[set.rarity]} : {})};
 }
 
 const CHAIN = [
@@ -136,11 +158,17 @@ const ROOMS = [
 
 // Permanent, purely visual endgame rewards. No timed exclusivity or power boosts.
 const SANCTUARY_COLLECTION = {
+  wayfarer_title: {name:'Lantern Wayfarer',kind:'title',icon:'🏮',tokens:2,coins:150000,seals:4},
+  chronicler_title: {name:'Dragon Chronicler',kind:'title',icon:'📜',tokens:4,coins:500000,seals:12},
+  starlight_title: {name:'Starlight Curator',kind:'title',icon:'🌠',tokens:6,coins:1000000,seals:24},
   ember_garden: {name:'Ember Garden', kind:'sanctuary', element:'fire', icon:'🔥', tokens:2, coins:25000, mastery:'fire'},
   moon_pool: {name:'Moon Pool', kind:'sanctuary', element:'water', icon:'💧', tokens:2, coins:25000, mastery:'water'},
   grove_canopy: {name:'Grove Canopy', kind:'sanctuary', element:'nature', icon:'🌿', tokens:2, coins:25000, mastery:'nature'},
   guardian_title: {name:'Sanctuary Guardian', kind:'title', icon:'🏵️', tokens:0, coins:100000, mastery:'all'},
   steadfast_title: {name:'Steadfast Keeper', kind:'title', icon:'🌙', tokens:0, coins:50000, weeks:4},
+  patron_title: {name:'Sanctuary Patron', kind:'title', icon:'🌱', tokens:0, coins:0, projectRank:1},
+  steward_title: {name:'Mountain Steward', kind:'title', icon:'🌲', tokens:0, coins:0, projectRank:5},
+  benefactor_title: {name:'Eternal Benefactor', kind:'title', icon:'🏔️', tokens:0, coins:0, projectRank:10},
 };
 
 const DECOR = [

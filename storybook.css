@@ -282,6 +282,31 @@ body.storybook #coinCount, body.storybook #lvlChip { white-space: normal; overfl
 body.storybook #view-board #perchRow { margin-bottom: 14px; }
 body.storybook #view-board #board { margin-bottom: 12px !important; }
 body.storybook #view-board #quest-carousel-container { margin-bottom: 12px !important; }
+/* Fit the full five-row board to the available playfield, not its width. */
+body.storybook #view-board .board-playfield { display:flex; flex-direction:column; padding:6px 2px; }
+body.storybook #view-board #quest-carousel-container { flex:0 0 auto; width:100%; margin-bottom:6px!important; }
+body.storybook #view-board #quest-carousel .quest-card { min-height:0; padding:6px!important; flex:0 0 100%!important; min-width:100%!important; margin:0!important; }
+body.storybook #view-board #quest-carousel .quest-card p { font-size:11px!important; line-height:1.3!important; }
+body.storybook #view-board #quest-carousel .quest-card strong { font-size:12px; }
+body.storybook #app #view-board #quest-carousel .quest-card button { padding:3px 8px!important; font-size:10px!important; min-height:24px!important; height:24px!important; }
+body.storybook #view-board #quest-carousel .art { width:32px!important; height:32px!important; min-width:32px!important; }
+body.storybook #view-board #quest-carousel .art svg { width:32px!important; height:32px!important; }
+body.storybook #view-board #quest-carousel .zzz { font-size:9px; }
+body.storybook #view-board .board-contract-summary { display:grid; grid-template-columns:1fr auto; align-items:center; gap:2px 6px; }
+body.storybook #view-board .board-contract-summary p { grid-column:1/-1; grid-row:2; margin:0!important; }
+body.storybook #view-board .board-contract-summary button { grid-column:2; grid-row:1; margin:0!important; }
+body.storybook #view-board #quest-dots { height:8px; min-height:8px; margin:2px 0!important; padding:0!important; }
+body.storybook #view-board #perchRow { flex:0 0 auto; width:100%; margin:0 0 6px!important; }
+body.storybook #view-board #perchRow .perch { height:40px!important; min-height:40px!important; max-height:40px!important; }
+body.storybook #view-board #board { flex:1 1 0; min-height:138px; grid-template-rows:repeat(5,minmax(0,1fr)); align-content:stretch!important; gap:6px!important; margin:0 auto!important; }
+body.storybook #view-board #board .cell { aspect-ratio:auto; height:100%!important; }
+body.storybook #view-board #exitTrialBtn { flex:0 0 auto; padding:5px 10px!important; margin-bottom:6px!important; }
+body.storybook #view-board .board-status { padding:3px 0; font-size:9px; }
+body.storybook #view-board > .action-buttons { padding:5px 0 2px; }
+body.storybook #view-board > .hatchery-hint { margin:3px 0 0; font-size:9px; }
+@media (min-height:701px) {
+  body.storybook #view-board #perchRow .perch { height:64px!important; min-height:64px!important; max-height:64px!important; }
+}
 body.storybook #view-board :is(#gather, #buyEgg, #autoMergeBtn) { height: 46px !important; min-height: 46px !important; }
 @media (max-width: 350px) {
   body.storybook .game-header { padding: 8px 10px !important; gap: 8px !important; }
@@ -291,3 +316,15 @@ body.storybook #view-board :is(#gather, #buyEgg, #autoMergeBtn) { height: 46px !
   body.storybook .header-right { gap: 5px !important; }
   body.storybook .header-right .stat-pill { font-size: 10px !important; }
 }
+/* A compact action replaces the old savings hint; it adds no new Board row. */
+body.storybook #view-board > .next-goal {
+  display: block; width: 100%; min-height: 28px; height: auto;
+  padding: 4px 8px; white-space: normal; line-height: 1.3;
+  border-radius: 8px; flex: 0 0 auto; cursor: pointer;
+}
+body.storybook #view-board > .next-goal[hidden] { display: none; }
+#elderReservePanel summary { cursor: pointer; font-weight: 700; }
+#elderReservePanel p { line-height: 1.5; }
+.reserve-row, .reserve-pages { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }
+.reserve-row span { min-width: 0; overflow-wrap: anywhere; }
+.reserve-row button, .reserve-pages button { flex: 0 0 auto; min-height: 36px; }

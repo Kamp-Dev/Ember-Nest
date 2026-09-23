@@ -359,7 +359,7 @@ test('shop prices cap per day and the next day resets only the daily count', () 
 });
 
 test('shop grants the advertised dragon and charges once', () => {
-  game().run(`state.book[4] = true; state.coins = 1000; buyEgg();
+  game().run(`state.saveForDecor=false;state.book[4] = true; state.coins = 1000; buyEgg();
     assert.equal(state.cells.find(Boolean).level, 2); assert.equal(state.coins, 450);
     assert.equal(state.dailyEggsBought, 1);`);
 });

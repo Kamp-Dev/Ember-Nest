@@ -11,7 +11,7 @@ for (const scenario of ['fresh', 'mid', 'advanced']) for (const shop of [false, 
       let tasks=[]; setTimeout=(fn,ms=0)=>{tasks.push({fn,at:Date.now()+ms});return tasks.length;};
       function flushTasks(){const due=tasks.filter(t=>t.at<=Date.now());tasks=tasks.filter(t=>t.at>Date.now());due.forEach(t=>t.fn());}
       let ledger={chests:0,contracts:0,sleepy:0,trials:0,roost:0,shop:0,decor:0};
-      let chestCount=0, hearthAt=null, elderAt=null, decorAt=null;
+      let chestCount=0, hearthAt=null, elderAt=null, decorAt=null, weeklyAt=null;
       function measured(key,fn){const before=state.coins;fn();ledger[key]+=state.coins-before;}
       function total(tier){return state.cells.reduce((n,c)=>n+(c?.level===tier?c.count:0),0);}
       function consolidate(){for(let step=0;step<200;step++){
@@ -24,7 +24,7 @@ for (const scenario of ['fresh', 'mid', 'advanced']) for (const shop of [false, 
           measured('chests',revealChest);chestCount++;consolidate();}
       }}
       function rewards(){
-        flushTasks(); claimChests();
+        flushTasks(); claimChests();deliverRewardInbox();consolidate();
         rollContracts();
         for(let i=0;i<state.contracts.items.length;i++){
           const c=state.contracts.items[i];
@@ -67,14 +67,17 @@ for (const scenario of ['fresh', 'mid', 'advanced']) for (const shop of [false, 
       if(hearthAt===null&&state.cells.some(c=>c?.level===4))hearthAt=minutes;
       if(elderAt===null&&state.cells.some(c=>c?.level===5))elderAt=minutes;
       if(decorAt===null&&DECOR.every(d=>state.decor[d.id]))decorAt=minutes;}`);
+    // Weekly completion is observed after successful claims, not inferred from targets.
     for (let step = 0; step < 1350; step++) {
       g.advance(8000); g.tick(); stepAction();
+      g.run("if(weeklyAt===null&&state.contracts.completed)weeklyAt=(Date.now()-100000)/60000");
     }
-    runs.push(JSON.parse(g.run(`JSON.stringify({hearthAt,elderAt,decorAt,coins:state.coins,startingCoins,level:state.level,chestCount,gifts:state.gives,ledger})`)));
+    runs.push(JSON.parse(g.run(`JSON.stringify({hearthAt,elderAt,decorAt,weeklyAt,coins:state.coins,startingCoins,level:state.level,chestCount,gifts:state.gives,ledger})`)));
   }
   const median = values => {const v=values.filter(x=>x!==null).sort((a,b)=>a-b);return v.length?v[Math.floor(v.length/2)]:null;};
   results.push({scenario,shop,reserveDecor,samples:runs.length,minutes:180,
-    medians:Object.fromEntries(['hearthAt','elderAt','decorAt','coins','level','chestCount','gifts'].map(k=>[k,median(runs.map(r=>r[k]))])),
+    medians:Object.fromEntries(['hearthAt','elderAt','decorAt','weeklyAt','coins','level','chestCount','gifts'].map(k=>[k,median(runs.map(r=>r[k]))])),
+    weeklyRuns:runs.filter(r=>r.weeklyAt!==null).length,
     elderRuns:runs.filter(r=>r.elderAt!==null).length,
     allDecorRuns:runs.filter(r=>r.decorAt!==null).length,
     ledger:Object.fromEntries(Object.keys(runs[0].ledger).map(k=>[k,median(runs.map(r=>r.ledger[k]))]))});
