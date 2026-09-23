@@ -40,6 +40,7 @@ const STASH_CATALOG = {
   border_tide: { name:'Tide Crown', rarity:'epic', icon:'💧', type:'cosmetic', slot:'border', img:'assets/avatar/border_tide_v1.png', tokenCost:1 },
   border_grove: { name:'Grove Crown', rarity:'epic', icon:'🌿', type:'cosmetic', slot:'border', img:'assets/avatar/border_grove_v1.png', tokenCost:1 },
   rare_egg: { name: "Rare Egg", rarity: "rare", icon: "🥚", type: "consumable" },
+  element_prism: {name:'Element Prism',rarity:'rare',icon:'🔮',type:'consumable',description:'Change a board stack to an element already discovered at its stage. Shiny stacks require that shiny discovery. Preserves stage, count and shiny status. Earn one at level 10, then one per completed weekly bonus pair.'},
   time_skip_1h: { name: "1h Time Skip", rarity: "epic", icon: "⏳", type: "consumable" },
   breeder_tunic: { name: "Apprentice Tunic", rarity: "uncommon", icon: "🧥", type: "cosmetic", slot: "torso", img: "assets/avatar/torso_tunic.png" },
   rare_tunic: { name: "Adept Tunic", rarity: "rare", icon: "🧥", type: "cosmetic", slot: "torso", img: "assets/avatar/torso_tunic_rare.png" },
@@ -158,6 +159,10 @@ const ROOMS = [
 
 // Permanent, purely visual endgame rewards. No timed exclusivity or power boosts.
 const SANCTUARY_COLLECTION = {
+  surge_keeper: {name:'Keeper of the Surge',kind:'title',icon:'🔥',tokens:0,coins:0,surge:true},
+  ember_explorer: {name:'Ember Trailblazer',kind:'title',icon:'🔥',tokens:0,coins:0,expedition:'fire',stamps:12},
+  tide_explorer: {name:'Tide Navigator',kind:'title',icon:'🌊',tokens:0,coins:0,expedition:'water',stamps:12},
+  grove_explorer: {name:'Grove Pathfinder',kind:'title',icon:'🌿',tokens:0,coins:0,expedition:'nature',stamps:12},
   wayfarer_title: {name:'Lantern Wayfarer',kind:'title',icon:'🏮',tokens:2,coins:150000,seals:4},
   chronicler_title: {name:'Dragon Chronicler',kind:'title',icon:'📜',tokens:4,coins:500000,seals:12},
   starlight_title: {name:'Starlight Curator',kind:'title',icon:'🌠',tokens:6,coins:1000000,seals:24},
@@ -171,6 +176,12 @@ const SANCTUARY_COLLECTION = {
   benefactor_title: {name:'Eternal Benefactor', kind:'title', icon:'🏔️', tokens:0, coins:0, projectRank:10},
 };
 
+const EXPEDITION_ROUTES = {fire:'Ember Trail',water:'Moonlit Coast',nature:'Ancient Grove'};
+const EXPEDITION_PACKAGES = {
+  scout:{name:'Scouting trip',coins:100000,hours:6,stamps:1},
+  survey:{name:'Field survey',coins:300000,hours:24,stamps:3},
+  voyage:{name:'Grand voyage',coins:600000,hours:48,stamps:6},
+};
 const DECOR = [
   { id: "moss", name: "Moss bed", art: "🌿", cost: 600, bonus: 0.1, needStage: 1 },
   { id: "lamp", name: "Ember lamp", art: "🏮", cost: 2200, bonus: 0.15, needStage: 2 },

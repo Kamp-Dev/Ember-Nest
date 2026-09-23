@@ -1,5 +1,18 @@
 # Progression audit — September 22, 2026
 
+## Stabilization checkpoint
+
+See `RELEASE-READINESS.md` for the latest expedition economy comparison, save safeguards, Roost overwrite fix, motion/rendering work, browser walkthrough and remaining release gates. The code gate now passes 129 tests. Historical sections below preserve earlier findings and counts; they are not claims that every prior issue remains unchanged or that human retention is proven.
+
+## Element Prism implemented
+
+- Rare consumable in Home → The Stash → Items, using the existing icon-based consumable presentation. Earn one introductory Prism at level 10 (existing eligible players included), then one when both weekly bonuses are completed. Award flags persist; a completed pair is reconciled before weekly rollover. No purchase or premium-currency path was added.
+- Select a Board stack, select Fire/Water/Nature, then explicitly confirm spending one Prism for the entire stack. Eligible stages are Wyrmling through Elder. The target element must already be recorded at that exact stage; shiny stacks require the matching shiny discovery. This version reorganizes known lineages, rather than bypassing discovery/mastery.
+- Preserves all other dragon fields, stack count and shiny status. No coins, XP, promotion progress or new discoveries are awarded. Works on a full Board because it uses no additional tile. Excludes locked tiles, reserve, Roost, Eggs, Hatchlings and Trial mode.
+- Cancellation, stale/replaced/modified stacks, invalid targets and duplicate confirmation do not spend another item. Returning to an earlier element requires another Prism. Save/reload preserves both the result and reward flags.
+- Existing legacy `time_skip_1h` catalog/use code was discovered during this implementation and left unchanged. No new time-skip distribution was added.
+- Validation: 119 regression tests pass, including five Prism-specific tests covering economy/trait conservation, full boards, cancellation, stale selection, duplicate confirmation, eligibility, awards and rollover. JavaScript syntax check passes. Browser visual verification was not performed in this pass.
+
 ## Retention follow-up: weekly bonuses, collection choices, 12-week benchmark
 
 Implemented in order:

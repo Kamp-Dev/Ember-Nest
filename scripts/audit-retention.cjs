@@ -2,6 +2,8 @@
 // not human timing. No fabricated Trial wins, purchases, mastery or bonus completions.
 const {game}=require('../tests/support/game-harness.cjs');
 const results=[];
+const expeditionPolicy=process.argv.includes('--expeditions');
+const saveFirst=process.argv.includes('--save-first');
 for(const stage of ['fresh','late']) for(const cadence of ['casual','active']) {
  const runs=[];
  for(let seed=1;seed<=2;seed++) {
@@ -20,7 +22,7 @@ for(const stage of ['fresh','late']) for(const cadence of ['casual','active']) {
    }
    state.energy=state.maxEnergy;state.perchAt=Date.now();state.nextEnergyAt=Date.now()+REGEN_MS;
    state.contracts=null;rollContracts();state.saveForDecor=true;
-   let blocked=0,gathers=0,waits=0,stored=0;const titleWeeks={};
+   let blocked=0,gathers=0,waits=0,stored=0,expeditionSpent=0;const titleWeeks={};
    function mergeAll(){for(let n=0;n<100;n++){
     let pair=null;for(let i=0;i<25&&!pair;i++)for(let j=i+1;j<25;j++){
      const a=state.cells[i],b=state.cells[j];if(a&&b&&a.level===b.level&&a.level<5){pair=[i,j];break;}}
@@ -40,7 +42,16 @@ for(const stage of ['fresh','late']) for(const cadence of ['casual','active']) {
     for(const d of DECOR)if(!state.decor[d.id]&&highestOwned()>=d.needStage&&state.coins>=d.cost)buyDecor(d.id);
     for(const [id,item] of Object.entries(SANCTUARY_COLLECTION))if(!state.collectionOwned?.[id]&&collectionAvailable(item)){
      claimCollection(id);if(state.collectionOwned?.[id])titleWeeks[id]=week;}
-    if(sanctuaryProjectOpen()&&sanctuaryProjectRank()<10&&state.coins>=sanctuaryProjectCost())contributeSanctuary();
+    const savingForTitle=${saveFirst} && Object.entries(SANCTUARY_COLLECTION).some(([id,item])=>item.seals&&!state.collectionOwned?.[id]&&bonusSealCount()>=item.seals-2);
+    if(!savingForTitle&&sanctuaryProjectOpen()&&sanctuaryProjectRank()<10&&state.coins>=sanctuaryProjectCost())contributeSanctuary();
+    if(${expeditionPolicy}&&sanctuaryProjectOpen()){
+     if(expeditionReady())claimExpedition(state.expedition.id);
+     if(!state.expedition&&!savingForTitle){
+      const reserve=50000;const offer=['voyage','survey','scout'].find(id=>state.coins>=EXPEDITION_PACKAGES[id].coins+reserve);
+      const route=Object.keys(EXPEDITION_ROUTES).sort((a,b)=>expeditionStamps(a)-expeditionStamps(b))[0];
+      if(offer){const before=state.coins;previewExpedition(route,offer);confirmExpedition();expeditionSpent+=before-state.coins;}
+     }
+    }
     if(highestOwned()>=3&&state.coins>5000+eggPrice())buyEgg();
     mergeAll();
    }
@@ -54,8 +65,8 @@ for(const stage of ['fresh','late']) for(const cadence of ['casual','active']) {
    }
    g.run(`activities(${week})`);
   }
-  runs.push(JSON.parse(g.run(`JSON.stringify({seals:bonusSealCount(),tokens:state.contractTokens||0,completedWeeks:completedWeeksCount(),coins:state.coins,projects:sanctuaryProjectRank(),reserve:state.elderReserve.length,blocked,gathers,waits,titleWeeks})`)));
+  runs.push(JSON.parse(g.run(`JSON.stringify({seals:bonusSealCount(),tokens:state.contractTokens||0,completedWeeks:completedWeeksCount(),coins:state.coins,projects:sanctuaryProjectRank(),reserve:state.elderReserve.length,blocked,gathers,waits,expeditionSpent,journal:state.expeditionJournal,titleWeeks})`)));
  }
- results.push({stage,cadence,weeks:12,sessionsPerWeek:cadence==='casual'?3:7,minutesPerSession:10,seeds:2,runs});
+ results.push({stage,cadence,expeditionPolicy,saveFirst,weeks:12,sessionsPerWeek:cadence==='casual'?3:7,minutesPerSession:10,seeds:2,runs});
 }
 console.log(JSON.stringify(results,null,2));

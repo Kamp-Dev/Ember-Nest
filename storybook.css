@@ -252,6 +252,26 @@ body.storybook #app[data-sanctuary]:not([data-sanctuary='']) #board {
   background: var(--sanctuary-glow); box-shadow: 0 0 16px var(--sanctuary-glow);
 }
 body.storybook #app[data-sanctuary]:not([data-sanctuary='']) .keeper-profile { box-shadow: inset 0 -5px 0 var(--sanctuary-accent), inset 0 -50px 65px var(--sanctuary-glow) !important; }
+/* Sanctuary identity stays behind gameplay, with no extra overlay or hit target. */
+.keeper-name-row { display:flex; align-items:center; gap:5px; min-width:0; margin-bottom:6px; }
+body.storybook #app .keeper-name-row #nameLine { width:auto; min-width:0; margin:0; flex:0 1 auto; }
+.sanctuary-name-icon { flex:none; font-size:16px; line-height:1.2; filter:drop-shadow(0 1px 2px var(--sanctuary-accent)); }
+.sanctuary-name-icon[hidden] { display:none; }
+body.storybook #app[data-sanctuary='fire'] { --sanctuary-pattern:radial-gradient(ellipse at 15% 100%,#ef963c88,transparent 48%),radial-gradient(ellipse at 90% 85%,#df583766,transparent 45%); }
+body.storybook #app[data-sanctuary='water'] { --sanctuary-pattern:repeating-radial-gradient(ellipse at 50% 100%,transparent 0 22px,#73cbe044 24px 27px,transparent 30px 52px); }
+body.storybook #app[data-sanctuary='nature'] { --sanctuary-pattern:radial-gradient(ellipse at 0 0,#83b96399,transparent 45%),radial-gradient(ellipse at 100% 0,#599e6f88,transparent 45%),radial-gradient(ellipse at 50% 100%,#bad78455,transparent 55%); }
+body.storybook #app[data-sanctuary]:not([data-sanctuary='']) #board {
+  background-image:var(--sanctuary-pattern); border-color:var(--sanctuary-accent);
+  box-shadow:inset 0 0 20px var(--sanctuary-glow),0 0 18px var(--sanctuary-glow);
+}
+body.storybook #app[data-sanctuary]:not([data-sanctuary='']) .keeper-profile {
+  background-image:var(--sanctuary-pattern)!important;
+  border-bottom:3px solid var(--sanctuary-accent);
+}
+body.storybook #app[data-sanctuary]:not([data-sanctuary='']) .sanctuary-badge {
+  display:inline-block; align-self:center; padding:5px 10px; border:1px solid var(--sanctuary-accent);
+  border-radius:20px; background:var(--sanctuary-glow); font-weight:700;
+}
 body.storybook #board .cell.selected-dragon { outline: 3px solid #ad573b; outline-offset: -3px; }
 body.storybook #board .cell.matching-dragon { outline: 2px dashed #53704f; outline-offset: -3px; }
 body.storybook #board .cell.valid { outline: 4px solid #bc722e; outline-offset: -4px; }
@@ -296,7 +316,8 @@ body.storybook #view-board .board-contract-summary { display:grid; grid-template
 body.storybook #view-board .board-contract-summary p { grid-column:1/-1; grid-row:2; margin:0!important; }
 body.storybook #view-board .board-contract-summary button { grid-column:2; grid-row:1; margin:0!important; }
 body.storybook #view-board #quest-dots { height:8px; min-height:8px; margin:2px 0!important; padding:0!important; }
-body.storybook #view-board #perchRow { flex:0 0 auto; width:100%; margin:0 0 6px!important; }
+/* Match the board width and centerline, overriding the legacy 450px cap. */
+body.storybook #view-board #perchRow { flex:0 0 auto; width:100%; max-width:480px!important; margin:0 auto 6px!important; }
 body.storybook #view-board #perchRow .perch { height:40px!important; min-height:40px!important; max-height:40px!important; }
 body.storybook #view-board #board { flex:1 1 0; min-height:138px; grid-template-rows:repeat(5,minmax(0,1fr)); align-content:stretch!important; gap:6px!important; margin:0 auto!important; }
 body.storybook #view-board #board .cell { aspect-ratio:auto; height:100%!important; }
@@ -328,3 +349,11 @@ body.storybook #view-board > .next-goal[hidden] { display: none; }
 .reserve-row, .reserve-pages { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }
 .reserve-row span { min-width: 0; overflow-wrap: anywhere; }
 .reserve-row button, .reserve-pages button { flex: 0 0 auto; min-height: 36px; }
+/* Pause offscreen effects and make storage failures visible above game controls. */
+body.storybook .view:not(.active) *, body.storybook .view:not(.active) *::before, body.storybook .view:not(.active) *::after,
+body.storybook.page-hidden *, body.storybook.page-hidden *::before, body.storybook.page-hidden *::after { animation-play-state: paused !important; }
+#saveWarning:not([hidden]) { position:fixed; z-index:99999; inset:8px 8px auto; padding:14px; margin:0; background:#542323; color:#fff; border:2px solid #ffc36b; border-radius:8px; font-size:13px; line-height:1.5; }
+.expedition-route { border-top:1px solid var(--border); padding:8px 0; }
+.expedition-route button { display:block; width:100%; margin:6px 0; white-space:normal; min-height:42px; }
+#expeditionContent > button { min-height:42px; margin:4px; }
+body.storybook #board .cell.trial-hint-target { outline:3px dashed #57cfd5; outline-offset:-4px; }

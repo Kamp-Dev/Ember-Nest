@@ -327,3 +327,10 @@ test('rarity tiles expose text and pressed state, with bounded effects and reduc
   assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
   assert.match(css,/animation:none!important/);
 });
+
+test('equipped legendary cards contain their sweep without clipping keeper artwork',()=>{
+  const css=fs.readFileSync(path.resolve(__dirname,'../wardrobe.css'),'utf8');
+  assert.match(css,/body\.storybook #app #view-home \.keeper-gear \{ overflow:hidden; isolation:isolate; \}/);
+  assert.match(css,/html\[data-tile-motion="off"\] \.keeper-gear::after \{ content:none; \}/);
+  assert.match(css,/@media \(prefers-reduced-motion:reduce\)\s*\{\s*\.keeper-gear, \.keeper-gear::before, \.keeper-gear::after \{ animation:none!important; \}/);
+});

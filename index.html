@@ -15,10 +15,10 @@
     // Restore appearance before paint; keep this separate from game progress.
     try { document.documentElement.dataset.appearance = localStorage.getItem('ember-nest-appearance') === 'dark' ? 'dark' : 'light'; } catch (_) {}
   </script>
-  <link rel="stylesheet" href="storybook.css?v=7">
+  <link rel="stylesheet" href="storybook.css?v=11">
   <link rel="stylesheet" href="moonlight.css?v=2">
-  <link rel="stylesheet" href="wardrobe.css?v=20">
-  <link rel="stylesheet" href="keeper-header.css?v=4">
+  <link rel="stylesheet" href="wardrobe.css?v=21">
+  <link rel="stylesheet" href="keeper-header.css?v=5">
   
   <style>
     .coin-icon {
@@ -38,10 +38,11 @@
     
     <!-- === UNIFIED GAME HEADER === -->
     <header class="game-header">
+      <p id="saveWarning" role="alert" hidden></p>
       <div class="header-left">
         <h1 id="title">Ember <span>Nest</span></h1>
         <button id="headerKeeperBtn" popovertarget="keeperSettings" aria-controls="keeperSettings" aria-expanded="false" aria-label="Keeper settings"><span class="header-portrait"><span><img id="header-body" src="assets/avatar/body_base.png" alt=""><img id="header-torso" alt="" hidden><img id="header-head" alt="" hidden></span></span><img id="dk-border" src="" alt="" class="header-portrait-border" style="display:none"><span id="headerLevel">1</span></button>
-        <div class="header-identity"><button id="nameLine" class="player-name" aria-label="Rename keeper">Keeper</button><progress id="headerXp" value="0" max="100" aria-label="Keeper level progress"></progress><span id="lvlChip" class="header-xp-label">Lv 1</span></div>
+        <div class="header-identity"><div class="keeper-name-row"><button id="nameLine" class="player-name" aria-label="Rename keeper">Keeper</button><span id="headerSanctuaryIcon" class="sanctuary-name-icon" role="img" hidden></span></div><progress id="headerXp" value="0" max="100" aria-label="Keeper level progress"></progress><span id="lvlChip" class="header-xp-label">Lv 1</span></div>
       </div>
       
       <div id="keeperSettings" class="header-tools" popover="auto" aria-label="Keeper settings" ontoggle="document.getElementById('headerKeeperBtn').setAttribute('aria-expanded',String(event.newState === 'open'))">
@@ -223,11 +224,29 @@
       <div id="view-trials" class="view">
         <div class="section-title">Trials of the Mountain</div>
         <div id="trialBox" style="margin-bottom: 16px;"></div>
+        <section class="savings-panel" aria-label="Ember Surge challenge">
+          <h3>Ember Surge · Challenge prototype</h3>
+          <p>Clear 12 ash before live ash reaches 12. Only the first promotion is safe; later promotions spawn two ash. Your pouch gets 12 extra gathers. Choose your merge landing tiles carefully. Free entry, no timer, and your main board stays safe.</p>
+          <p>No permanent dragon discoveries or Ash daily/weekly reward credit. Leaving or reloading abandons this attempt without a fee.</p>
+          <p id="surgeStatus"></p>
+          <button id="surgeEnter" onclick="enterStage('surge')">Complete Ash Trial first</button>
+        </section>
       </div>
 
       <!-- === VIEW 5: THE NEST === -->
       <div id="view-nest" class="view">
         <div class="section-title">Mountain Rooms & Decor</div>
+        <details class="savings-panel" id="backupPanel">
+          <summary>Save backups &amp; recovery</summary>
+          <p>Download a backup before switching devices or testing new content. Trial attempts are not resumed. Restore replaces progress; it does not combine saves. Keep only one game tab open.</p>
+          <button onclick="exportGameBackup()">Download current backup</button>
+          <button onclick="exportBeforeRestore()">Download pre-restore copy</button>
+          <p><label for="backupFile">Choose an Ember Nest backup to preview</label></p>
+          <input id="backupFile" type="file" accept=".json,application/json" onchange="previewBackupFile(this)">
+          <p id="backupStatus" role="status" aria-live="polite">No restore selected. Downloaded files are not automatically synced.</p>
+          <button id="confirmBackupRestore" disabled onclick="confirmBackupRestore()">Confirm replacement &amp; reload</button>
+          <button onclick="cancelBackupRestore()">Cancel restore</button>
+        </details>
         <section class="savings-panel" aria-label="Saved dragon rewards">
           <p id="rewardInboxStatus" role="status"></p>
           <button id="collectRewardInbox" onclick="collectRewardInbox()">Collect saved dragons</button>
@@ -261,6 +280,11 @@
           <p style="color: #e0e1dd; font-size: 0.9rem; margin-top: 16px;">Explore Collection for permanent mastery and weekly-contract cosmetics.</p>
         </div>
         <div id="sub-collection" class="nest-sub-view" style="display:none;width:100%">
+          <section id="expeditionPanel" class="savings-panel" tabindex="-1" aria-label="Field expeditions">
+            <h3>Field expeditions</h3>
+            <p>Fund a route, return later, and collect permanent journal stamps. One trip at a time. Dragons stay with you. Rewards never expire; no coin payouts or power boosts.</p>
+            <div id="expeditionContent"></div>
+          </section>
           <p id="collectionSummary" class="collection-summary"></p>
           <p class="collection-summary">Sanctuary styles decorate your board and keeper profile. Titles appear on Home. All rewards are permanent and cosmetic only. Weeks need not be consecutive.</p>
           <div id="sanctuaryCollection"></div>
@@ -422,13 +446,13 @@
     </div>
     
     <!-- TRIAL WIN MODAL -->
-    <div id="trailWin" class="modal">
+    <div id="trailWin" class="modal" role="dialog" aria-modal="true" aria-labelledby="trialWinTitle">
       <div class="modal-content">
-        <h2>Trial Cleared!</h2>
+        <h2 id="trialWinTitle">Trial Cleared!</h2>
         <p id="winSub"></p>
         <div id="winLoot"></div>
         <div class="modal-buttons">
-          <button id="winHome">Return to Nest</button>
+          <button id="winHome">Back to Board</button>
           <button id="winAgain">Run Again</button>
         </div>
       </div>
@@ -454,12 +478,12 @@
     </div>
 
     <!-- TRIAL FAIL MODAL -->
-    <div id="trailFail" class="modal">
+    <div id="trailFail" class="modal" role="dialog" aria-modal="true" aria-labelledby="trialFailTitle" aria-describedby="failWhy">
       <div class="modal-content">
-        <h2>Ash Overwhelmed</h2>
+        <h2 id="trialFailTitle">Trial attempt ended</h2>
         <p id="failWhy"></p>
         <div class="modal-buttons">
-          <button id="homeTrail">Back to Nest</button>
+          <button id="homeTrail">Back to Board</button>
           <button id="restartTrail">Try Again</button>
         </div>
       </div>
@@ -568,8 +592,8 @@
     <p>Motion follows your <strong>Animated tiles</strong> setting in the portrait menu. Samples cannot be equipped or consumed.</p>
   </dialog>
   <div id="wardrobeDialog" class="wardrobe-dialog" role="dialog" aria-modal="true" aria-labelledby="wardrobeDialogTitle" hidden></div>
-  <script src="game-data.js?v=8"></script>
-  <script src="game-core.js?v=5"></script>
-  <script src="app.js?v=17"></script>
+  <script src="game-data.js?v=11"></script>
+  <script src="game-core.js?v=9"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>

@@ -297,6 +297,7 @@ function wardrobeProgress(id) {
   return {current:['fire','water','nature'].filter(e => state.masteryClaims?.[e + '_rare'] === true).length, target:3, label:'Claim all three Radiant elemental masteries'};
 }
 function awardWardrobeMilestones() {
+  awardElementPrisms();
   rememberWardrobeContract();
   rememberCompletedWeek();
   if (!state.wardrobeClaims || typeof state.wardrobeClaims !== 'object' || Array.isArray(state.wardrobeClaims)) state.wardrobeClaims = {};
@@ -344,7 +345,7 @@ function showWardrobeDialog(kind, id) {
   if (!modal || !item || !ownsCosmeticReward(id)) return;
   if (!wardrobeDialogKind) wardrobeReturnFocus = document.activeElement;
   wardrobeDialogKind = kind; wardrobeDialogItem = id;
-  const progress = item.requirement ? wardrobeProgress(id).label : item.type === 'consumable' ? (id === 'rare_egg' ? 'Hatches a shiny egg into an open board tile.' : 'Adds one hour of current Roost income, up to bank capacity.') : Number.isInteger(item.tokenCost) ? 'Collected from the weekly contract cosmetic shop.' : 'Collected keeper clothing.';
+  const progress = item.description || (item.requirement ? wardrobeProgress(id).label : item.type === 'consumable' ? (id === 'rare_egg' ? 'Hatches a shiny egg into an open board tile.' : 'Adds one hour of current Roost income, up to bank capacity.') : Number.isInteger(item.tokenCost) ? 'Collected from the weekly contract cosmetic shop.' : 'Collected keeper clothing.');
   const worn = !!item.img && state.keeper?.equipment?.[item.slot]?.split('/').pop() === item.img.split('/').pop();
   const currentEntry = item.type === 'cosmetic' ? stashInventory(item.slot).find(entry => entry.equipped) : null;
   const current = currentEntry && currentEntry.itemId !== id ? STASH_CATALOG[currentEntry.itemId] : null;
@@ -363,6 +364,7 @@ function showWardrobeDialog(kind, id) {
   modal.querySelector?.('.wardrobe-dialog-card')?.focus();
 }
 function closeWardrobeDialog() {
+  pendingPrism = null;
   const modal = document.getElementById('wardrobeDialog');
   if (modal) modal.hidden = true;
   wardrobeDialogKind = null; wardrobeDialogItem = null;
@@ -407,6 +409,119 @@ function browsedStash() {
     const x=STASH_CATALOG[a.itemId], y=STASH_CATALOG[b.itemId];
     return (stashSort === 'equipped' ? Number(b.equipped)-Number(a.equipped) : stashSort === 'rarity' ? (rank[y.rarity] || 0)-(rank[x.rarity] || 0) : 0) || x.name.localeCompare(y.name);
   });
+}
+let pendingRestore = null;
+let restoreReadId = 0;
+function downloadSaveText(text,name) {
+  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+  const link=document.createElement('a');link.href=url;link.download=name;
+  document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportGameBackup() {
+  try { downloadSaveText(JSON.stringify(backupPayload(),null,2),'ember-nest-backup.json');setSafeText('backupStatus','Backup download requested. Keep the file somewhere safe; this is not cloud sync.'); }
+  catch(error){setSafeText('backupStatus','Backup download failed: '+error.message);}
+}
+function exportBeforeRestore() {
+  try {
+    const raw=localStorage.getItem(SAVE+'-before-restore');
+    if(!raw)throw new Error('No pre-restore copy is available yet.');
+    const data=JSON.parse(raw);
+    downloadSaveText(JSON.stringify({format:'ember-nest-backup',version:1,createdAt:new Date().toISOString(),data},null,2),'ember-nest-before-restore.json');
+    setSafeText('backupStatus','Pre-restore copy download requested.');
+  } catch(error){setSafeText('backupStatus',error.message);}
+}
+function cancelBackupRestore() {
+  restoreReadId++;pendingRestore=null;
+  const confirm=document.getElementById('confirmBackupRestore');if(confirm)confirm.disabled=true;
+  const input=document.getElementById('backupFile');if(input)input.value='';
+  setSafeText('backupStatus','Restore cancelled. Current save unchanged.');
+}
+async function previewBackupFile(input) {
+  const readId=++restoreReadId;pendingRestore=null;
+  const confirm=document.getElementById('confirmBackupRestore');if(confirm)confirm.disabled=true;
+  try {
+    if(state.mode==='stage')throw new Error('Leave the Trial before restoring.');
+    const file=input.files?.[0];if(!file)return;
+    if(file.size>2000000)throw new Error('Backup is too large (maximum 2 MB).');
+    const text=await file.text();if(readId!==restoreReadId)return;
+    const restored=validateBackup(text);
+    pendingRestore={text,expectedRaw:localStorage.getItem(SAVE)};
+    setSafeText('backupStatus',`Ready to replace this save with level ${restored.level}, ${restored.coins.toLocaleString()} coins, and ${restored.cells.filter(Boolean).length} occupied board tiles. This replaces progress; it does not merge saves. A pre-restore copy will be kept on this device. Confirm only if this is the save you want.`);
+    if(confirm)confirm.disabled=false;
+  } catch(error){if(readId===restoreReadId)setSafeText('backupStatus','Cannot restore: '+error.message);}
+}
+function confirmBackupRestore() {
+  if(!pendingRestore)return;
+  try {
+    commitBackupRestore(pendingRestore.text,pendingRestore.expectedRaw);pendingRestore=null;
+    const button=document.getElementById('confirmBackupRestore');if(button)button.disabled=true;
+    window.location.reload();
+  } catch(error){pendingRestore=null;const button=document.getElementById('confirmBackupRestore');if(button)button.disabled=true;setSafeText('backupStatus','Restore not completed: '+error.message);}
+}
+window.addEventListener('storage',event=>{
+  if(event.key===SAVE||event.key===null){try{detectSaveConflict();}catch(_){showSaveWarning('Save storage is unavailable. Keep this tab open and export a backup.');}}
+});
+let pendingPrism = null;
+function awardElementPrisms() {
+  let added = 0;
+  if (state.level >= 10 && !state.prismIntroClaimed) { state.prismIntroClaimed = true; added++; }
+  const weekly = state.contracts;
+  if (weekly?.completed && weekly.bonus?.length === 2 && weekly.bonus.every(item => item.claimed) && !weekly.prismClaimed) {
+    weekly.prismClaimed = true; added++;
+  }
+  if (added) {
+    state.stash = state.stash || {};
+    state.stash.element_prism = (state.stash.element_prism || 0) + added;
+    save();
+    toast('Element Prism added to The Stash · Items.');
+  }
+}
+function prismTargets(dragon) {
+  if (!dragon || !Number.isInteger(dragon.level) || dragon.level < 2 || dragon.level > 5 || !Number.isSafeInteger(dragon.count) || dragon.count < 1) return [];
+  const discoveries = dragon.shiny ? state.rareElementBook : state.elementBook;
+  return ['fire','water','nature'].filter(element => element !== (dragon.element || 'neutral') && discoveries?.[element]?.[dragon.level] === true);
+}
+function prismLabel(dragon) {
+  return (dragon.shiny ? 'Shiny ' : '') + (({fire:'Fire',water:'Water',nature:'Nature'})[dragon.element] || 'Neutral') + ' ' + CHAIN[dragon.level].name + ' ×' + dragon.count;
+}
+function openElementPrism() {
+  if (state.mode !== 'home' || !(state.stash?.element_prism > 0)) return;
+  const modal = document.getElementById('wardrobeDialog');
+  if (!modal) return;
+  recoverElementDiscoveries();
+  pendingPrism = null;
+  if (wardrobeDialogKind !== 'prism') wardrobeReturnFocus = document.activeElement;
+  wardrobeDialogKind = 'prism'; wardrobeDialogItem = 'element_prism';
+  const choices = state.cells.map((dragon,index) => !state.locked[index] && prismTargets(dragon).length ?
+    '<section class="contract-row"><strong>Tile ' + (index+1) + ' · ' + prismLabel(dragon) + '</strong><p>Change entire stack to:</p>' +
+    prismTargets(dragon).map(element => '<button onclick="previewElementPrism(' + index + ',\'' + element + '\')">' + ({fire:'Fire',water:'Water',nature:'Nature'})[element] + '</button>').join('') + '</section>' : '').join('');
+  modal.innerHTML = '<section class="wardrobe-dialog-card item-detail-card rarity-rare" tabindex="-1"><h2 id="wardrobeDialogTitle">Element Prism · choose a stack</h2><p>' + STASH_CATALOG.element_prism.description + '</p><p>Only unlocked Board tiles are eligible; Roost, reserve and Trial dragons are excluded. No coins, XP, or new mastery discoveries are awarded.</p>' +
+    (choices || '<p>No eligible stacks. Discover another element at the same stage first, then place your dragon on the Board.</p>') + '<button onclick="closeWardrobeDialog()">Cancel · keep item</button></section>';
+  modal.hidden = false; modal.querySelector?.('.wardrobe-dialog-card')?.focus();
+}
+function previewElementPrism(index, element) {
+  if (state.mode !== 'home' || !Number.isInteger(index) || state.locked[index] || !(state.stash?.element_prism > 0)) return;
+  const dragon = state.cells[index];
+  if (!prismTargets(dragon).includes(element)) return;
+  const modal = document.getElementById('wardrobeDialog');
+  if (!modal) return;
+  pendingPrism = {index, element, dragon, snapshot:JSON.stringify(dragon)};
+  modal.innerHTML = '<section class="wardrobe-dialog-card item-detail-card rarity-rare" tabindex="-1"><h2 id="wardrobeDialogTitle">Confirm element change</h2><p>Board tile ' + (index+1) + '</p><p>' + prismLabel(dragon) + ' → ' + prismLabel({...dragon,element}) + '</p><p>Costs 1 Element Prism for the entire stack. Stage, count and shiny status stay the same. No mastery, coins or XP are awarded. Changing back would require another Prism.</p><button onclick="confirmElementPrism()">Confirm · use 1 Prism</button><button onclick="openElementPrism()">Choose another stack</button><button onclick="closeWardrobeDialog()">Cancel · keep item</button></section>';
+  modal.querySelector?.('.wardrobe-dialog-card')?.focus();
+}
+function confirmElementPrism() {
+  const request = pendingPrism;
+  if (!request || state.mode !== 'home' || !(state.stash?.element_prism > 0)) return false;
+  const dragon = state.cells[request.index];
+  if (state.locked[request.index] || dragon !== request.dragon || JSON.stringify(dragon) !== request.snapshot || !prismTargets(dragon).includes(request.element)) {
+    pendingPrism = null; toast('That stack changed. Please choose it again.'); openElementPrism(); return false;
+  }
+  state.cells[request.index] = {...dragon,element:request.element};
+  state.stash.element_prism--;
+  if (!state.stash.element_prism) delete state.stash.element_prism;
+  pendingPrism = null;
+  save(); closeWardrobeDialog(); render(); toast('Element changed. Stage, stack and shiny status preserved.');
+  return true;
 }
 function activateStashItem(id) {
   if (stashInspect) showWardrobeDialog('details',id);
@@ -686,6 +801,7 @@ window.useFromStash = function(itemId) {
     if (!(state.stash[itemId] > 0)) return;
     if (state.mode !== 'home') { toast('Return to the nest to use this item.'); return; }
     let message;
+    if (itemId === 'element_prism') { openElementPrism(); return; }
     if (itemId === 'rare_egg') {
       if (!spawn(0, 1, undefined, true)) return;
       message = 'A shiny egg was placed on your board!';
@@ -851,7 +967,11 @@ function sfx(kind) {
 // MODULE 8: VFX & PARTICLES
 // ==========================================
 
+let activeParticleCount = 0;
+function effectsReduced() { return document.hidden || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches; }
 function spawnParticles(x, y, count = 8, color = '#ffcf40') {
+  if (effectsReduced()) return;
+  count = Math.max(0,Math.min(24,Math.floor(count),48-activeParticleCount));
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
@@ -871,11 +991,13 @@ function spawnParticles(x, y, count = 8, color = '#ffcf40') {
     `;
     
     document.body.appendChild(p);
-    setTimeout(() => p.remove(), 800);
+    activeParticleCount++;
+    setTimeout(() => { p.remove(); activeParticleCount--; }, 800);
   }
 }
 
 function spawnFloatingText(x, y, text) {
+  if (effectsReduced()) return;
   const p = document.createElement('div');
   p.className = 'floating-text';
   p.innerHTML = `${text} <span class="spinning-coin">🪙</span>`;
@@ -1253,6 +1375,9 @@ function unlock(i) {
 // --- ROOST ASSIGNMENT ---
 
 function selectDragonForRoost(boardIndex) {
+  if (state.mode !== 'home' || !Number.isInteger(boardIndex) || !perchOpen(roostTargetSlot) || state.perch[roostTargetSlot]) {
+    toast('Choose an empty unlocked perch. Existing dragons have not been replaced.'); return;
+  }
   if (roostTargetSlot < 0 || roostTargetSlot > 2) return;
   
   const cells = board();
@@ -1384,6 +1509,7 @@ function ashSvg() {
 // --- CORE ACTIONS ---
 
 function gather() {
+  if (trialInputLocked()) return;
   if (state.mode === "stage") {
     if ((state.trailGathers || 0) <= 0) {
       toast("Trail pouch is empty • merge what you have");
@@ -1429,6 +1555,7 @@ function gather() {
   render();
 }
 function triggerAutoMerge() {
+  if (state.mode === 'stage') { showTrialHint(); return; }
   if (state.mode !== 'home') return;
   if ((state.level || 1) < 5) {
     toast("Auto Merge unlocks at Level 5!");
@@ -1516,22 +1643,27 @@ function triggerAutoMerge() {
 
 
 function checkTrailStuck() {
-  if (state.mode !== "stage" || state.trailWon || (state.ashBurned || 0) >= ASH_GOAL) return;
+  if (state.mode !== "stage" || trialInputLocked() || (state.ashBurned || 0) >= trialRules().goal) return;
   if ((state.trailGathers || 0) > 0 || canFiveMerge()) return;
   
   sfx("fail");
   showTrailFail("The pouch is empty and nothing can 5-merge. The nest is still safe.");
 }
 
-function enterStage() {
+function enterStage(kind = 'ash') {
+  selectedCell = -1; drag = null; ghost?.remove(); ghost = null;
+  hideTrailFail(); hideTrailWin();
   if (state.mode === "stage") {
     state.mode = "home";
     resetTrail();
     toast("Returned to the nest");
   } else {
+    kind = kind === 'surge' ? 'surge' : 'ash';
+    if (kind === 'surge' && !state.ashTrialCompleted) { toast('Complete the Ash Trial to unlock Ember Surge.'); return; }
+    state.trialKind = kind;
     state.mode = "stage";
     generateTrail();
-    toast(`Ash Trail • burn ${ASH_GOAL} ash to finish`);
+    toast(`${trialRules().name} • burn ${trialRules().goal} ash to finish`);
     if (!state.seenGuide) showGuide();
     
     // Explicit scroll lock on stage entry
@@ -1549,17 +1681,21 @@ function enterStage() {
 }
 
 function restartTrail() {
+  selectedCell = -1; drag = null; ghost?.remove(); ghost = null;
+  if (state.mode !== 'stage') { enterStage(state.lastTrialKind || 'ash'); return; }
   hideTrailFail();
   state.mode = "stage";
   resetTrail();
   generateTrail();
-  toast(`Ash Trail • burn ${ASH_GOAL} ash to finish`);
+  toast(`${trialRules().name} • burn ${trialRules().goal} ash to finish`);
   save(); 
   render();
 }
 
 function winStage() {
-  if (state.mode !== "stage") return;
+  if (state.mode !== "stage" || state.trialFailed) return;
+  state.lastTrialKind = state.trialKind === 'surge' ? 'surge' : 'ash';
+  if (state.trialKind === 'surge') { winSurge(); return; }
   
   rollDaily();
   const first = !state.ashCleared;
@@ -1617,15 +1753,54 @@ const left = dailyLeft();
   render();
 }
 
+function winSurge() {
+  if (state.mode !== 'stage' || state.trialKind !== 'surge' || !state.trailWon || state.ashBurned < 12) return false;
+  state.lastTrialKind = 'surge';
+  const first = !state.surgeCleared;
+  state.surgeCleared = true;
+  state.surgeWins = (state.surgeWins || 0) + 1;
+  if (first) { state.stash.element_prism = (state.stash.element_prism || 0) + 1; }
+  state.mode = 'home'; resetTrail(); state.trialKind = 'ash';
+  hideTrailFail();
+  showTrailWin(first ? ['Ember Surge cleared!','1 Element Prism added to The Stash.','Keeper of the Surge title is ready in Nest → Collection.'] : ['Ember Surge cleared again.','Practice clear — no repeat rewards.'], 'Main board and energy preserved. No coin or XP payout.');
+  save(); render(); return true;
+}
+function trialHint() {
+  if (state.mode !== 'stage' || trialInputLocked()) return null;
+  const cells = state.stageCells;
+  let best = null;
+  for (let from=0;from<cells.length;from++) for(let to=0;to<cells.length;to++) {
+    const a=cells[from],b=cells[to];
+    if(from===to||!a||!b||a.level!==b.level||a.level>=5||isAsh(from)||isAsh(to)) continue;
+    const promotes=a.count+b.count>=5;
+    const clears=promotes ? warmthTargets(to,a.level+1).filter(i=>state.ash[i]).length : 0;
+    const dangerous=promotes && state.stageMerges>=trialRules().grace && ashCount()-clears+ASH_PER_MERGE>=trialRules().limit;
+    const score=clears*100+(promotes?20:0)+a.count+b.count-(dangerous?1000:0);
+    if(!best||score>best.score) best={from,to,clears,promotes,dangerous,score};
+  }
+  if(best) return {...best,text:`Tile ${best.from+1} → tile ${best.to+1}: ${best.promotes ? 'promote and clear '+best.clears+' ash' : 'combine these stacks; fewer than five does not clear ash'}${best.dangerous ? '. Warning: spawning ash may end this run.' : '.'} One-move suggestion, not a guaranteed solution.`};
+  return {text:emptyOpen().length && state.trailGathers>0 ? 'No matching pair yet. Gather an egg, then look for five of the same stage.' : 'No merge available. Try Again starts a fresh free run; your main board is safe.'};
+}
+function showTrialHint() {
+  const hint=trialHint();
+  if(!hint)return;
+  updateBoardFeedback(hint.from ?? -1);
+  if(Number.isInteger(hint.to))document.querySelector('#board .cell[data-i="'+hint.to+'"]')?.classList.add('trial-hint-target');
+  setSafeText('boardStatus',hint.text);
+}
 function failStage() {
-  if (state.mode !== "stage" || state.trailWon || (state.ashBurned || 0) >= ASH_GOAL) return;
+  if (state.mode !== "stage" || trialInputLocked() || (state.ashBurned || 0) >= trialRules().goal) return;
   sfx("fail");
   showTrailFail("Ash covered the path. The nest is still safe.");
 }
 
 function showTrailFail(why) {
+  if (state.mode !== 'stage' || state.trailWon || state.trialFailed) return;
+  state.trialFailed = true;
+  save();
   document.getElementById("failWhy") && (document.getElementById("failWhy").textContent = why);
   document.getElementById("trailFail")?.classList.add("open");
+  document.getElementById('restartTrail')?.focus();
 }
 
 function hideTrailFail() {
@@ -1636,6 +1811,7 @@ function showTrailWin(lines, sub) {
   document.getElementById("winSub") && (document.getElementById("winSub").textContent = sub);
   document.getElementById("winLoot") && (document.getElementById("winLoot").innerHTML = lines.map(t => `<div>${t}</div>`).join(""));
   document.getElementById("trailWin")?.classList.add("open");
+  document.getElementById('winHome')?.focus();
 }
 
 function hideTrailWin() {
@@ -1675,6 +1851,7 @@ function rareBookKnown() {
 }
 
 function discover(level) {
+  if (state.mode === 'stage' && state.trialKind === 'surge') return;
   state.book = state.book || { 0: true };
   state.highestDiscovered = Math.max(highestOwned(), level);
   if (state.book[level]) return;
@@ -1686,6 +1863,7 @@ function discover(level) {
 }
 
 function discoverRare(level) {
+  if (state.mode === 'stage' && state.trialKind === 'surge') return;
   state.rareBook = state.rareBook || {};
   if (state.rareBook[level]) return;
   
@@ -1709,6 +1887,7 @@ function scanBook() {
 
 // Element discoveries never replay stage-based coin rewards.
 function recordElementDiscovery(item) {
+  if (state.mode === 'stage' && state.trialKind === 'surge') return;
   if (!item || !Number.isInteger(item.level) || item.level < 2 || item.level > 5 ||
       !Object.prototype.hasOwnProperty.call(ELEMENT_BOOK, item.element)) return;
   for (const key of item.shiny ? ['elementBook','rareElementBook'] : ['elementBook']) {
@@ -1977,6 +2156,7 @@ function contractWeek(now = Date.now()) {
   return { key, next: next.getTime() };
 }
 function rollContracts() {
+  awardElementPrisms();
   rememberWardrobeContract();
   rememberCompletedWeek();
   const week = contractWeek();
@@ -2010,7 +2190,8 @@ function contractEvent(kind, count = 1, level = null) {
       item.claimed = true;
       state.contractTokens = (state.contractTokens || 0) + 1;
       state.bonusSeals = (state.bonusSeals || 0) + 1;
-      toast('Bonus complete! +1 cosmetic token and 1 permanent collection seal.');
+      awardElementPrisms();
+      toast('Bonus complete! +1 cosmetic token and 1 permanent collection seal.' + (state.contracts.bonus.every(item => item.claimed) ? ' Element Prism added to The Stash.' : ''));
     }
   }
   save();
@@ -2077,7 +2258,7 @@ function renderContractsPanel() {
       <button ${item.claimed || !ready || state.mode !== 'home' ? 'disabled' : ''} onclick="claimContract(${i}, '${weekly.week}')">${item.claimed ? 'Claimed ✓' : item.kind === 'donate' ? 'Donate & claim' : 'Claim'}</button>
       <button ${item.claimed || weekly.replaced || state.mode !== 'home' ? 'disabled' : ''} onclick="replaceContract(${i}, '${weekly.week}')">Replace</button></section>`;
   }).join('');
-  panel.innerHTML += '<section class="savings-panel contract-bonus"><strong>Optional weekly bonuses</strong><p>After all five claims: two extra goals, one cosmetic token and one permanent collection seal each. Rewards bank automatically. Unfinished bonus progress resets Monday; seals never expire. No daily streak.</p>' +
+  panel.innerHTML += '<section class="savings-panel contract-bonus"><strong>Optional weekly bonuses</strong><p>After all five claims: two extra goals, one cosmetic token and one permanent collection seal each. Complete both for one Element Prism in The Stash. Rewards bank automatically. Unfinished bonus progress resets Monday; earned rewards never expire. No daily streak.</p>' +
     (weekly.bonus ? weekly.bonus.map(item => '<p>' + contractTitle(item) + ' · ' + item.progress + '/' + item.target + (item.claimed ? ' · Reward banked ✓' : ' · +1 token / +1 seal') + '</p>').join('') : '<p>Complete and claim the five contracts to unlock.</p>') + '</section>';
   const resetLabel = document.getElementById('contractsReset');
   if (resetLabel) resetLabel.textContent = 'Resets Monday: ' + new Date(contractWeek().next).toLocaleString() + ' · ' +
@@ -2131,8 +2312,63 @@ function masteryGateMet(gate) {
 }
 function collectionAvailable(item) {
   return masteryGateMet(item.mastery) && completedWeeksCount() >= (item.weeks || 0) &&
+    (!item.surge || state.surgeCleared === true) &&
     bonusSealCount() >= (item.seals || 0) &&
+    (!item.expedition || expeditionStamps(item.expedition) >= item.stamps) &&
     sanctuaryProjectRank() >= (item.projectRank || 0);
+}
+let pendingExpedition = null;
+function expeditionStamps(route) {
+  const count = state.expeditionJournal?.[route];
+  return Number.isSafeInteger(count) && count >= 0 ? count : 0;
+}
+function expeditionReady() {
+  const trip = state.expedition;
+  return !!trip && Object.prototype.hasOwnProperty.call(EXPEDITION_ROUTES,trip.route) &&
+    Object.prototype.hasOwnProperty.call(EXPEDITION_PACKAGES,trip.package) && Number.isFinite(trip.readyAt) && Date.now() >= trip.readyAt;
+}
+function previewExpedition(route, packageId) {
+  if (state.mode !== 'home' || state.expedition || !sanctuaryProjectOpen() ||
+      !Object.prototype.hasOwnProperty.call(EXPEDITION_ROUTES,route) || !Object.prototype.hasOwnProperty.call(EXPEDITION_PACKAGES,packageId)) return;
+  pendingExpedition = {route,package:packageId};
+  renderExpeditions();
+}
+function cancelExpeditionPreview() { pendingExpedition = null; renderExpeditions(); }
+function confirmExpedition() {
+  const quote = pendingExpedition;
+  if (!quote || state.mode !== 'home' || state.expedition || !sanctuaryProjectOpen()) return false;
+  const offer = EXPEDITION_PACKAGES[quote.package];
+  if (!offer || state.coins < offer.coins) return false;
+  const trip = {...quote,id:Date.now(),startedAt:Date.now(),readyAt:Date.now()+offer.hours*3600000};
+  state.coins -= offer.coins; state.expedition = trip;
+  if (!save()) { state.coins += offer.coins; delete state.expedition; return false; }
+  pendingExpedition = null; render(); toast('Expedition funded. Your journal reward will wait until you return.'); return true;
+}
+function claimExpedition(id) {
+  if (state.mode !== 'home' || !expeditionReady() || state.expedition.id !== id) return false;
+  const trip = state.expedition, previous = state.expeditionJournal;
+  state.expeditionJournal = {...previous,[trip.route]:expeditionStamps(trip.route)+EXPEDITION_PACKAGES[trip.package].stamps};
+  delete state.expedition;
+  if (!save()) { state.expedition = trip; state.expeditionJournal = previous; return false; }
+  render(); toast('Journal updated! Permanent route titles unlock at 12 stamps.'); return true;
+}
+function renderExpeditions() {
+  const target = document.getElementById('expeditionContent');
+  if (!target) return;
+  const disabled = state.mode !== 'home' ? 'disabled' : '';
+  const journal = Object.entries(EXPEDITION_ROUTES).map(([id,name]) => name + ': ' + expeditionStamps(id) + ' stamps').join(' · ');
+  let html = '<p>' + journal + '</p><p>Each route unlocks a permanent title at 12 stamps. Further trips continue your journal total; no additional rewards are promised beyond that milestone.</p>';
+  if (!sanctuaryProjectOpen()) html += '<p>Discover Elder and complete all five decor upgrades to unlock expeditions.</p>';
+  else if (state.expedition) {
+    const trip = state.expedition;
+    const route = EXPEDITION_ROUTES[trip.route];
+    if (!route || !EXPEDITION_PACKAGES[trip.package] || !Number.isFinite(trip.readyAt)) html += '<p>Saved expedition needs recovery. It has not been replaced or charged again.</p>';
+    else html += '<p>' + route + ' · ' + (expeditionReady() ? 'Ready to collect. No expiry.' : Math.max(1,Math.ceil((trip.readyAt-Date.now())/60000)) + ' minutes remaining · progresses offline') + '</p><button ' + (expeditionReady() ? disabled : 'disabled') + ' onclick="claimExpedition(' + Number(trip.id) + ')">Collect journal stamps</button>';
+  } else if (pendingExpedition) {
+    const offer = EXPEDITION_PACKAGES[pendingExpedition.package];
+    html += '<p>Confirm ' + EXPEDITION_ROUTES[pendingExpedition.route] + ' · ' + offer.name + ': ' + offer.coins.toLocaleString() + ' coins for ' + offer.stamps + ' stamps in ' + offer.hours + ' hours. Coins are spent on departure, with no refund. Dragons and Roost income are unchanged.</p><p>Balance after departure: ' + Math.max(0,state.coins-offer.coins).toLocaleString() + ' coins. This optional spending can delay your collection goals; upgrade savings does not protect expedition spending.</p><button onclick="confirmExpedition()" ' + (state.coins >= offer.coins ? disabled : 'disabled') + '>Confirm · spend ' + offer.coins.toLocaleString() + '</button><button onclick="cancelExpeditionPreview()">Cancel · spend nothing</button>';
+  } else html += Object.entries(EXPEDITION_ROUTES).map(([route,name]) => '<section class="expedition-route"><h4>' + name + '</h4>' + Object.entries(EXPEDITION_PACKAGES).map(([id,offer]) => '<button ' + (state.coins >= offer.coins ? disabled : 'disabled') + ' onclick="previewExpedition(\'' + route + '\',\'' + id + '\')">' + offer.name + ' · ' + offer.coins.toLocaleString() + ' coins · ' + offer.hours + 'h · ' + offer.stamps + ' stamps</button>').join('') + '</section>').join('');
+  if (target._expeditionHtml !== html) { target.innerHTML = html; target._expeditionHtml = html; }
 }
 function trackCollection(id) {
   if (state.mode !== 'home' || !Object.prototype.hasOwnProperty.call(SANCTUARY_COLLECTION,id)) return;
@@ -2200,10 +2436,11 @@ function renderElderReserve() {
     (state.elderReserve.slice(elderReservePage*8, elderReservePage*8+8).map(entry =>
       '<div class="reserve-row"><span>' + reserveDragonLabel(entry.dragon) + '</span><button onclick="restoreElder(' + entry.id + ')" ' + (blocked || !emptyOpen().length ? 'disabled' : '') + '>Return</button></div>').join('') || '<p>Your reserve is empty.</p>') +
     (pages > 1 ? '<div class="reserve-pages"><button onclick="changeReservePage(-1)" ' + (!elderReservePage ? 'disabled' : '') + '>Previous</button><span>' + (elderReservePage+1) + '/' + pages + '</span><button onclick="changeReservePage(1)" ' + (elderReservePage+1 >= pages ? 'disabled' : '') + '>Next</button></div>' : '');
-  if (target.innerHTML !== html) target.innerHTML = html;
+  if (target._reserveHtml !== html) { target.innerHTML = html; target._reserveHtml = html; }
 }
 function nextProgressionGoal() {
   if (state.mode !== 'home') return null;
+  if (expeditionReady()) return {text:'Your expedition journal reward is ready; no expiry.',target:'expedition'};
   const free = emptyOpen().length;
   if (free < 3 && state.cells.some(dragon => dragon?.level === 5))
     return {text:'Make room: safely store an Elder.', target:'reserve'};
@@ -2232,13 +2469,15 @@ function openNextGoal() {
   if (goal.target === 'book') { document.getElementById('bookBtn')?.click(); return; }
   document.querySelector('[data-tab="view-nest"]')?.click();
   const subtab = goal.target === 'decor' ? 'sub-decor' : 'sub-collection';
+  if (goal.target === 'expedition') document.querySelector('[data-subtab="sub-collection"]')?.click();
   if (goal.target === 'decor' || goal.target === 'collection') document.querySelector('[data-subtab="' + subtab + '"]')?.click();
-  const target = document.getElementById(goal.target === 'reserve' ? 'elderReservePanel' : goal.target === 'inbox' ? 'collectRewardInbox' : subtab);
+  const target = document.getElementById(goal.target === 'expedition' ? 'expeditionPanel' : goal.target === 'reserve' ? 'elderReservePanel' : goal.target === 'inbox' ? 'collectRewardInbox' : subtab);
   if (goal.target === 'reserve' && target) target.open = true;
   target?.scrollIntoView?.({block:'nearest'});
   target?.focus?.();
 }
 function renderProgressionGoals() {
+  renderExpeditions();
   renderElderReserve();
   const goal = nextProgressionGoal();
   const prompt = document.getElementById('savingsBoardHint');
@@ -2277,12 +2516,24 @@ function equipCollection(id) {
   } else state.sanctuaryStyle = state.sanctuaryStyle === id ? null : id;
   save(); render();
 }
+function collectionRewardDetails(item) {
+  if (item.kind === 'title') return 'Displays this title beneath your Keeper name on Home. One title at a time; your Sanctuary style stays equipped. Cosmetic only — no income or power bonus.';
+  const looks = {fire:'Warm ember glows',water:'Blue water ripples',nature:'Green canopy shading'};
+  return `${looks[item.element] || 'Elemental accents'} on the Board and Home Keeper panel, plus ${item.icon} beside your header name. One Sanctuary style at a time; your room and clothing stay unchanged. Cosmetic only — no income or power bonus.`;
+}
 function renderCollection() {
   rememberCompletedWeek();
   const equipped = SANCTUARY_COLLECTION[state.sanctuaryStyle];
   const element = equipped?.kind === 'sanctuary' && state.collectionOwned?.[state.sanctuaryStyle] === true ? equipped.element : '';
   document.getElementById('app')?.setAttribute('data-sanctuary', element);
   setSafeText('sanctuaryBadge', element ? equipped.icon + ' ' + equipped.name : '');
+  const sanctuaryIcon = document.getElementById('headerSanctuaryIcon');
+  if (sanctuaryIcon) {
+    sanctuaryIcon.textContent = element ? equipped.icon : '';
+    sanctuaryIcon.hidden = !element;
+    sanctuaryIcon.setAttribute('aria-label', element ? equipped.name + ' Sanctuary style equipped' : '');
+    sanctuaryIcon.title = element ? equipped.name : '';
+  }
   setSafeText('collectionSummary', `${Object.keys(SANCTUARY_COLLECTION).filter(id => state.collectionOwned?.[id] === true).length}/${Object.keys(SANCTUARY_COLLECTION).length} collected · ${completedWeeksCount()} completed weeks · ${state.contractTokens || 0} tokens · ${bonusSealCount()} permanent seals. Track a reward to guide your next goal. Seals are milestones, not spent currency.`);
   const target = document.getElementById('sanctuaryCollection');
   if (!target) return;
@@ -2290,8 +2541,13 @@ function renderCollection() {
     const owned = state.collectionOwned?.[id] === true;
     const active = item.kind === 'title' ? state.keeper?.collectionTitle === id : state.sanctuaryStyle === id;
     const ready = collectionAvailable(item);
-    const requirement = item.seals ? `Earn ${item.seals} bonus seals (${bonusSealCount()}/${item.seals}); at most two per week, no consecutive-week requirement` : item.projectRank ? `Complete ${item.projectRank} Sanctuary projects (${sanctuaryProjectRank()}/${item.projectRank})` : item.weeks ? `Complete ${item.weeks} weekly sets (${completedWeeksCount()}/${item.weeks})` : item.mastery === 'all' ? 'Claim all three Main mastery rewards' : `Claim ${ELEMENT_BOOK[item.mastery].name} Main mastery`;
-    return `<section class="collection-card"><div class="collection-emblem ${item.element || ''}" aria-hidden="true">${item.icon}</div><h3>${item.name}</h3><p>${item.kind === 'title' ? 'Keeper title' : 'Sanctuary style'} · ${requirement}</p><p>${item.coins.toLocaleString()} coins${item.tokens ? ' + '+item.tokens+' cosmetic tokens' : ''}</p><button onclick="${owned ? 'equipCollection' : 'claimCollection'}('${id}')" ${state.mode !== 'home' || !owned && (!ready || state.coins < item.coins || (state.contractTokens || 0) < item.tokens) ? 'disabled' : ''}>${owned ? active ? 'Equipped · remove' : 'Equip' : !ready ? 'Locked' : 'Unlock'}</button>${!owned ? `<button onclick="trackCollection('${id}')" aria-pressed="${state.collectionGoal === id}" ${state.mode !== 'home' ? 'disabled' : ''}>${state.collectionGoal === id ? 'Tracking · stop' : 'Track goal'}</button>` : ''}</section>`;
+    const details = collectionRewardDetails(item);
+    const ownership = owned ? 'Permanently owned · switching or removing is free' : (item.coins || item.tokens) ? 'One-time unlock · equip afterward' : 'Free reward · unlock, then equip';
+    const requirement = item.surge ? 'Complete Ember Surge in Trials' : item.expedition ? `${EXPEDITION_ROUTES[item.expedition]} journal: ${expeditionStamps(item.expedition)}/${item.stamps} stamps` : item.seals ? `Earn ${item.seals} bonus seals (${bonusSealCount()}/${item.seals}); at most two per week, no consecutive-week requirement` : item.projectRank ? `Complete ${item.projectRank} Sanctuary projects (${sanctuaryProjectRank()}/${item.projectRank})` : item.weeks ? `Complete ${item.weeks} weekly sets (${completedWeeksCount()}/${item.weeks})` : item.mastery === 'all' ? 'Claim all three Main mastery rewards' : `Claim ${ELEMENT_BOOK[item.mastery].name} Main mastery`;
+    return `<section class="collection-card"><div class="collection-emblem ${item.element || ''}" aria-hidden="true">${item.icon}</div><h3>${item.name}</h3>
+      <p>${details}</p><p>${item.kind === 'title' ? 'Keeper title' : 'Sanctuary style'} · ${requirement}</p>
+      <p>${ownership}${owned ? '' : `<br>${item.coins.toLocaleString()} coins${item.tokens ? ' + '+item.tokens+' cosmetic tokens' : ''}`}</p>
+      <button onclick="${owned ? 'equipCollection' : 'claimCollection'}('${id}')" ${state.mode !== 'home' || !owned && (!ready || state.coins < item.coins || (state.contractTokens || 0) < item.tokens) ? 'disabled' : ''}>${owned ? active ? 'Equipped · remove' : 'Equip' : !ready ? 'Locked' : 'Unlock'}</button>${!owned ? `<button onclick="trackCollection('${id}')" aria-pressed="${state.collectionGoal === id}" ${state.mode !== 'home' ? 'disabled' : ''}>${state.collectionGoal === id ? 'Tracking · stop' : 'Track goal'}</button>` : ''}</section>`;
   }).join('');
 }
 function openContracts() {
@@ -2433,8 +2689,8 @@ function renderQuest() {
     
     box.innerHTML = `
       <div class="art">${dragonSvg(STAGE_GOAL, 42)}</div>
-      <p>Burn <b>${ASH_GOAL} ash</b> • ${state.ashBurned || 0}/${ASH_GOAL} cleared<br>
-      <span style="font-size:0.7rem; color:#deb781;">Live ash limits: ${ashCount()}/${ASH_FAIL}</span></p>
+      <p>${trialRules().name} • Burn <b>${trialRules().goal} ash</b> • ${state.ashBurned || 0}/${trialRules().goal} cleared<br>
+      <span style="font-size:0.7rem; color:#deb781;">Live ash limits: ${ashCount()}/${trialRules().limit}</span></p>
       <button id="giveBtnStage" disabled>${have ? "Done" : "Goal"}</button>
     `;
     
@@ -2505,6 +2761,9 @@ function renderQuest() {
 // --- TRIAL BANNER UI ---
 
 function renderTrialBanner() {
+  const surgeButton = document.getElementById('surgeEnter');
+  if (surgeButton) { surgeButton.disabled = !state.ashTrialCompleted || state.mode === 'stage'; surgeButton.textContent = !state.ashTrialCompleted ? 'Complete Ash Trial first' : state.surgeCleared ? 'Replay Ember Surge' : 'Enter Ember Surge'; }
+  setSafeText('surgeStatus',state.surgeCleared ? 'First-clear reward earned. Replays are free practice; no repeat rewards.' : 'First clear: 1 Element Prism and the Keeper of the Surge title in Collection.');
   const box = document.getElementById("trialBox");
   if (!box) return;
   
@@ -2721,6 +2980,16 @@ document.getElementById("closePickerBtn")?.addEventListener("click", closePicker
 // MODULE 21: MASTER RENDER LOOP
 // ==========================================
 
+function compactCoinBalance(value) {
+  const coins = Math.max(0, Math.floor(Number(value) || 0));
+  if (coins < 10000) return String(coins);
+  for (const [scale, suffix] of [[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']]) {
+    if (coins >= scale) {
+      const amount = coins / scale;
+      return String(amount >= 100 ? Math.floor(amount) : Math.floor(amount * 10) / 10) + suffix;
+    }
+  }
+}
 function render() {
   rollDaily();
 
@@ -2739,11 +3008,17 @@ function render() {
   const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
   const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
 
-  setHTML("title", state.mode === "stage" ? "Ash <span>Trial</span>" : "Ember <span>Nest</span>");
+  setHTML("title", state.mode === "stage" ? state.trialKind === 'surge' ? "Ember <span>Surge</span>" : "Ash <span>Trial</span>" : "Ember <span>Nest</span>");
   setText("hint", state.mode === "stage" ? "Leave trial" : trailWaitLabel());
   setText("muteBtn", state.muted ? "🔇" : "🔊");
   setText("lvlChip", `Lv ${state.level || 1} • ${state.xp || 0}/${xpNeed(state.level || 1)}`);
-  setText("coinCount", state.coins);
+  setText("coinCount", compactCoinBalance(state.coins));
+  const coinLabel = document.getElementById('coinCount');
+  if (coinLabel) {
+    const exact = Math.floor(state.coins).toLocaleString('en-US') + ' coins';
+    coinLabel.setAttribute('aria-label', exact);
+    coinLabel.title = exact;
+  }
   setText('headerLevel', state.level || 1);
   const xpBar = document.getElementById('headerXp');
   if (xpBar) { xpBar.max=xpNeed(state.level || 1); xpBar.value=state.xp || 0; xpBar.title=`${state.xp || 0}/${xpBar.max} XP`; }
@@ -2768,7 +3043,9 @@ function render() {
   const autoBtn = document.getElementById("autoMergeBtn");
   if (autoBtn) {
     if (state.mode === "stage") {
-      autoBtn.style.setProperty("display", "none", "important");
+      autoBtn.style.setProperty("display", "inline-flex", "important");
+      autoBtn.textContent = 'Show hint'; autoBtn.disabled = trialInputLocked();
+      autoBtn.classList.remove('locked-btn'); autoBtn.style.opacity='1'; autoBtn.style.pointerEvents='auto';
     } else {
       autoBtn.style.setProperty("display", "inline-flex", "important");
       if ((state.level || 1) >= 5) {
@@ -2788,6 +3065,7 @@ function render() {
 
   const gatherBtn = document.getElementById("gather");
   if (gatherBtn) {
+    gatherBtn.disabled = trialInputLocked();
     gatherBtn.textContent = state.mode === "stage" 
       ? `Gather egg • ${state.trailGathers || 0} left` 
     : (highestOwned() >= 4 ? 'Gather dragon 🐉' : 'Gather egg 🥚');
@@ -2813,7 +3091,7 @@ function render() {
   setText('savingsStatus', savingsGoal ? `Next upgrade: ${savingsGoal.name} · ${Math.min(state.coins, savingsGoal.cost)}/${savingsGoal.cost} coins. Savings protects this amount from dragon purchases only.` : DECOR.every(d => state.decor?.[d.id]) ? 'Decor complete! Explore Collection for mastery rewards and optional Sanctuary projects.' : 'Discover more dragons to unlock the next Nest upgrade.');
   setText('savingsToggle', state.saveForDecor ? 'Upgrade savings: On' : 'Upgrade savings: Off');
   document.getElementById('savingsToggle')?.setAttribute('aria-pressed', String(!!state.saveForDecor));
-  setText('hatcheryHint', state.mode === 'stage' ? `First ${ASH_GRACE} merges are safe • ${TRAIL_GATHERS + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0)} starting gathers`
+  setText('hatcheryHint', state.mode === 'stage' ? `Safe opening promotions: ${trialRules().grace} • ${trialPouchSize()} starting gathers`
     : highestOwned() >= 4 ? 'Hatchery: 80% Hatchling / 20% Wyrmling • 1 energy per gather'
     : highestOwned() >= 3 ? 'Hatchery: 80% Egg / 20% Hatchling • discover Hearth for the next upgrade'
     : 'Hatchery: Eggs • discover Young to improve gathers');
@@ -2841,7 +3119,6 @@ function render() {
   
   const mt = document.getElementById("mountain");
   if (mt) {
-    const openN = roomsOpen();
     const roomImages = {
       "hatchery": `${IMG_DIR}Hatchery.jpg`,
       "alcove": `${IMG_DIR}moss alcove.jpg`,
@@ -2851,9 +3128,8 @@ function render() {
     };
 
     mt.innerHTML = `<div style="display: flex; flex-direction: column; gap: 10px;">
-      ${ROOMS.map((r, i) => {
+      ${ROOMS.map(r => {
         const open = !r.need || !!state.decor[r.need];
-        const now = i === openN - 1;
         const isSelected = state.theme === r.id;
         const decorItem = r.need ? DECOR.find(d => d.id === r.need) : null;
         const costText = decorItem ? `${decorItem.cost} 🪙` : "";
@@ -2864,7 +3140,7 @@ function render() {
         }
 
         return `
-          <div class="room ${open ? "open" : ""} ${now ? "now" : ""} ${isSelected ? "now" : ""}" data-room="${r.id}"
+          <div class="room ${open ? "open" : ""} ${isSelected ? "now" : ""}" data-room="${r.id}"
                style="border: 1px solid #778da9; border-radius: 8px; padding: 12px 100px; min-height: 48px; background: ${bgStyle}; background-size: cover; background-position: center; opacity:${open ? '1' : '0.75'}; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
             
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -3017,9 +3293,11 @@ function cellFromPoint(x, y) {
 
 let selectedCell = -1;
 function boardFeedback(index = selectedCell) {
+  if (state.mode === 'stage' && trialInputLocked()) return state.trialFailed ? 'Run ended. Retry or return safely to the main board.' : 'Trial complete. Preparing your result…';
   const cells = board();
   const item = cells[index];
   const free = cells.filter((c,i) => !c && !isLocked(i) && !isAsh(i)).length;
+  if (state.mode === 'stage' && !item) return `${trialRules().name} · ${state.ashBurned||0}/${trialRules().goal} cleared · ${state.trailGathers||0} gathers left. Promote beside ash; Show hint suggests a move.`;
   if (!item) return free ? `${free} open tiles · drag matching stages together; five grow into one.`
     : 'Board full · combine stacks, perch a dragon, or open land to gather again.';
   if (item.level === 5) return 'Elder selected · final stage. Move it or place it in the Roost.';
@@ -3030,6 +3308,7 @@ function updateBoardFeedback(index = selectedCell) {
   selectedCell = board()[index] && !isLocked(index) && !isAsh(index) ? index : -1;
   const item = board()[selectedCell];
   document.querySelectorAll('#board .cell').forEach(cell => {
+    cell.classList.remove('trial-hint-target');
     const i = +cell.dataset.i;
     cell.classList.toggle('selected-dragon', i === selectedCell);
     cell.classList.toggle('matching-dragon', !!item && item.level < 5 && i !== selectedCell && board()[i]?.level === item.level && !isLocked(i) && !isAsh(i));
@@ -3039,6 +3318,7 @@ function updateBoardFeedback(index = selectedCell) {
 
 // --- DRAG START ---
 boardEl?.addEventListener("pointerdown", (e) => {
+  if (trialInputLocked()) return;
   const cell = e.target.closest(".cell");
   if (!cell) return;
   
@@ -3149,7 +3429,7 @@ function endDrag(e) {
   document.querySelectorAll(".valid").forEach(c => c.classList.remove("valid"));
   
   // 1. MOBILE SAFETY: Lock in touch coordinates even as the finger lifts
-  if (e.type === 'pointercancel') { drag = null; return; }
+  if (e.type === 'pointercancel' || trialInputLocked()) { drag = null; return; }
   const x = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : 0);
   const y = e.clientY || (e.changedTouches ? e.changedTouches[0].clientY : 0);
   
@@ -3294,6 +3574,16 @@ function initGame() {
   bindClose("lootOk", "lootModal", () => { levelShowing = false; showLevelEvent(); });
 
   // --- ASH TRAIL OVERLAYS ---
+  for(const [id,closeId] of [['trailFail','homeTrail'],['trailWin','winHome']]) {
+    document.getElementById(id)?.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();document.getElementById(closeId)?.click();}
+      if(event.key==='Tab') {
+        const buttons=[...document.getElementById(id).querySelectorAll('button:not(:disabled)')];
+        const index=buttons.indexOf(document.activeElement);
+        if(buttons.length){event.preventDefault();buttons[(index+(event.shiftKey?-1:1)+buttons.length)%buttons.length].focus();}
+      }
+    });
+  }
   document.getElementById("restartTrail")?.addEventListener("click", restartTrail);
   bindClose("winHome", "trailWin");
   
@@ -3545,6 +3835,9 @@ document.getElementById("confirmWarningBtn")?.addEventListener("click", () => {
 // ==========================================
 
 // --- BACKGROUND TICK LOOP (Energy & Bank) ---
+document.addEventListener?.('visibilitychange', () => {
+  document.body.classList.toggle('page-hidden',document.hidden);
+});
 setInterval(() => {
   // Energy regeneration is shared with render/load through tickEnergy below.
 
@@ -3569,6 +3862,12 @@ setInterval(() => {
   tickEnergy(); 
   tickPerch(); 
   
+  if (!document.hidden) {
+    renderExpeditions();
+    const goal = nextProgressionGoal();
+    const prompt = document.getElementById('savingsBoardHint');
+    if (prompt) { prompt.hidden = !goal; const text = goal ? 'Next goal: ' + goal.text + ' ›' : ''; if (prompt.textContent !== text) prompt.textContent = text; }
+  }
   const currentInc = perchIncome();
   const maxBankLimit = currentInc * 480;
 
@@ -3599,7 +3898,10 @@ setInterval(() => {
         dragonBankBtn.classList.remove("is-maxed");
       }
     }
-    bankCountEl.innerHTML = `${newVal} <span class="spinning-coin">🪙</span>`;
+    if (bankCountEl._lastBankValue !== newVal) {
+      bankCountEl.innerHTML = `${newVal} <span class="spinning-coin">🪙</span>`;
+      bankCountEl._lastBankValue = newVal;
+    }
   }
   
   if (bankRateEl) {

@@ -50,6 +50,18 @@ body.storybook #app #view-home .keeper-gear { position:relative; padding:4px!imp
 .keeper-gear img { width:100%; height:65px; object-fit:contain; }
 .keeper-gear > span { display:block; font-size:32px; height:61px; line-height:61px; opacity:.4; }
 .keeper-gear small { display:block; font-size:9px; text-transform:uppercase; }
+/* Legendary sweeps extend beyond their origin; contain them to the equipment
+   card, not the keeper artwork or the deliberately oversized portrait frame. */
+body.storybook #app #view-home .keeper-gear { overflow:hidden; isolation:isolate; }
+html[data-tile-motion="off"] .keeper-gear,
+html[data-tile-motion="off"] .keeper-gear::before,
+html[data-tile-motion="off"] .keeper-gear::after { animation:none!important; }
+html[data-tile-motion="off"] .keeper-gear::before,
+html[data-tile-motion="off"] .keeper-gear::after { content:none; }
+@media (prefers-reduced-motion:reduce) {
+ .keeper-gear, .keeper-gear::before, .keeper-gear::after { animation:none!important; }
+ .keeper-gear::before, .keeper-gear::after { content:none; }
+}
 body.storybook #view-home .stash-container { display:flex; flex-direction:column; padding:16px!important; overflow:visible!important; border-radius:22px 22px 0 0; background:#f3edda; border-top:2px solid #c5bb94; }
 body.storybook #view-home .stash-header { order:0; margin-bottom:10px!important; }
 .stash-container > .wardrobe-announcement, .stash-container > .wardrobe-inbox { order:1; }

@@ -1,6 +1,12 @@
 // Mutable game state, persistence, board operations, merging, and Ash Trial rules.
 // This file must load after game-data.js and before app.js.
 
+function trialRules() {
+  return state.trialKind === 'surge'
+    ? {name:'Ember Surge',goal:12,grace:1,limit:12}
+    : {name:'Ash Trial',goal:ASH_GOAL,grace:ASH_GRACE,limit:ASH_FAIL};
+}
+function trialPouchSize() { return TRAIL_GATHERS + (state.trialKind === 'surge' ? 12 : 0) + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0); }
 function clearAshAt(i) {
   if (!state.ash || !state.ash[i]) return false;
   state.ash[i] = false;
@@ -8,44 +14,18 @@ function clearAshAt(i) {
   return true;
 }
 
-function applyWarmth(landed, nextLevel) {
-  if (nextLevel < 1) return;
-  const flashes = [];
-  const col = landed % COLS;
-  const row = Math.floor(landed / COLS);
-
-  const burnNear = () => neighbors(landed).forEach(i => { if (clearAshAt(i)) flashes.push(i); });
-
-  const burnFourDirections = () => {
-    const targets = [];
-    if (row > 0) targets.push((row - 1) * COLS + col);
-    if (row < ROWS - 1) targets.push((row + 1) * COLS + col);
-    if (col > 0) targets.push(row * COLS + (col - 1));
-    if (col < COLS - 1) targets.push(row * COLS + (col + 1));
-    targets.forEach(i => { if (clearAshAt(i)) flashes.push(i); });
-  };
-
-  const burnRow = () => {
-    for (let c = 0; c < COLS; c++) {
-      const i = row * COLS + c;
-      if (clearAshAt(i)) flashes.push(i);
-    }
-  };
-
-  const burnCol = () => {
-    for (let r = 0; r < ROWS; r++) {
-      const i = r * COLS + col;
-      if (clearAshAt(i)) flashes.push(i);
-    }
-  };
-
-  if (nextLevel >= 5) { burnRow(); burnCol(); }
-  else if (nextLevel >= 3) burnRow();
-  else if (nextLevel === 2) burnFourDirections();
-  else burnNear();
-
-  state._flash = flashes;
+function warmthTargets(landed, nextLevel) {
+  if (!Number.isInteger(landed) || landed < 0 || landed >= COLS*ROWS || nextLevel < 1) return [];
+  if (nextLevel <= 2) return neighbors(landed);
+  const row = Math.floor(landed/COLS), col = landed%COLS;
+  const targets = Array.from({length:COLS},(_,c)=>row*COLS+c);
+  if (nextLevel >= 5) for(let r=0;r<ROWS;r++) targets.push(r*COLS+col);
+  return [...new Set(targets)];
 }
+function applyWarmth(landed, nextLevel) {
+  state._flash = warmthTargets(landed,nextLevel).filter(clearAshAt);
+}
+function trialInputLocked() { return state.mode === 'stage' && !!(state.trailWon || state.trialFailed); }
 
 function generateTrail() {
   resetTrail(); // Rely on resetTrail to clear the board rather than duplicating logic
@@ -95,12 +75,14 @@ function spawnAsh(n) {
 }
 
 function resetTrail() {
+  state.trialRunId = (state.trialRunId || 0) + 1;
   state.stageCells = Array(COLS * ROWS).fill(null);
   state.ash = Array(COLS * ROWS).fill(false);
   state.stageMerges = 0;
-  state.trailGathers = TRAIL_GATHERS + (state.pouchBonus || 0) + (state.dailyPouchBonus || 0);
+  state.trailGathers = trialPouchSize();
   state.ashBurned = 0;
   state.trailWon = false;
+  state.trialFailed = false;
   state._flash = [];
 }
 // --- TRAIL WIN/FAIL STATES & UI ---
@@ -135,10 +117,23 @@ const defaultState = () => ({
 });
 
 let state = defaultState();
+let saveBlocked = false;
+let lastSavedRaw = null;
+function detectSaveConflict() {
+  if (localStorage.getItem(SAVE) === lastSavedRaw) return false;
+  saveBlocked = true;
+  showSaveWarning('Another tab changed this save. Autosave is paused. Export this tab if you need its unsaved progress, then reload to use the newer save.');
+  return true;
+}
+function showSaveWarning(message) {
+  const warning = document.getElementById('saveWarning');
+  if (warning) { warning.hidden = !message; warning.textContent = message; }
+}
 
 function load() {
   try {
     let raw = localStorage.getItem(SAVE);
+    lastSavedRaw = raw;
     if (!raw) {
       for (let v = 10; v >= 1; v--) {
         raw = localStorage.getItem(`ember-nest-v${v}`);
@@ -148,6 +143,7 @@ function load() {
     if (!raw) return;
 
     const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) throw new Error('Invalid save format');
     state = { ...defaultState(), ...saved };
     state.bonusSeals = Number.isSafeInteger(saved.bonusSeals) && saved.bonusSeals >= 0 ? saved.bonusSeals : 0;
     state.elderReserve = Array.isArray(saved.elderReserve) ? saved.elderReserve.filter(entry =>
@@ -181,15 +177,94 @@ function load() {
       }
     });
     state.mode = "home";
+    if (saved.trialKind === 'surge') state.stageCells = Array(gridSize).fill(null);
+    state.trialKind = 'ash';
     state.ash = Array(gridSize).fill(false);
     state.stageMerges = 0;
   } catch (error) {
+    saveBlocked = true;
+    showSaveWarning('Your save could not be read. Autosave is paused to protect it. Do not continue playing; keep this browser data and reload or seek recovery help.');
     console.error("Save state could not be loaded:", error);
   }
 }
 
 function save() {
-  localStorage.setItem(SAVE, JSON.stringify(state));
+  if (saveBlocked) return false;
+  try {
+    if (detectSaveConflict()) return false;
+    const raw = JSON.stringify(state);
+    localStorage.setItem(SAVE, raw);
+    lastSavedRaw = raw;
+    showSaveWarning('');
+    return true;
+  } catch (error) {
+    showSaveWarning('Progress is not saving. Keep this tab open, free browser storage or allow site storage, then try another action. Do not clear site data.');
+    return false;
+  }
+}
+
+// Only this versioned export format is accepted; arbitrary legacy JSON is not imported.
+function backupPayload() {
+  const data=JSON.parse(JSON.stringify(state));
+  data.mode='home';data.trialKind='ash';data.stageCells=Array(COLS*ROWS).fill(null);
+  data.ash=Array(COLS*ROWS).fill(false);data.stageMerges=0;data.trailWon=false;data.trialFailed=false;
+  return {format:'ember-nest-backup',version:1,createdAt:new Date().toISOString(),data};
+}
+function validateBackup(text) {
+  if(typeof text!=='string'||text.length>2000000)throw new Error('Backup is too large (maximum 2 MB).');
+  const payload=JSON.parse(text);
+  if(payload?.format!=='ember-nest-backup'||payload.version!==1)throw new Error('Choose an Ember Nest version 1 backup.');
+  const data=payload.data;
+  const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
+  if(!object(data))throw new Error('Missing save data.');
+  function inspect(value,depth=0){
+    if(depth>16)throw new Error('Backup nesting is invalid.');
+    if(typeof value==='number'&&!Number.isFinite(value))throw new Error('Invalid number.');
+    if(typeof value==='string'&&(value.length>1000||/[<>"`]|javascript:|data:text\/html/i.test(value)))throw new Error('Backup contains unsupported text or markup.');
+    if(value&&typeof value==='object')for(const [key,child]of Object.entries(value)){
+      if(['__proto__','constructor','prototype'].includes(key))throw new Error('Unsafe backup key.');
+      inspect(child,depth+1);
+    }
+  }
+  inspect(data);
+  for(const key of ['coins','energy','level','maxEnergy','xp'])if(!Number.isSafeInteger(data[key])||data[key]<0)throw new Error('Invalid '+key+'.');
+  if(data.level<1||data.maxEnergy<1)throw new Error('Invalid player level or energy capacity.');
+  for(const [key,value]of Object.entries(defaultState())){
+    if(!(key in data))continue;
+    if(Array.isArray(value)&&!Array.isArray(data[key]))throw new Error('Invalid '+key+' list.');
+    if(object(value)&&!object(data[key]))throw new Error('Invalid '+key+' record.');
+    if(typeof value==='boolean'&&typeof data[key]!=='boolean')throw new Error('Invalid '+key+' flag.');
+    if(typeof value==='string'&&typeof data[key]!=='string')throw new Error('Invalid '+key+' text.');
+    if(typeof value==='number'&&(!Number.isFinite(data[key])||data[key]<0))throw new Error('Invalid '+key+' number.');
+  }
+  const dragon=d=>d===null||(object(d)&&Number.isInteger(d.level)&&d.level>=0&&d.level<=5&&Number.isSafeInteger(d.count)&&d.count>0&&(!d.element||['neutral','fire','water','nature'].includes(d.element)));
+  if(!Array.isArray(data.cells)||data.cells.length!==25||!data.cells.every(dragon)||!Array.isArray(data.locked)||data.locked.length!==25||!data.locked.every(v=>typeof v==='boolean'))throw new Error('Invalid board.');
+  if(!Array.isArray(data.perch)||data.perch.length!==3||!data.perch.every(dragon))throw new Error('Invalid Roost.');
+  if(!object(data.keeper)||!object(data.keeper.equipment)||!object(data.stash)||!Object.values(data.stash).every(n=>Number.isSafeInteger(n)&&n>=0))throw new Error('Invalid keeper or inventory.');
+  if(!Object.values(data.keeper.equipment).every(v=>v===null||typeof v==='string'&&/^[A-Za-z0-9_./-]+$/.test(v)))throw new Error('Invalid equipment references.');
+  for(const key of ['completedContractWeeks','wardrobeClaims','collectionOwned','redeemedCosmetics','claimedChests','expeditionJournal'])if(data[key]!==undefined&&!object(data[key]))throw new Error('Invalid '+key+' record.');
+  if(data.wardrobePending!==undefined&&(!Array.isArray(data.wardrobePending)||!data.wardrobePending.every(v=>typeof v==='string')))throw new Error('Invalid reward list.');
+  if(data.contracts&&(!object(data.contracts)||!Array.isArray(data.contracts.items)||data.contracts.items.length!==5||!data.contracts.items.every(c=>object(c)&&['gather','merge','roost','nurture','trial','donate','earn'].includes(c.kind)&&Number.isFinite(c.target)&&c.target>0&&Number.isFinite(c.progress)&&c.progress>=0&&Number.isFinite(c.reward)&&c.reward>=0)))throw new Error('Invalid weekly contracts.');
+  if(data.contracts?.bonus&&(!Array.isArray(data.contracts.bonus)||data.contracts.bonus.length!==2||!data.contracts.bonus.every(c=>object(c)&&['gather','merge'].includes(c.kind)&&Number.isFinite(c.target)&&c.target>0&&Number.isFinite(c.progress)&&c.progress>=0)))throw new Error('Invalid bonus goals.');
+  if(data.contracts?.items.some(c=>['donate','nurture'].includes(c.kind)&&(!Number.isInteger(c.want)||c.want<0||c.want>5)))throw new Error('Invalid contract dragon stage.');
+  if(data.rewardInbox&&!data.rewardInbox.every(r=>object(r)&&Number.isInteger(r.level)&&r.level>=0&&r.level<=5&&Number.isSafeInteger(r.quantity)&&r.quantity>0))throw new Error('Invalid pending dragons.');
+  if(data.expedition&&(!object(data.expedition)||!Object.hasOwn(EXPEDITION_ROUTES,data.expedition.route)||!Object.hasOwn(EXPEDITION_PACKAGES,data.expedition.package)||!Number.isFinite(data.expedition.id)||!Number.isFinite(data.expedition.readyAt)))throw new Error('Invalid expedition.');
+  if(data.elderReserve&&!data.elderReserve.every(e=>object(e)&&e.dragon?.level===5&&dragon(e.dragon)))throw new Error('Invalid Elder reserve.');
+  data.mode='home';data.trialKind='ash';data.stageCells=Array(25).fill(null);data.ash=Array(25).fill(false);data.stageMerges=0;data.trailWon=false;data.trialFailed=false;
+  return data;
+}
+function commitBackupRestore(text,expectedRaw) {
+  if(state.mode==='stage')throw new Error('Leave your Trial before restoring.');
+  const restored=validateBackup(text);
+  const previous=localStorage.getItem(SAVE);
+  if(previous!==expectedRaw)throw new Error('The current save changed. Preview the backup again before restoring.');
+  // If the recovery copy cannot be written, do not replace the primary save.
+  if(previous!==null)localStorage.setItem(SAVE+'-before-restore',previous);
+  const raw=JSON.stringify(restored);
+  localStorage.setItem(SAVE,raw);
+  lastSavedRaw=raw;saveBlocked=true;
+  showSaveWarning('Backup restored. Reload this page to continue.');
+  return true;
 }
 
 // Preserve fractional timer progress and refill all elapsed ticks, including offline.
@@ -235,6 +310,7 @@ function emptyOpen() {
 }
 
 function spawn(level, count = 1, at, forceShiny = false) {
+  if (trialInputLocked()) return false;
   const cells = board();
   const free = emptyOpen();
   if (!free.length) {
@@ -309,6 +385,7 @@ function neighbors(index) {
 // Resolves a merge without depending on a particular input method. UI feedback
 // is delegated to the existing presentation helpers in app.js.
 function mergeInto(fromI, toI) {
+  if (trialInputLocked()) return false;
   const cells = board();
   const source = cells[fromI];
   const target = cells[toI];
@@ -371,16 +448,18 @@ function mergeInto(fromI, toI) {
     applyWarmth(toI, nextLevel);
     if (state._flash?.length) sfx("ash");
     state.stageMerges = (state.stageMerges || 0) + 1;
-    if ((state.ashBurned || 0) >= ASH_GOAL) {
+    const rules = trialRules();
+    const runId = state.trialRunId;
+    if ((state.ashBurned || 0) >= rules.goal) {
       state.trailWon = true;
-      state.ashTrialCompleted = true;
+      if (state.trialKind !== 'surge') state.ashTrialCompleted = true;
       save();
-      setTimeout(winStage, 400);
+      setTimeout(() => { if (state.trialRunId === runId) winStage(); }, 400);
       return true;
     }
-    if (state.stageMerges > ASH_GRACE) {
+    if (state.stageMerges > rules.grace) {
       const ashSpawned = spawnAsh(ASH_PER_MERGE);
-      if (!ashSpawned || ashCount() >= ASH_FAIL) setTimeout(failStage, 250);
+      if (!ashSpawned || ashCount() >= rules.limit) setTimeout(() => { if (state.trialRunId === runId) failStage(); }, 250);
     }
   }
   return true;

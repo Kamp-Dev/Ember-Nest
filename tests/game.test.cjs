@@ -105,6 +105,72 @@ test('board action dock stays outside its scroller and header tools have their o
   assert.doesNotMatch(app, /window\.addEventListener\("wheel"/);
 });
 
+test('Board perches share the board width cap and horizontal centerline', () => {
+  const css = fs.readFileSync(path.join(root, 'storybook.css'), 'utf8');
+  assert.match(css, /#view-board #perchRow\s*\{[^}]*width:100%;[^}]*max-width:480px!important;[^}]*margin:0 auto 6px!important/);
+  assert.match(css, /#board\s*\{[^}]*max-width: 480px !important/);
+});
+
+test('header abbreviates large coin balances without rounding up spendable coins', () => {
+  const g=game();
+  for(const [coins,label] of [[0,'0'],[9999,'9999'],[10000,'10K'],[25999,'25.9K'],[250000,'250K'],[999999,'999K'],[1250000,'1.2M'],[1000000000,'1B']]) {
+    assert.equal(g.run(`compactCoinBalance(${coins})`),label);
+  }
+  const node={setAttribute(name,value){this[name]=value;}};
+  g.nodes.set('coinCount',node);
+  g.run('state.coins=250123;render()');
+  assert.equal(node.title,'250,123 coins');
+  assert.equal(node['aria-label'],'250,123 coins');
+  assert.equal(g.run('state.coins'),250123);
+});
+
+test('Collection explains reward effects and distinguishes ownership from purchase', () => {
+  const g=game();
+  g.nodes.set('sanctuaryCollection',{innerHTML:''});
+  g.run('renderCollection()');
+  let html=g.nodes.get('sanctuaryCollection').innerHTML;
+  for(const text of ['Blue water ripples','Green canopy shading','Warm ember glows','beneath your Keeper name','no income or power bonus','One-time unlock','Free reward']) assert.ok(html.includes(text),text);
+  const before=g.run('JSON.stringify(state.collectionOwned)');
+  g.run('renderCollection()');
+  assert.equal(g.run('JSON.stringify(state.collectionOwned)'),before);
+  g.run('state.collectionOwned={};for(const id of Object.keys(SANCTUARY_COLLECTION))state.collectionOwned[id]=true;renderCollection()');
+  html=g.nodes.get('sanctuaryCollection').innerHTML;
+  assert.ok(html.includes('Permanently owned · switching or removing is free'));
+  assert.ok(!html.includes('One-time unlock'));
+  assert.ok(!html.includes('25,000 coins'));
+});
+
+test('Sanctuary name icon follows owned equipped styles and clears on removal', () => {
+  const g = game();
+  const icon = {textContent:'', hidden:true, setAttribute(name,value){this[name]=value;}};
+  g.nodes.set('headerSanctuaryIcon', icon);
+  for (const [id, symbol, name] of [['moon_pool','💧','Moon Pool'],['grove_canopy','🌿','Grove Canopy'],['ember_garden','🔥','Ember Garden']]) {
+    g.run(`state.collectionOwned={${id}:true};state.sanctuaryStyle='${id}';renderCollection()`);
+    assert.equal(icon.textContent,symbol);
+    assert.equal(icon.hidden,false);
+    assert.equal(icon.title,name);
+    assert.match(icon['aria-label'],/equipped/);
+  }
+  g.run(`state.sanctuaryStyle=null;renderCollection()`);
+  assert.equal(icon.hidden,true);assert.equal(icon.textContent,'');
+  g.run(`state.sanctuaryStyle='moon_pool';state.collectionOwned={};renderCollection()`);
+  assert.equal(icon.hidden,true);
+});
+
+test('Nest highlights only the active room, not the newest unlocked room', () => {
+  const g = game();
+  g.nodes.set('mountain', { innerHTML: '' });
+  for (const theme of ['hatchery', 'alcove']) {
+    g.run(`state.decor.moss=true;state.theme=${JSON.stringify(theme)};render()`);
+    const html = g.nodes.get('mountain').innerHTML;
+    const highlighted = [...html.matchAll(/class="room ([^"]*)" data-room="([^"]*)"/g)]
+      .filter(match => match[1].split(/\s+/).includes('now'));
+    assert.deepEqual(highlighted.map(match => match[2]), [theme]);
+    assert.equal((html.match(/>Active<\/span>/g) || []).length, 1);
+    assert.equal((html.match(/>Ready<\/span>/g) || []).length, 1);
+  }
+});
+
 test('Beginnings ends at Hatchling while legacy tier discoveries remain intact', () => {
   const g=game();g.run(`state.book={0:true,1:true,2:true,3:true,4:true,5:true};currentBookElement='fire';currentBookPage=5;switchBookElement('growth');assert.equal(currentBookPage,1);assert.equal(state.book[5],true);`);
   assert.equal(g.nodes.get('nextPageBtn').disabled,true);

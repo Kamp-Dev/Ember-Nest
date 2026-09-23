@@ -22,8 +22,8 @@ body.storybook #app #nameLine { display:block; width:100%; min-height:0!importan
 .header-xp-label { display:block; font-size:8px; margin-top:4px; white-space:nowrap; }
 body.storybook #app .header-right { grid-column:2; grid-row:1; display:grid; grid-template-columns:28px minmax(0,1fr) minmax(0,1fr); gap:7px!important; width:100%; }
 body.storybook #app .header-right .stat-pill { position:relative; min-height:34px; padding:4px 4px 4px 14px!important; border:0!important; background:#344b48!important; color:#fff5da!important; border-radius:8px; font-size:12px!important; }
-body.storybook #app .resource-icon { position:absolute; left:-7px; top:50%; transform:translateY(-50%); font-size:25px; line-height:1; filter:drop-shadow(0 2px 1px #0005); }
-body.storybook #app #coinCount { font-size:12px; overflow-wrap:anywhere; }
+body.storybook #app .resource-icon { position:absolute; left:-6px; top:50%; transform:translateY(-50%); font-size:20px; line-height:1; filter:drop-shadow(0 2px 1px #0005); }
+body.storybook #app #coinCount { font-size:12px; overflow-wrap:normal; white-space:nowrap; font-variant-numeric:tabular-nums; }
 body.storybook #app :is(#coinCount,#energyCount) { color:#fff5da!important; text-shadow:0 1px 2px #0008; }
 body.storybook #app #energyTimer { color:#c8dabb!important; font-size:8px!important; }
 body.storybook #app #bookBtn { width:28px; height:36px; padding:0!important; font-size:19px!important; }
