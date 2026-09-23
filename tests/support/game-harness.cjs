@@ -44,7 +44,7 @@ function game(saved = {}, overrides = {}) {
   const run = code => vm.runInContext(code, context, { timeout: 2000 });
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"><\/script>/g)].map(match => match[1]);
-  assert.deepEqual(scripts, ['game-data.js', 'game-core.js', 'app.js']);
+  assert.deepEqual(scripts, ['game-data.js', 'battle-core.js', 'game-core.js', 'battle-state.js', 'app.js', 'battle.js']);
   for (const file of scripts) {
     let source = fs.readFileSync(path.join(root, file), 'utf8');
     if (file === 'game-data.js') for (const [key, value] of Object.entries(overrides)) {

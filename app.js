@@ -478,6 +478,7 @@ function awardElementPrisms() {
   }
 }
 function prismTargets(dragon) {
+  if(dragon?.training)return []; // Keep trained elemental identities stable.
   if (!dragon || !Number.isInteger(dragon.level) || dragon.level < 2 || dragon.level > 5 || !Number.isSafeInteger(dragon.count) || dragon.count < 1) return [];
   const discoveries = dragon.shiny ? state.rareElementBook : state.elementBook;
   return ['fire','water','nature'].filter(element => element !== (dragon.element || 'neutral') && discoveries?.[element]?.[dragon.level] === true);
@@ -1015,7 +1016,7 @@ function xpNeed(lv) {
   return 30 + lv * 20; 
 }
 
-function addXp(n) {
+function addXp(n, deferPresentation = false) {
   if (!n) return;
   state.xp = (state.xp || 0) + n;
   state.level = state.level || 1;
@@ -1032,7 +1033,7 @@ function addXp(n) {
     });
   }
 
-  if (!levelShowing) showLevelEvent();
+  if (!deferPresentation && !levelShowing) showLevelEvent();
 }
 
 function showLevelEvent() {
@@ -1113,7 +1114,7 @@ function revealChest() {
   if (tier >= 2) { grantDragonReward(1, 2); lines.push("2 hatchlings ➔ nest"); }
   if (tier >= 3) { grantDragonReward(2); lines.push("1 wyrmling ➔ nest"); }
   if (tier >= 5) { grantDragonReward(3); lines.push("1 Young ➔ nest"); }
-  if (rewardInboxCount()) lines.push('Board full: undelivered dragons are saved in your Nest reward inbox.');
+  if (rewardInboxCount()) lines.push('Board full: undelivered dragons are saved in Goals → Reward inbox.');
   
   // 5. Trigger the Second Modal
   setTimeout(() => {
@@ -1183,6 +1184,7 @@ function tributeCost() {
 }
 
 function emptyPerch(slot) {
+  if(state.mode!=='home')return;
   const p = state.perch[slot];
   if (!p) return;
   
@@ -1196,12 +1198,7 @@ function emptyPerch(slot) {
   const spot = free[Math.floor(Math.random() * free.length)];
   const cells = board();
   
-  cells[spot] = { 
-    level: p.level, 
-    count: p.count, 
-    shiny: p.shiny,  
-    element: p.element || "neutral" 
-  };
+  cells[spot] = { ...p, element: p.element || "neutral" };
 
   state.perch[slot] = null;
   perchArmed = -1;
@@ -1259,7 +1256,8 @@ function highestOwned() {
     ...Object.keys(state.rareBook || {}).filter(key => state.rareBook[key]).map(Number),
     ...(state.cells || []).map(c => c?.level),
     ...(state.perch || []).map(c => c?.level),
-    ...(state.elderReserve || []).map(entry => entry.dragon?.level)];
+    ...(state.elderReserve || []).map(entry => entry.dragon?.level),
+    ...(state.battleRoster || []).map(d => d.level)];
   state.highestDiscovered = Math.max(0, ...levels.filter(level =>
     Number.isInteger(level) && level >= 0 && level < CHAIN.length));
   return state.highestDiscovered;
@@ -1388,10 +1386,10 @@ function selectDragonForRoost(boardIndex) {
   const itemElement = draggedItem.element || "neutral";
 
   if (draggedItem.count > 1) {
-    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: itemElement };
+    state.perch[roostTargetSlot] = { ...draggedItem, count: 1, element: itemElement };
     draggedItem.count -= 1;
   } else {
-    state.perch[roostTargetSlot] = { level: draggedItem.level, count: 1, shiny: draggedItem.shiny, element: itemElement };
+    state.perch[roostTargetSlot] = { ...draggedItem, count: 1, element: itemElement };
     cells[boardIndex] = null; 
   }
   
@@ -1574,12 +1572,12 @@ function triggerAutoMerge() {
     keepChecking = false;
 
     for (let i = 0; i < cells.length; i++) {
-      if (!cells[i] || isLocked(i) || isAsh(i)) continue; 
+      if (!cells[i] || cells[i].training || isLocked(i) || isAsh(i)) continue;
       
       let matchIdx = -1;
 
       for (let j = i + 1; j < cells.length; j++) {
-        if (!cells[j] || isLocked(j) || isAsh(j)) continue; 
+        if (!cells[j] || cells[j].training || isLocked(j) || isAsh(j)) continue;
 
         if (cells[i].level === cells[j].level) {
           matchIdx = j;
@@ -1720,7 +1718,7 @@ function winStage() {
     state.coins += pay;
     grantDragonReward(gift);
     if (first) grantDragonReward(0);
-    if (rewardInboxCount()) lines.push('Undelivered dragons are saved in your Nest reward inbox.');
+    if (rewardInboxCount()) lines.push('Undelivered dragons are saved in Goals → Reward inbox.');
     lines.push(`${dragonSvg(gift, 24)} ${CHAIN[gift].name} ➔ nest`);
     lines.push(`🪙 ${pay} ember coins`);
     if (first) lines.push("🥚 Egg ➔ nest (first clear bonus)");
@@ -1903,6 +1901,7 @@ function recordElementDiscovery(item) {
 function recoverElementDiscoveries() {
   // Old saves have no element history: recover verified owned dragons only.
   [...(state.cells || []), ...(state.perch || []), ...(state.elderReserve || []).map(entry => entry.dragon),
+    ...(state.battleRoster || []),
     ...(state.mode === 'stage' ? state.stageCells || [] : [])].forEach(recordElementDiscovery);
 }
 
@@ -2447,7 +2446,7 @@ function nextProgressionGoal() {
   const free = emptyOpen().length;
   if (free < 3 && state.cells.some(dragon => dragon?.level === 5))
     return {text:'Make room: safely store an Elder.', target:'reserve'};
-  if (rewardInboxCount()) return {text:rewardInboxCount() + ' rewards waiting' + (free ? ' — collect in Nest.' : ' — merge to free a tile.'), target:free ? 'inbox' : 'book'};
+  if (rewardInboxCount()) return {text:rewardInboxCount() + ' rewards waiting' + (free ? ' — collect in Goals.' : ' — merge to free a tile.'), target:free ? 'inbox' : 'book'};
   if (Object.keys(MASTERY_REWARDS).some(id => masteryProgress(id) === 4 && !state.masteryClaims?.[id]))
     return {text:'A mastery reward is ready to claim.', target:'mastery'};
   if (state.contracts?.items?.some(item => !item.claimed && item.progress >= item.target))
@@ -2470,6 +2469,7 @@ function openNextGoal() {
   if (goal.target === 'mastery') { openMastery(); return; }
   if (goal.target === 'contracts') { openContracts(); return; }
   if (goal.target === 'book') { document.getElementById('bookBtn')?.click(); return; }
+  if (goal.target === 'inbox') { document.querySelector('[data-tab="view-goals"]')?.click();document.getElementById('collectRewardInbox')?.focus();return; }
   document.querySelector('[data-tab="view-nest"]')?.click();
   const subtab = goal.target === 'decor' ? 'sub-decor' : 'sub-collection';
   if (goal.target === 'expedition') document.querySelector('[data-subtab="sub-collection"]')?.click();
@@ -2483,6 +2483,10 @@ function renderProgressionGoals() {
   renderExpeditions();
   renderElderReserve();
   const goal = nextProgressionGoal();
+  setSafeText('goalsNextStatus',goal?'Next: '+goal.text:'Finish your current Trial to manage goals.');
+  setSafeText('goalsSleepyStatus',state.level<3?'Daily offering unlocks at Keeper level 3.':state.sleepyDone?'Offering complete for today. Streak: '+(state.sleepyStreak||0)+'/7.':'Offer one untrained Young dragon · Streak '+(state.sleepyStreak||0)+'/7.');
+  const sleepyOffer=document.getElementById('goalsSleepyOffer');
+  if(sleepyOffer)sleepyOffer.disabled=state.mode!=='home'||state.level<3||state.sleepyDone||findLevel(3)<0;
   const prompt = document.getElementById('savingsBoardHint');
   if (prompt) { prompt.hidden = !goal; prompt.textContent = goal ? 'Next goal: ' + goal.text + ' ›' : ''; }
   const pending = rewardInboxCount();
@@ -2555,8 +2559,16 @@ function renderCollection() {
 }
 function openContracts() {
   rollContracts(); save(); renderContractsPanel();
+  const goalsTab=document.querySelector('[data-tab="view-goals"]');
+  if(goalsTab){goalsTab.click();return;}
   document.getElementById('contractsModal')?.classList.add('open');
   document.getElementById('contractsModal')?.focus();
+}
+function openNestCollection(){
+  if(state.mode!=='home')return;
+  document.querySelector('[data-tab="view-nest"]')?.click();
+  document.querySelector('[data-subtab="sub-collection"]')?.click();
+  document.getElementById('expeditionPanel')?.scrollIntoView?.({block:'start'});
 }
 function closeContracts() {
   document.getElementById('contractsModal')?.classList.remove('open');
@@ -3321,6 +3333,7 @@ function boardFeedback(index = selectedCell) {
   if (state.mode === 'stage' && trialInputLocked()) return state.trialFailed ? 'Run ended. Retry or return safely to the main board.' : 'Trial complete. Preparing your result…';
   const cells = board();
   const item = cells[index];
+  if(item?.training)return `${item.training.name} - trained companion. Enlist in the Battle Lodge to battle or grow. Protected from merging and donation.`;
   const free = cells.filter((c,i) => !c && !isLocked(i) && !isAsh(i)).length;
   if (state.mode === 'stage' && !item) return `${trialRules().name} · ${state.ashBurned||0}/${trialRules().goal} cleared · ${state.trailGathers||0} gathers left. Promote beside ash; Show hint suggests a move.`;
   if (!item) return free ? `${free} open tiles · drag matching stages together; five grow into one.`
@@ -3368,6 +3381,7 @@ boardEl?.addEventListener("pointerdown", (e) => {
       seatPerch(slot, i);
     } else if (overflowArm === "dismiss") {
       const it = currentBoard[i];
+      if(it.training){toast('Trained dragons are protected. Return them to the Battle Lodge.');overflowArm=null;return;}
       const pay = dismissPay(it.level, it.shiny);
       
       if (it.count > 1) it.count -= 1;
@@ -3793,6 +3807,8 @@ function executeTabSwitch(targetTab, viewId) {
   
   targetTab?.classList.add("active");
   document.getElementById(viewId)?.classList.add("active");
+  if(viewId==='view-trials'&&typeof renderBattleLodge==='function')renderBattleLodge();
+  if(viewId==='view-goals')renderContractsPanel();
   if (viewId === 'view-home' && !wardrobeDialogKind && pendingWardrobeRewards().length &&
       !document.querySelector('.modal.open, .modal[style*="display: flex"]')) openWardrobeReward();
 

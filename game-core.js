@@ -124,6 +124,7 @@ const defaultState = () => ({
   sleepyDone: false, sleepyStreak: 0, questTab: 0, tributes: 0,
   keeper: { title: 'Novice Breeder', equipment: { body: 'body_base.png', torso: null, head: null, legs: null } },
   stash: {}, rewardInbox: [], elderReserve: [], elderReserveNextId: 1, bonusSeals: 0, collectionGoal: null, saveForDecor: true, sanctuaryRank: 0,
+  battleRoster: [], battleNextId: 1, battleClears: {},
 });
 
 let state = defaultState();
@@ -154,6 +155,7 @@ function load() {
 
     const saved = JSON.parse(raw);
     if (!saved || typeof saved !== 'object' || Array.isArray(saved)) throw new Error('Invalid save format');
+    validateBattleState(saved);
     state = { ...defaultState(), ...saved };
     state.bonusSeals = Number.isSafeInteger(saved.bonusSeals) && saved.bonusSeals >= 0 ? saved.bonusSeals : 0;
     state.elderReserve = Array.isArray(saved.elderReserve) ? saved.elderReserve.filter(entry =>
@@ -260,6 +262,7 @@ function validateBackup(text) {
   if(data.rewardInbox&&!data.rewardInbox.every(r=>object(r)&&Number.isInteger(r.level)&&r.level>=0&&r.level<=5&&Number.isSafeInteger(r.quantity)&&r.quantity>0))throw new Error('Invalid pending dragons.');
   if(data.expedition&&(!object(data.expedition)||!Object.hasOwn(EXPEDITION_ROUTES,data.expedition.route)||!Object.hasOwn(EXPEDITION_PACKAGES,data.expedition.package)||!Number.isFinite(data.expedition.id)||!Number.isFinite(data.expedition.readyAt)))throw new Error('Invalid expedition.');
   if(data.elderReserve&&!data.elderReserve.every(e=>object(e)&&e.dragon?.level===5&&dragon(e.dragon)))throw new Error('Invalid Elder reserve.');
+  validateBattleState(data);
   data.mode='home';data.trialKind='ash';data.stageCells=Array(25).fill(null);data.ash=Array(25).fill(false);data.stageMerges=0;data.trailWon=false;data.trialFailed=false;
   return data;
 }
@@ -343,7 +346,7 @@ function spawn(level, count = 1, at, forceShiny = false) {
 }
 
 function findLevel(level) {
-  return state.cells.findIndex(cell => cell && cell.level === level);
+  return state.cells.findIndex(cell => cell && !cell.training && cell.level === level);
 }
 
 // Reward-only delivery. Paid purchases/consumables continue to fail without charge.
@@ -400,6 +403,7 @@ function mergeInto(fromI, toI) {
   const source = cells[fromI];
   const target = cells[toI];
   if (!source || !target || fromI === toI || source.level !== target.level) return false;
+  if(source.training || target.training){toast('Trained dragons grow in the Battle Lodge; their identity stays safe.');return false;}
   if (source.level >= CHAIN.length - 1) {
     toast("Elders keep watch • no further merge");
     return false;

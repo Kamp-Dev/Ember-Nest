@@ -1,0 +1,35 @@
+body.storybook #defenseDialog { width:min(920px,100%); max-width:100%; max-height:100dvh; box-sizing:border-box; margin:auto; padding:14px; overflow-y:auto; border:2px solid #81976d; border-radius:18px; background:#f4efd9; color:#304636; }
+#defenseDialog::backdrop { background:#102821b8; }
+#defenseDialog h2 { font-size:22px; margin:0; }
+#defenseDialog p { font-size:12px; line-height:1.45; margin:8px 0; }
+.defense-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; position:sticky; top:-14px; background:#f4efd9; z-index:5; padding:8px 0; }
+.defense-content { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(260px,1fr); gap:16px; align-items:start; }
+.defense-controls { min-width:0; }
+.defense-controls summary { cursor:pointer; padding:10px 0; font-size:13px; }
+body.storybook #app .defense-heading button { min-height:44px; }
+#defenseStats { font-weight:700; font-variant-numeric:tabular-nums; }
+.defense-arena { position:relative; aspect-ratio:1; width:100%; overflow:hidden; border-radius:18px; background:radial-gradient(ellipse at 10% 15%,#91b672,#557e67); border:2px solid #537359; box-sizing:border-box; }
+.defense-path,.defense-shots { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.defense-path polyline { fill:none; stroke:#dfcc95; stroke-width:10; stroke-linejoin:round; }
+.defense-path text { font-size:5px; fill:#283d33; font-weight:700; }
+body.storybook #app #defenseDialog .defense-pad { position:absolute; transform:translate(-50%,-50%)!important; width:13%; height:13%; min-width:36px; min-height:36px; padding:0!important; border:2px solid #f0dfa8!important; border-radius:50%!important; background:#edf0d5!important; color:#283d33!important; box-shadow:0 2px 3px #18362f77!important; z-index:3; }
+body.storybook #app #defenseDialog .defense-pad.selected { outline:3px solid #f2bb45; outline-offset:1px; }
+.defense-pad svg { width:100%; height:100%; pointer-events:none; }
+.defense-pad small { position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); background:#283d33; color:white; padding:1px 4px; border-radius:6px; font-size:9px; white-space:nowrap; }
+.defense-enemy { position:absolute; transform:translate(-50%,-50%); width:6%; text-align:center; color:#684759; font-size:22px; line-height:1; text-shadow:0 1px 1px #fff; pointer-events:none; }
+.defense-enemy { transition:left .1s linear,top .1s linear; }
+.defense-range { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.defense-range circle { fill:#ffffff13; stroke:#fff4ba; stroke-width:.5; stroke-dasharray:1.5 1.5; }
+.defense-enemy.runner { color:#713f21; }.defense-enemy.armored { color:#46586a; }.defense-enemy.boss { font-size:36px; width:10%; color:#7f3138; }
+.defense-enemy.slowed { filter:drop-shadow(0 0 3px #83dcff); }.defense-enemy.rooted { outline:2px dotted #28522d; }
+.defense-enemy i { display:block; height:4px; background:linear-gradient(to right,#64c97b var(--health),#53353b var(--health)); border:1px solid #203d2b; border-radius:3px; }
+.defense-shots { z-index:2; }.defense-shots line { stroke-width:1; stroke-linecap:round; }.shot-fire { stroke:#ffdf81; }.shot-water { stroke:#b5f2ff; }.shot-nature { stroke:#bcffa8; }
+.defense-actions,.defense-roles { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+body.storybook #app #defenseDialog button { font-size:12px!important; min-height:42px; }
+body.storybook #app #defenseDialog .defense-pad { min-height:0; }
+.defense-roles button { flex:1; }.defense-roles button[aria-pressed="true"] { outline:3px solid #bf803f; outline-offset:1px; }
+.defense-actions button { flex:1 1 30%; }
+html[data-appearance="dark"] body.storybook #defenseDialog { background:#203b40; color:#f6edcf; }
+html[data-appearance="dark"] .defense-heading { background:#203b40; }
+@media(max-width:650px){.defense-content {grid-template-columns:1fr;gap:6px;}.defense-arena {max-width:360px;margin:auto;}.defense-heading h2 {flex:1;}.defense-heading {top:-14px;} }
+@media(max-width:360px){body.storybook #defenseDialog {padding:8px;}#defenseDialog h2 {font-size:18px;}}

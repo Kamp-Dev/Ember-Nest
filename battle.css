@@ -1,0 +1,217 @@
+/* Battle Lodge stays independent of Board sizing and the Keeper layout. */
+#battleDialog { --battle-paper:#f7f0df; --battle-ink:#2b423d; --battle-edge:#aeac8b; --battle-card:#fffbf0;
+  width:min(850px,94vw); max-width:94vw; max-height:92dvh; margin:auto; inset:0; box-sizing:border-box; overflow:auto;
+  padding:20px; border:2px solid #bdac78; border-radius:22px; color:var(--battle-ink); background:var(--battle-paper); box-shadow:0 24px 90px #071e29a8; }
+#battleDialog::backdrop { background:#0d223dcc; backdrop-filter:blur(5px); }
+html[data-appearance=dark] #battleDialog { --battle-paper:#192f35; --battle-ink:#e9efdf; --battle-edge:#52736e; --battle-card:#233d43; }
+#battleDialog * { box-sizing:border-box; }
+#battleDialog [hidden] { display:none!important; }
+#battleDialog h2,#battleDialog h3 { margin:0 0 8px; color:var(--battle-ink); }
+#battleDialog p { font-size:13px; line-height:1.55; margin:9px 0 15px; }
+#battleDialog small { font-size:11px; font-weight:500; }
+#battleDialog button { border:1px solid var(--battle-edge); border-radius:12px; padding:10px 13px; min-height:44px; background:var(--battle-card); color:var(--battle-ink); font:inherit; font-size:13px; box-shadow:0 3px 0 #152d3820; cursor:pointer; }
+#battleDialog button:disabled { opacity:.5; cursor:not-allowed; }
+#battleDialog button:focus-visible,#battleDialog input:focus-visible,#battleDialog select:focus-visible,#battleDialog summary:focus-visible { outline:3px solid #db9a39; outline-offset:3px; }
+#battleDialog button[aria-pressed=true] { border:2px solid #c78b36; background:linear-gradient(#eabd6530,#eabd6510),var(--battle-card); }
+#battleDialog details { margin:14px 0; padding:12px; border:1px solid var(--battle-edge); border-radius:12px; }
+#battleDialog summary { cursor:pointer; font-size:13px; font-weight:700; }
+.battle-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--battle-edge); padding-bottom:12px; margin-bottom:12px; }
+.battle-heading small { letter-spacing:.16em; }
+#battleDialog[data-fighting=true] .battle-heading small { display:none; }
+#battleDialog[data-fighting=true] .battle-heading h2 { font-size:21px; margin:0; }
+#battleDialog[data-fighting=true] .battle-heading { padding-bottom:8px; margin-bottom:8px; }
+#pveFightHeading { font-size:14px; }
+.pve-roster { display:grid; grid-template-columns:repeat(auto-fill,minmax(125px,1fr)); gap:10px; margin-bottom:14px; }
+#battleDialog .pve-roster button { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; overflow-wrap:anywhere; }
+.pve-roster svg { width:70px; height:70px; }
+.pve-enlist { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:12px; }
+#battleDialog .pve-enlist button { display:flex; align-items:center; gap:8px; text-align:left; }
+.pve-enlist svg { width:54px; height:54px; flex-shrink:0; }
+.pve-enlist small { display:block; margin-top:5px; }
+.pve-profile { padding:16px; background:var(--battle-card); border:1px solid var(--battle-edge); border-radius:16px; margin:15px 0 22px; }
+.pve-profile-top { display:flex; align-items:center; gap:15px; }
+.pve-profile-top svg { width:88px; height:88px; flex-shrink:0; }
+.pve-profile label { display:block; font-size:12px; margin:8px 0; }
+.pve-profile input,.pve-profile select { display:block; width:100%; padding:10px; margin-top:4px; font:inherit; border:1px solid var(--battle-edge); border-radius:8px; background:var(--battle-paper); color:var(--battle-ink); }
+.pve-actions { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+.pve-encounters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#battleDialog .pve-encounters button { display:flex; flex-direction:column; gap:7px; text-align:left; }
+.pve-encounters strong { font-size:17px; }
+.pve-encounters span { font-size:12px; }
+.pve-hud { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:16px 0 10px; }
+.pve-hud>div { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.pve-hud>div:last-child { text-align:right; }
+.pve-hud strong { overflow-wrap:anywhere; }
+.pve-hud span { font-size:11px; }
+.pve-hud progress { width:100%; height:14px; accent-color:#60a76a; }
+.pve-arena { position:relative; height:clamp(140px,24dvh,220px); overflow:hidden; border-radius:16px; border:1px solid #698774;
+  background:linear-gradient(#17372d40,#24483138 65%,#c4b078),url('assets/theme/forest-sanctuary-v1.png') center 60%/cover,#517b67; isolation:isolate; }
+html[data-appearance=dark] .pve-arena { background:linear-gradient(#0b293b38,#17253199 70%,#203c3e),url('assets/theme/forest-sanctuary-night-v1.png') center 60%/cover,#264e5c; }
+.pve-arena:after { content:''; position:absolute; bottom:15px; left:10%; right:10%; height:20px; border-radius:50%; background:#072b2444; filter:blur(8px); z-index:-1; }
+.pve-fighter,.pve-foe { position:absolute; width:46%; max-width:270px; height:95%; bottom:2%; display:flex; justify-content:center; align-items:flex-end; }
+.pve-fighter { left:1%; transform-origin:50% 90%; }
+.pve-foe { right:1%; transform-origin:50% 90%; }
+.pve-fighter>svg,.pve-monster { width:100%; height:auto; max-height:100%; overflow:visible; }
+.pve-pose-set { position:relative; width:100%; aspect-ratio:1; }
+.pve-pose-frame { position:absolute; inset:0; width:100%; height:100%; overflow:hidden; opacity:0; }
+.pve-pose-frame.frame-0 { opacity:1; }
+.pve-moves { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+#battleDialog .pve-moves button { display:flex; flex-direction:column; gap:5px; min-width:0; text-align:left; }
+.pve-moves span { font-size:11px; }
+.pve-turn { min-height:42px; padding:9px 12px; border-radius:10px; background:var(--battle-card); }
+.pve-result { text-align:center; border:1px solid #c39b4f; padding:18px; border-radius:14px; margin-top:15px; }
+#battleDialog ol { padding-left:20px; font-size:12px; line-height:1.6; }
+.pve-effect { pointer-events:none; position:absolute; left:35%; top:43%; width:44%; height:36%; opacity:0; --fx:#dcebf7; }
+[data-element=fire] .pve-effect { --fx:#ff973e; }
+[data-element=water] .pve-effect { --fx:#80e4ff; }
+[data-element=nature] .pve-effect { --fx:#92d575; }
+.pve-effect i { position:absolute; width:68%; height:20%; top:35%; border-radius:70% 20% 55% 30%; background:var(--fx); box-shadow:0 0 10px var(--fx); transform:rotate(-10deg); }
+.pve-effect i:nth-child(2) { top:5%; width:43%; left:25%; transform:rotate(12deg); }
+.pve-effect i:nth-child(3) { top:65%; width:50%; left:15%; transform:rotate(8deg); }
+.pve-effect i:nth-child(4) { left:72%; top:20%; width:12%; height:16%; }
+.pve-effect i:nth-child(5) { left:76%; top:70%; width:8%; height:12%; }
+[data-element=water] .pve-effect i { background:transparent; border:5px solid var(--fx); height:60%; border-radius:50%; }
+[data-element=nature] .pve-effect { left:60%; top:50%; width:32%; }
+[data-element=nature] .pve-effect i { border-radius:90% 0 80% 10%; width:18%; height:95%; background:linear-gradient(90deg,#567742,var(--fx)); transform:rotate(14deg); top:0; }
+[data-element=nature] .pve-effect i:nth-child(2) { left:35%; transform:rotate(-15deg); }
+[data-element=nature] .pve-effect i:nth-child(3) { left:65%; transform:rotate(20deg); }
+.event-enemy .pve-effect { transform:scaleX(-1); left:20%; }
+.event-heal .pve-effect { left:10%; }
+html[data-tile-motion=on] #battleDialog .pve-monster { animation:pve-breathe 3s ease-in-out infinite!important; }
+html[data-tile-motion=on] #battleDialog .monster-arm { transform-box:fill-box; transform-origin:50% 10%; animation:pve-limb 2.7s ease-in-out infinite alternate!important; }
+html[data-tile-motion=on] #battleDialog .arm-right { animation-delay:-1.3s!important; }
+html[data-tile-motion=on] #battleDialog .monster-crown { transform-box:fill-box; transform-origin:50% 100%; animation:pve-limb 3.6s ease-in-out infinite alternate!important; }
+html[data-tile-motion=on] #battleDialog .event-player.event-hit .pve-pose-frame { animation:pve-frame 1s steps(1,end) both!important; }
+html[data-tile-motion=on] #battleDialog .event-player.event-hit .frame-0 { animation-name:pve-frame-zero!important; }
+html[data-tile-motion=on] #battleDialog .event-player.event-hit .frame-1 { animation-name:pve-frame-one!important; }
+html[data-tile-motion=on] #battleDialog .event-player.event-hit .frame-2 { animation-name:pve-frame-two!important; }
+html[data-tile-motion=on] #battleDialog .event-player.event-hit .frame-3 { animation-name:pve-frame-three!important; }
+html[data-tile-motion=on] #battleDialog .event-player.event-hit .pve-fighter { animation:pve-lunge 1s ease-in-out both!important; }
+html[data-tile-motion=on] #battleDialog .event-player.event-hit .pve-foe,
+html[data-tile-motion=on] #battleDialog .event-enemy.event-hit .pve-fighter { animation:pve-impact 1s ease-in-out both!important; }
+html[data-tile-motion=on] #battleDialog .event-enemy.event-hit .pve-foe { animation:pve-foe-lunge 1s ease-in-out both!important; }
+html[data-tile-motion=on] #battleDialog :is(.event-hit,.event-heal,.event-burn) .pve-effect { animation:pve-cast 1s ease-out both!important; }
+html[data-tile-motion=off] #battleDialog :is(.event-hit,.event-heal,.event-burn) .pve-effect { opacity:.65; }
+html[data-tile-motion=on] body.page-hidden #battleDialog * { animation-play-state:paused!important; }
+@keyframes pve-frame-zero { 0%,100%{opacity:1} 12%{opacity:0} }
+@keyframes pve-frame-one { 0%,35%,100%{opacity:0} 12%{opacity:1} }
+@keyframes pve-frame-two { 0%,75%,100%{opacity:0} 35%{opacity:1} }
+@keyframes pve-frame-three { 0%,100%{opacity:0} 75%{opacity:1} }
+@keyframes pve-breathe { 50%{transform:translateY(-5px) scale(1.025,1.015)} }
+@keyframes pve-limb { from{transform:rotate(-5deg)} to{transform:rotate(5deg)} }
+@keyframes pve-lunge { 20%{transform:translateX(-3%) rotate(-3deg)} 45%{transform:translateX(8%) rotate(2deg)} }
+@keyframes pve-foe-lunge { 25%{transform:translateX(3%)} 45%{transform:translateX(-10%) rotate(-4deg)} }
+@keyframes pve-impact { 50%,70%{filter:brightness(1.5);transform:translateX(-3%)} 60%{transform:translateX(3%)} }
+@keyframes pve-cast { 0%,25%,100%{opacity:0;scale:.2 1} 40%{opacity:1;scale:.6 1} 70%{opacity:.9;scale:1 1.1} }
+@media(max-width:520px){ #battleDialog{padding:12px;border-radius:16px;max-height:94dvh;width:96vw;max-width:96vw} .pve-arena{height:clamp(140px,24dvh,200px)}.pve-enlist{grid-template-columns:1fr}.pve-encounters{gap:8px}.pve-hud{gap:12px}.pve-moves{gap:8px} #battleDialog .pve-moves button{padding:9px}.pve-encounters strong{font-size:15px}.battle-heading h2{font-size:23px} }
+@media(max-width:350px){.pve-arena{height:150px}.pve-encounters{grid-template-columns:1fr}.pve-hud strong{font-size:12px}.pve-hud span{font-size:10px}#battleDialog[data-fighting=true] .battle-heading h2{font-size:17px}#battleDialog .battle-heading button{font-size:11px;white-space:nowrap;padding:8px}}
+
+/* Campaign hub: selection stays on its own tab; only the battle is modal. */
+#battleHubContent { --battle-paper:#f7f0df;--battle-ink:#2b423d;--battle-edge:#aeac8b;--battle-card:#fffbf0;color:var(--battle-ink); }
+html[data-appearance=dark] #battleHubContent { --battle-paper:#192f35;--battle-ink:#e9efdf;--battle-edge:#52736e;--battle-card:#233d43; }
+#battleHubContent [hidden] {display:none!important}
+#battleHubContent p {font-size:13px;line-height:1.6}
+#battleHubContent h3 {color:var(--battle-ink);font-size:17px;margin:16px 0 8px}
+#battleHubContent button {min-height:44px;padding:10px;border:1px solid var(--battle-edge);border-radius:12px;font:inherit;font-size:12px;cursor:pointer}
+#battleHubContent button:disabled {opacity:.5;cursor:not-allowed}
+#battleHubContent button[aria-pressed=true] {outline:2px solid #d7a744;outline-offset:1px}
+#battleHubContent :is(button,input,select,summary):focus-visible {outline:3px solid #d7a744;outline-offset:3px}
+#battleHubContent .pve-roster button {display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;overflow-wrap:anywhere}
+#battleHubContent .pve-enlist button {display:flex;align-items:center;text-align:left;gap:8px}
+#battleHubContent .pve-encounters button {display:flex;flex-direction:column;gap:7px;text-align:left}
+#battleHubContent details {border:1px solid var(--battle-edge);border-radius:12px;padding:12px;margin:12px 0;background:var(--battle-card)}
+#battleHubContent summary {cursor:pointer;min-height:32px;font-weight:700;font-size:13px}
+.pve-region {border-top:1px solid var(--battle-edge);padding-top:18px}
+.pve-region small {float:right}
+#tabBar .tab-btn {min-width:0;flex:1;padding-inline:2px}
+#tabBar .tab-label {font-size:11px}
+.goals-shortcuts {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.goals-shortcuts button {min-height:48px}
+#view-goals {padding:16px}
+#view-goals h2 {font-size:20px}
+.goals-intro {font-size:13px;line-height:1.6}
+.pve-fight-tools {display:flex;gap:10px;align-items:center;justify-content:space-between}
+#battleDialog .pve-fight-tools button {min-width:44px;padding:6px}
+.pve-loading {text-align:center;padding:20px 5px;background:linear-gradient(#15313b28,#15313b00)}
+.pve-loading>small {letter-spacing:.22em}
+.pve-loading progress {width:75%;height:10px;accent-color:#70b5ac}
+.pve-arrival {display:flex;align-items:center;justify-content:center;height:230px;gap:10px;margin:16px 0}
+.pve-arrival>svg,.pve-arrival>.pve-pose-set {width:40%;max-width:220px;max-height:100%}
+.pve-arrival>span {font:bold 30px Georgia;color:#c79335}
+.pve-arena,html[data-appearance=dark] .pve-arena {background:linear-gradient(#10243205,#17354418),url('assets/battle/moonlit-arena-v1.png') center 70%/cover,#294b54;height:clamp(170px,29dvh,280px)}
+.pve-arena[data-biome=fire] {background-blend-mode:soft-light,normal;background-color:#a76848}
+.pve-arena[data-biome=water] {background-color:#265887}
+.pve-arena[data-biome=nature] {background-color:#426e46}
+.pve-status-icons {position:absolute;top:2%;left:10%;right:10%;display:flex;justify-content:center;gap:4px;z-index:7}
+.pve-attack-poses {position:relative;width:100%;height:100%}
+.pve-idle-pose {position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center}
+.pve-idle-pose svg {width:100%;height:100%}
+.pve-attack-pose {position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0}
+.pve-arrival>.pve-attack-poses {width:40%;max-width:220px}
+html[data-tile-motion=on] #battleDialog .event-player.event-hit:not(.is-windup) .pve-idle-pose {animation:pve-idle-swap calc(.95s / var(--pve-speed)) steps(1,end) both!important}
+html[data-tile-motion=on] #battleDialog .event-player.event-hit:not(.is-windup) .pve-attack-pose {animation:pve-attack-swap calc(.95s / var(--pve-speed)) steps(1,end) both!important}
+@keyframes pve-idle-swap {0%,85%,100%{opacity:1}15%{opacity:0}}
+@keyframes pve-attack-swap {0%,85%,100%{opacity:0}15%{opacity:1}}
+.pve-status-icons span {background:#102d43e8;border:1px solid #aed9e6;border-radius:50%;width:29px;height:29px;display:grid;place-items:center;font-size:17px;box-shadow:0 2px 8px #09232b99}
+.pve-shield-dome {position:absolute;inset:9% 3% 1%;border:2px solid #a8eaff;border-radius:48% 48% 40% 40%;background:radial-gradient(ellipse,#a9eaff08 45%,#91dfff4d 90%);box-shadow:inset 0 0 22px #8dddff70,0 0 14px #94dbff60;pointer-events:none}
+.pve-shield-dome svg {position:absolute;left:34%;top:-8%;width:32%;height:36%;fill:#184a7399;stroke:#c1f0ff;stroke-width:4;filter:drop-shadow(0 0 5px #76d8ff)}
+.pve-fx-layer {position:absolute;inset:0;pointer-events:none;z-index:8;--fx:#e6ddff;--target:75%;--source:25%}
+.pve-fx-layer.target-player {--target:25%;--source:75%}
+.pve-fx-layer.fx-fire {--fx:#ffbd6b}
+.pve-fx-layer.fx-water {--fx:#85e7ff}
+.pve-fx-layer.fx-nature,.pve-fx-layer.fx-heal {--fx:#abec89}
+.pve-charge-ring {position:absolute;left:calc(var(--source) - 10%);bottom:5%;width:20%;height:20%;border:3px double var(--fx);border-radius:50%;box-shadow:0 0 16px var(--fx);opacity:0}
+.pve-projectile {position:absolute;left:var(--source);top:45%;width:12%;height:13%;border-radius:60%;background:radial-gradient(ellipse,#fff4d5,var(--fx) 40%,transparent 70%);filter:drop-shadow(0 0 6px var(--fx));opacity:0}
+.pve-projectile i {position:absolute;width:120%;height:25%;left:-60%;top:30%;border-radius:70%;background:var(--fx);transform:rotate(-12deg)}
+.pve-projectile i:nth-child(2){top:70%;width:80%;transform:rotate(14deg)}
+.pve-projectile i:nth-child(3){top:0;width:70%;transform:rotate(-24deg)}
+.target-player .pve-projectile {scale:-1 1}
+.pve-impact-art {position:absolute;left:calc(var(--target) - 20%);bottom:8%;width:40%;height:65%;fill:var(--fx);stroke:var(--fx);stroke-width:3;opacity:0;filter:drop-shadow(0 0 4px var(--fx))}
+.skill-special .pve-impact-art {height:88%;width:50%;left:calc(var(--target) - 25%);filter:drop-shadow(0 0 8px var(--fx))}
+.skill-special .pve-projectile {height:22%;width:18%;top:38%}
+.skill-strike .pve-projectile {display:none}
+.skill-strike .pve-impact-art {fill:none;stroke:#fff4d5;stroke-width:5;height:40%;bottom:23%}
+.fx-water .pve-impact-art {fill:#53cced38;stroke-width:5}
+.pve-root {fill:none;stroke-width:7;stroke-linecap:round;stroke-dasharray:180;stroke-dashoffset:180}
+.pve-floating-number {position:absolute;left:calc(var(--target) - 25%);width:50%;top:27%;text-align:center;color:#fff6d9;font:bold 30px Georgia;text-shadow:0 2px 3px #101f2e,1px 0 2px #101f2e;opacity:0}
+.pve-floating-number small {display:block;color:#c8efff;font:bold 10px sans-serif!important;letter-spacing:.05em;margin-top:4px}
+.fx-heal .pve-floating-number {color:#b8f5a2}
+.fx-status .pve-floating-number,.fx-guard .pve-floating-number {font-size:17px}
+.pve-sparks {position:absolute;left:var(--target);top:55%}
+.pve-sparks i {position:absolute;width:5px;height:9px;border-radius:50%;background:var(--fx);box-shadow:0 0 5px var(--fx);rotate:calc(var(--i)*30deg);opacity:0}
+.pve-shield-break {position:absolute;left:calc(var(--target) - 18px);top:37%;font-size:36px;opacity:0}
+.pve-ambience {position:absolute;inset:0;pointer-events:none}
+.pve-ambience i {position:absolute;left:calc(8% + var(--i)*11%);top:calc(15% + var(--i)*6%);width:3px;height:3px;border-radius:50%;background:#f8e5ad;box-shadow:0 0 8px #ffe49b;opacity:.55}
+html[data-tile-motion=on] #battleDialog .pve-status-icons {animation:pve-status-float 2.5s ease-in-out infinite!important}
+html[data-tile-motion=on] #battleDialog .pve-ambience i {animation:pve-mote 6s ease-in-out infinite alternate!important;animation-delay:calc(var(--i)*-.8s)!important}
+html[data-tile-motion=on] #battleDialog .pve-floating-number {animation:pve-number calc(.9s / var(--pve-speed)) ease-out both!important}
+html[data-tile-motion=on] #battleDialog .pve-projectile {animation:pve-projectile calc(.8s / var(--pve-speed)) ease-in both!important}
+html[data-tile-motion=on] #battleDialog .pve-impact-art {animation:pve-burst calc(.9s / var(--pve-speed)) ease-out both!important}
+html[data-tile-motion=on] #battleDialog .pve-root {animation:pve-root calc(.75s / var(--pve-speed)) ease-out both!important;animation-delay:calc(var(--i)*.025s)!important}
+html[data-tile-motion=on] #battleDialog .pve-sparks i {animation:pve-spark calc(.9s / var(--pve-speed)) ease-out both!important}
+html[data-tile-motion=on] #battleDialog .pve-shield-break {animation:pve-burst calc(.8s / var(--pve-speed)) ease-out both!important}
+html[data-tile-motion=on] #battleDialog .is-windup .pve-charge-ring {animation:pve-charge calc(.35s / var(--pve-speed)) ease-in both!important}
+#battleDialog .is-windup :is(.pve-projectile,.pve-impact-art,.pve-floating-number,.pve-sparks,.pve-shield-break) {display:none}
+#battleDialog :is(.fx-guard,.fx-status) :is(.pve-projectile,.pve-impact-art,.pve-sparks) {display:none}
+#battleDialog .fx-heal .pve-projectile {display:none}
+html[data-tile-motion=off] #battleDialog :is(.pve-floating-number,.pve-impact-art) {opacity:1}
+html[data-tile-motion=off] #battleDialog .pve-impact-art {opacity:.3}
+html[data-tile-motion=off] #battleDialog .pve-root {stroke-dashoffset:0}
+@keyframes pve-status-float {50%{transform:translateY(-4px)}}
+@keyframes pve-mote {to{transform:translate(12px,-24px);opacity:.2}}
+@keyframes pve-charge {from{opacity:.3;scale:.6}to{opacity:1;scale:1.1}}
+@keyframes pve-projectile {0%{opacity:0}15%{opacity:1}65%{left:calc(var(--target) - 5%);opacity:1;scale:1.4}100%{left:var(--target);opacity:0}}
+@keyframes pve-burst {0%,25%{opacity:0;transform:scale(.4)}45%{opacity:.85}100%{opacity:0;transform:scale(1.2)}}
+@keyframes pve-number {0%,20%{opacity:0;transform:translateY(12px) scale(.8)}35%,75%{opacity:1;transform:translateY(-5px) scale(1)}100%{opacity:0;transform:translateY(-25px)}}
+@keyframes pve-spark {0%,30%{opacity:0;transform:translateY(0)}45%{opacity:1}100%{opacity:0;transform:translateY(-65px)}}
+@keyframes pve-root {to{stroke-dashoffset:0}}
+@media(max-height:760px){
+  #battleDialog[data-fighting=true] .pve-arena {height:145px}
+  #battleDialog[data-fighting=true] .pve-hud {gap:10px;margin:8px 0}
+  #battleDialog[data-fighting=true] .pve-hud>div {gap:4px}
+  #battleDialog[data-fighting=true] .pve-turn {margin:8px 0;padding:8px;min-height:36px;font-size:12px;line-height:1.35}
+  #battleDialog[data-fighting=true] .pve-moves button {padding:8px;gap:4px;font-size:12px;line-height:1.25}
+  #battleDialog[data-fighting=true] .pve-moves small {font-size:10px}
+  #battleDialog[data-fighting=true] details {margin:8px 0;padding:9px}
+}
+@media(max-width:520px){.pve-arena,html[data-appearance=dark] .pve-arena{height:clamp(165px,25dvh,220px)}.pve-arrival{height:180px}.pve-roster{grid-template-columns:repeat(3,minmax(0,1fr))}.pve-roster svg{width:60px;height:60px}#battleHubContent .pve-roster button{padding:7px;font-size:11px}.pve-floating-number{font-size:25px}}
